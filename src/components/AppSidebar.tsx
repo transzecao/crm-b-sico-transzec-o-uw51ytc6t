@@ -72,7 +72,7 @@ export function AppSidebar() {
       <SidebarHeader className="p-4">
         <h2 className="text-xl font-bold text-primary flex items-center gap-2">
           <Building2 className="w-6 h-6" />
-          Transzecão
+          Transzecão LTDA
         </h2>
       </SidebarHeader>
       <SidebarContent>

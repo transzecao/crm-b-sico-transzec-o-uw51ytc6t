@@ -14,7 +14,7 @@ export function AppHeader() {
           className="font-bold text-lg tracking-wider flex items-center gap-2 text-white hover:opacity-90 transition-opacity whitespace-nowrap"
         >
           <Globe className="w-5 h-5 opacity-80" />
-          <span>TRANSZECÃO 24</span>
+          <span>TRANSZECÃO LTDA</span>
         </Link>
 
         <nav className="hidden lg:flex items-center gap-1 text-sm font-medium">
@@ -57,10 +57,6 @@ export function AppHeader() {
 
         <button className="hidden sm:block text-sm font-medium hover:bg-white/10 px-3 py-1.5 rounded-full transition-colors">
           Convidar
-        </button>
-
-        <button className="hidden sm:block bg-green-500 hover:bg-green-600 text-white text-sm font-medium px-4 py-1.5 rounded-full transition-colors">
-          Comprar agora
         </button>
 
         <button className="text-sm font-medium hover:bg-white/10 px-3 py-1.5 rounded-full transition-colors flex items-center gap-1.5">

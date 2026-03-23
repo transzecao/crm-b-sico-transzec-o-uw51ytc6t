@@ -32,6 +32,8 @@ export type Company = {
   tipoCarga: string
   endereco: string
   descricaoNegocio?: string
+  siteProspectado?: string
+  sitePesquisado?: string
 }
 
 export type Contact = {
@@ -63,6 +65,7 @@ const mockCompanies: Company[] = [
     tipoCarga: 'Seca',
     endereco: 'Rua A, 123',
     descricaoNegocio: 'Indústria metalúrgica focada em peças pesadas.',
+    siteProspectado: 'https://www.indpaulista.com.br',
   },
   {
     id: '2',
@@ -72,6 +75,7 @@ const mockCompanies: Company[] = [
     tipoCarga: 'Seca',
     endereco: 'Av. Autopeças, 456',
     descricaoNegocio: 'Distribuição de autopeças em grande escala.',
+    sitePesquisado: 'https://br.linkedin.com/company/skautomotive',
   },
   {
     id: '3',
