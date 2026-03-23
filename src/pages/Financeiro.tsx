@@ -4,7 +4,6 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import {
   Truck,
   Calculator,
@@ -73,6 +72,7 @@ export default function Financeiro() {
       baseTariff: 150.0,
       valTon: 85.0,
       valKm: 4.5,
+      cubageFactor: 300.0,
       freteValorPct: 0.5,
       correcao: 1.0,
       marginPct: 15.0,
@@ -81,6 +81,12 @@ export default function Financeiro() {
     sim: {
       weight: 12500,
       volume: 45,
+      calcVolume: false,
+      dim: {
+        height: 1.5,
+        width: 1.5,
+        thickness: 20,
+      },
       dist: 850,
       value: 150000,
       origin: 'São Paulo, SP',
@@ -105,6 +111,31 @@ export default function Financeiro() {
     setCfg((p) => ({ ...p, params: { ...p.params, [k]: Number(v) } }))
   const updateSim = (k: keyof typeof cfg.sim, v: string | number) =>
     setCfg((p) => ({ ...p, sim: { ...p.sim, [k]: v } }))
+
+  const updateSimDim = (k: keyof typeof cfg.sim.dim, v: number) => {
+    setCfg((p) => {
+      const newDim = { ...p.sim.dim, [k]: v }
+      const newVol = p.sim.calcVolume
+        ? Number((newDim.height * newDim.width * newDim.thickness).toFixed(4))
+        : p.sim.volume
+      return {
+        ...p,
+        sim: { ...p.sim, dim: newDim, volume: newVol },
+      }
+    })
+  }
+
+  const toggleCalcVolume = (checked: boolean) => {
+    setCfg((p) => {
+      const newVol = checked
+        ? Number((p.sim.dim.height * p.sim.dim.width * p.sim.dim.thickness).toFixed(4))
+        : p.sim.volume
+      return {
+        ...p,
+        sim: { ...p.sim, calcVolume: checked, volume: newVol },
+      }
+    })
+  }
 
   const handleItem = (
     list: 'gen' | 'srv',
@@ -141,11 +172,14 @@ export default function Financeiro() {
     })
   }
 
-  // Calculation Memory
   const mem = useMemo(() => {
     const { params, sim, modules, gen, srv } = cfg
 
-    let wTon = sim.weight / 1000
+    const physicalWeight = sim.weight
+    const cubedWeight = sim.volume * params.cubageFactor
+    const taxableWeight = Math.max(physicalWeight, cubedWeight)
+    const wTon = taxableWeight / 1000
+
     let baseFreight = 0
     let cBase = 0
     let freteValor = 0
@@ -181,6 +215,9 @@ export default function Financeiro() {
     const total = sub2 + tax
 
     return {
+      physicalWeight,
+      cubedWeight,
+      taxableWeight,
       baseFreight,
       cBase,
       freteValor,
@@ -332,7 +369,6 @@ export default function Financeiro() {
 
       <div className="grid lg:grid-cols-12 gap-6 items-start">
         <div className="lg:col-span-8 space-y-6">
-          {/* Dados Gerais */}
           <Card className="shadow-sm border-t-4 border-t-primary/60">
             <CardHeader className="pb-4 border-b bg-slate-50/50">
               <CardTitle className="text-lg flex items-center gap-2">
@@ -373,7 +409,6 @@ export default function Financeiro() {
             </CardContent>
           </Card>
 
-          {/* Dados de Simulação */}
           <Card className="shadow-sm">
             <CardHeader className="pb-4 border-b bg-slate-50/50">
               <CardTitle className="text-lg flex items-center gap-2">
@@ -424,18 +459,7 @@ export default function Financeiro() {
                     className={inputClass}
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-xs font-semibold uppercase text-slate-500">
-                    Volume (m³)
-                  </Label>
-                  <Input
-                    type="number"
-                    value={cfg.sim.volume}
-                    onChange={(e) => updateSim('volume', Number(e.target.value))}
-                    className={inputClass}
-                  />
-                </div>
-                <div className="space-y-2">
+                <div className="space-y-2 md:col-span-2">
                   <Label className="text-xs font-semibold uppercase text-slate-500">
                     Valor da Mercadoria (R$)
                   </Label>
@@ -447,51 +471,138 @@ export default function Financeiro() {
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label className="text-xs font-semibold uppercase text-slate-500">
-                    Tipo de Carga
-                  </Label>
-                  <Input
-                    value={cfg.sim.cargoType}
-                    onChange={(e) => updateSim('cargoType', e.target.value)}
-                    className={inputClass}
-                  />
+                <div className="space-y-2 md:col-span-2 border border-slate-200 bg-slate-50/50 rounded-lg p-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <Label className="text-xs font-semibold uppercase text-slate-700">
+                      Volume (m³)
+                    </Label>
+                    <div className="flex items-center gap-2 bg-white px-2 py-1 rounded shadow-sm border">
+                      <Switch
+                        id="calc-vol"
+                        checked={cfg.sim.calcVolume}
+                        onCheckedChange={toggleCalcVolume}
+                      />
+                      <Label
+                        htmlFor="calc-vol"
+                        className="text-[10px] uppercase font-bold text-slate-500 cursor-pointer"
+                      >
+                        Por Dimensões
+                      </Label>
+                    </div>
+                  </div>
+
+                  {cfg.sim.calcVolume ? (
+                    <div className="grid grid-cols-3 gap-3">
+                      <div className="space-y-1">
+                        <Label className="text-[10px] font-semibold text-slate-500">
+                          Altura (m)
+                        </Label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={cfg.sim.dim.height}
+                          onChange={(e) => updateSimDim('height', Number(e.target.value))}
+                          className={inputClass}
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-[10px] font-semibold text-slate-500">
+                          Largura (m)
+                        </Label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={cfg.sim.dim.width}
+                          onChange={(e) => updateSimDim('width', Number(e.target.value))}
+                          className={inputClass}
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-[10px] font-semibold text-slate-500">
+                          Espessura (m)
+                        </Label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={cfg.sim.dim.thickness}
+                          onChange={(e) => updateSimDim('thickness', Number(e.target.value))}
+                          className={inputClass}
+                        />
+                      </div>
+                      <div className="col-span-3 pt-2">
+                        <div className="flex justify-between items-center text-sm px-3 py-2 bg-primary/10 rounded border border-primary/20 text-primary-foreground font-medium">
+                          <span className="text-primary font-bold">Total M³:</span>
+                          <span className="text-primary font-bold">
+                            {cfg.sim.volume.toLocaleString('pt-BR', { maximumFractionDigits: 4 })}{' '}
+                            m³
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={cfg.sim.volume}
+                        onChange={(e) => updateSim('volume', Number(e.target.value))}
+                        className={inputClass}
+                      />
+                      <div className="text-[10px] text-slate-400 mt-1">
+                        Insira o volume manualmente ou ative o cálculo por dimensões.
+                      </div>
+                    </div>
+                  )}
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-xs font-semibold uppercase text-slate-500">
-                    Tipo de Operação
-                  </Label>
-                  <Input
-                    value={cfg.sim.operationType}
-                    onChange={(e) => updateSim('operationType', e.target.value)}
-                    className={inputClass}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-xs font-semibold uppercase text-slate-500">
-                    Frequência
-                  </Label>
-                  <Input
-                    value={cfg.sim.frequency}
-                    onChange={(e) => updateSim('frequency', e.target.value)}
-                    className={inputClass}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-xs font-semibold uppercase text-slate-500">
-                    SLA / Prazo
-                  </Label>
-                  <Input
-                    value={cfg.sim.sla}
-                    onChange={(e) => updateSim('sla', e.target.value)}
-                    className={inputClass}
-                  />
+
+                <div className="space-y-2 md:col-span-2">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-full">
+                    <div className="space-y-2">
+                      <Label className="text-xs font-semibold uppercase text-slate-500">
+                        Tipo de Carga
+                      </Label>
+                      <Input
+                        value={cfg.sim.cargoType}
+                        onChange={(e) => updateSim('cargoType', e.target.value)}
+                        className={inputClass}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs font-semibold uppercase text-slate-500">
+                        Tipo de Operação
+                      </Label>
+                      <Input
+                        value={cfg.sim.operationType}
+                        onChange={(e) => updateSim('operationType', e.target.value)}
+                        className={inputClass}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs font-semibold uppercase text-slate-500">
+                        Frequência
+                      </Label>
+                      <Input
+                        value={cfg.sim.frequency}
+                        onChange={(e) => updateSim('frequency', e.target.value)}
+                        className={inputClass}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs font-semibold uppercase text-slate-500">
+                        SLA / Prazo
+                      </Label>
+                      <Input
+                        value={cfg.sim.sla}
+                        onChange={(e) => updateSim('sla', e.target.value)}
+                        className={inputClass}
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* Parâmetros de Custo */}
           <Card
             className={cn(
               'shadow-sm transition-opacity',
@@ -521,6 +632,7 @@ export default function Financeiro() {
                 { l: 'Tarifa Base por Faixa (R$)', k: 'baseTariff' },
                 { l: 'Valor por Tonelada (R$)', k: 'valTon' },
                 { l: 'Valor por KM (R$)', k: 'valKm' },
+                { l: 'Fator de Cubagem (kg/m³)', k: 'cubageFactor' },
                 { l: 'Frete Valor / Ad Valorem (%)', k: 'freteValorPct' },
                 { l: 'Fator de Correção', k: 'correcao' },
                 { l: 'Margem Comercial (%)', k: 'marginPct' },
@@ -551,7 +663,7 @@ export default function Financeiro() {
             'Generalidades Rodoviárias',
             <ListTodo className="w-5 h-5 text-primary" />,
             'genActive',
-            true, // Allow adding custom generalities as requested
+            true,
           )}
           {renderList(
             'srv',
@@ -574,7 +686,6 @@ export default function Financeiro() {
 
             <CardContent className="p-0">
               <div className="max-h-[calc(100vh-200px)] overflow-y-auto p-5 space-y-4 text-sm font-mono tracking-tight">
-                {/* Parâmetros */}
                 <div>
                   <div className="text-xs font-bold text-slate-400 uppercase mb-2 flex items-center gap-2">
                     <div className="h-px bg-slate-200 flex-1" />
@@ -588,6 +699,37 @@ export default function Financeiro() {
                   )}
                   {cfg.modules.paramsActive && (
                     <div className="space-y-2 text-slate-600">
+                      <div className="flex justify-between text-xs text-slate-500">
+                        <span>Peso Físico</span>
+                        <span>{mem.physicalWeight.toLocaleString('pt-BR')} kg</span>
+                      </div>
+                      <div className="flex justify-between text-xs text-slate-500">
+                        <span>
+                          Volume{' '}
+                          {cfg.sim.calcVolume
+                            ? `(${cfg.sim.dim.height}m x ${cfg.sim.dim.width}m x ${cfg.sim.dim.thickness}m)`
+                            : ''}
+                        </span>
+                        <span>
+                          {cfg.sim.volume.toLocaleString('pt-BR', { maximumFractionDigits: 4 })} m³
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-xs text-slate-500">
+                        <span>Peso Cubado ({cfg.params.cubageFactor} kg/m³)</span>
+                        <span>
+                          {mem.cubedWeight.toLocaleString('pt-BR', { maximumFractionDigits: 2 })} kg
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-xs font-semibold text-slate-700 bg-slate-100/50 p-1 rounded">
+                        <span>Peso Taxável</span>
+                        <span>
+                          {mem.taxableWeight.toLocaleString('pt-BR', { maximumFractionDigits: 2 })}{' '}
+                          kg
+                        </span>
+                      </div>
+
+                      <div className="h-px bg-slate-100 my-2" />
+
                       <div className="flex justify-between">
                         <span>Frete Peso Bruto</span>
                         <span>{fmt(mem.baseFreight)}</span>
@@ -604,7 +746,6 @@ export default function Financeiro() {
                   )}
                 </div>
 
-                {/* Generalidades */}
                 <div>
                   <div className="text-xs font-bold text-slate-400 uppercase mb-2 flex items-center gap-2 mt-4">
                     <div className="h-px bg-slate-200 flex-1" />
@@ -642,7 +783,6 @@ export default function Financeiro() {
                   )}
                 </div>
 
-                {/* Serviços */}
                 <div>
                   <div className="text-xs font-bold text-slate-400 uppercase mb-2 flex items-center gap-2 mt-4">
                     <div className="h-px bg-slate-200 flex-1" />
@@ -680,7 +820,6 @@ export default function Financeiro() {
                   )}
                 </div>
 
-                {/* Fechamento */}
                 <div className="pt-4 mt-6 border-t-2 border-slate-800">
                   <div className="space-y-2">
                     <div className="flex justify-between font-bold text-slate-800">
