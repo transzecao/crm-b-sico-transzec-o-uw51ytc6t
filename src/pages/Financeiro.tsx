@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -6,70 +6,110 @@ import { Switch } from '@/components/ui/switch'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { Badge } from '@/components/ui/badge'
-import { Train, Calculator, Plus, Trash2, Save, FileSpreadsheet, History } from 'lucide-react'
+import {
+  Train,
+  Calculator,
+  Plus,
+  Trash2,
+  Save,
+  FileSpreadsheet,
+  History,
+  Settings2,
+  ListTodo,
+  Blocks,
+  Route,
+} from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
-type ItemType = 'fixed' | 'pct' | 'emex'
+type ItemType = 'fixed' | 'pct'
 type CfgItem = {
   id: string
   name: string
   type: ItemType
   val: number
-  pct: number
   active: boolean
 }
 
 const defaultGen: CfgItem[] = [
-  { id: 'g1', name: 'Manobras Especiais', type: 'fixed', val: 850, pct: 0, active: true },
-  { id: 'g2', name: 'Permanência em Pátio', type: 'fixed', val: 1200, pct: 0, active: false },
-  { id: 'g3', name: 'Espera de Composição', type: 'fixed', val: 500, pct: 0, active: true },
-  { id: 'g4', name: 'Taxa EMEX-Ferro', type: 'emex', val: 10, pct: 0.5, active: false },
+  { id: 'g1', name: 'Manobra especial', type: 'fixed', val: 850, active: true },
+  { id: 'g2', name: 'Permanência em pátio', type: 'fixed', val: 1200, active: false },
+  { id: 'g3', name: 'Espera de composição', type: 'fixed', val: 500, active: true },
+  { id: 'g4', name: 'Necessidade de operação noturna', type: 'fixed', val: 300, active: false },
+  { id: 'g5', name: 'Transbordo', type: 'fixed', val: 2000, active: false },
+  { id: 'g6', name: 'Armazenagem temporária', type: 'fixed', val: 1500, active: false },
+  { id: 'g7', name: 'Reprogramação', type: 'fixed', val: 400, active: false },
+  { id: 'g8', name: 'Remarcação de janela operacional', type: 'fixed', val: 600, active: false },
 ]
 
 export default function Financeiro() {
   const [cfg, setCfg] = useState({
     info: {
       name: 'Tabela Padrão Ferroviária',
-      modal: 'Ferroviário',
+      modal: 'Transporte Ferroviário',
       company: 'Transzecão LTDA',
-      ver: '1.2.0',
-      resp: 'Admin Financeiro',
-      active: true,
+      version: '1.2.0',
+      responsible: 'Admin Financeiro',
+      updated: new Date().toISOString(),
+    },
+    modules: {
+      paramsActive: true,
+      genActive: true,
+      srvActive: true,
     },
     params: {
+      baseTariff: 1200.0,
       valTon: 150.0,
       valKm: 12.5,
-      gris: 0.3,
-      disp: 66.08,
-      corr: 1.05,
-      margin: 15.0,
-      tax: 14.25,
+      freteValorPct: 0.5,
+      grisPct: 0.3,
+      despacho: 66.08,
+      correcao: 1.05,
+      marginPct: 15.0,
+      taxPct: 14.25,
     },
-    tiers: [
-      { id: 't1', min: 0, max: 100, factor: 1.0 },
-      { id: 't2', min: 101, max: 500, factor: 0.95 },
-    ],
+    sim: {
+      weight: 50000,
+      volume: 120,
+      dist: 1200,
+      value: 500000,
+      origin: 'Campinas, SP',
+      destination: 'Rondonópolis, MT',
+      operationType: 'Ponto a Ponto',
+      cargoType: 'Granel Sólido',
+      sla: 'Padrão (15 dias)',
+      frequency: 'Semanal',
+      condition: 'Normal',
+    },
     gen: defaultGen,
     srv: [
       {
         id: 's1',
-        name: 'Transbordo Rodo-Ferroviário',
-        type: 'fixed',
-        val: 2500,
-        pct: 0,
+        name: 'Seguro Adicional de Carga',
+        type: 'pct',
+        val: 1.5,
         active: true,
       } as CfgItem,
     ],
-    updated: new Date().toISOString(),
   })
 
-  const [sim, setSim] = useState({ w: 50000, d: 1200, v: 500000 })
+  const [lastSaved, setLastSaved] = useState(cfg.info.updated)
 
-  const updateCfg = (k: keyof typeof cfg, v: any) => setCfg((p) => ({ ...p, [k]: v }))
+  const updateInfo = (k: keyof typeof cfg.info, v: string) =>
+    setCfg((p) => ({ ...p, info: { ...p.info, [k]: v } }))
+  const updateModule = (k: keyof typeof cfg.modules, v: boolean) =>
+    setCfg((p) => ({ ...p, modules: { ...p.modules, [k]: v } }))
   const updateParam = (k: keyof typeof cfg.params, v: string) =>
     setCfg((p) => ({ ...p, params: { ...p.params, [k]: Number(v) } }))
-  const updateSim = (k: keyof typeof sim, v: string) => setSim((p) => ({ ...p, [k]: Number(v) }))
+  const updateSim = (k: keyof typeof cfg.sim, v: string | number) =>
+    setCfg((p) => ({ ...p, sim: { ...p.sim, [k]: v } }))
 
   const handleItem = (
     list: 'gen' | 'srv',
@@ -86,7 +126,6 @@ export default function Financeiro() {
           name: 'Novo Item',
           type: 'fixed',
           val: 0,
-          pct: 0,
           active: true,
         })
       else if (action === 'del') return { ...p, [list]: items.filter((i) => i.id !== id) }
@@ -99,309 +138,604 @@ export default function Financeiro() {
   }
 
   const handleSave = () => {
-    updateCfg('updated', new Date().toISOString())
-    toast.success('Planilha salva com sucesso', { description: 'Memória de cálculo atualizada.' })
+    const now = new Date().toISOString()
+    updateInfo('updated', now)
+    setLastSaved(now)
+    toast.success('Planilha salva com sucesso', {
+      description: 'Memória de cálculo atualizada e versão registrada.',
+    })
   }
 
   // Calculation Memory
   const mem = useMemo(() => {
-    const wTon = sim.w / 1000
-    const base = sim.d * cfg.params.valKm + wTon * cfg.params.valTon
-    const activeTier = cfg.tiers.find((t) => sim.d >= t.min && sim.d <= t.max) || { factor: 1 }
-    const cBase = base * cfg.params.corr * activeTier.factor
-    const gris = sim.v * (cfg.params.gris / 100)
+    const { params, sim, modules, gen, srv } = cfg
 
-    const calcItem = (i: CfgItem) => {
-      if (!i.active || !cfg.info.active) return 0
-      if (i.type === 'fixed') return i.val
-      if (i.type === 'pct') return cBase * (i.pct / 100)
-      return Math.ceil(sim.w / 100) * i.val + cBase * (i.pct / 100)
+    let wTon = sim.weight / 1000
+    let baseFreight = 0
+    let cBase = 0
+    let freteValor = 0
+    let gris = 0
+    let despacho = 0
+
+    if (modules.paramsActive) {
+      baseFreight = params.baseTariff + sim.dist * params.valKm + wTon * params.valTon
+      cBase = baseFreight * params.correcao
+      freteValor = sim.value * (params.freteValorPct / 100)
+      gris = sim.value * (params.grisPct / 100)
+      despacho = params.despacho
     }
 
-    const genVals = cfg.gen.map((g) => ({ ...g, total: calcItem(g) })).filter((g) => g.total > 0)
-    const srvVals = cfg.srv.map((s) => ({ ...s, total: calcItem(s) })).filter((s) => s.total > 0)
+    const baseForPct = cBase > 0 ? cBase : sim.value
 
-    const sub1 =
-      (cfg.info.active ? cBase + cfg.params.disp + gris : 0) +
-      genVals.reduce((a, b) => a + b.total, 0) +
-      srvVals.reduce((a, b) => a + b.total, 0)
-    const margin = sub1 * (cfg.params.margin / 100)
+    const calcItem = (i: CfgItem, activeMod: boolean) => {
+      if (!i.active || !activeMod) return 0
+      if (i.type === 'fixed') return i.val
+      return baseForPct * (i.val / 100)
+    }
+
+    const genVals = gen
+      .map((g) => ({ ...g, total: calcItem(g, modules.genActive) }))
+      .filter((g) => g.total > 0 && modules.genActive)
+    const srvVals = srv
+      .map((s) => ({ ...s, total: calcItem(s, modules.srvActive) }))
+      .filter((s) => s.total > 0 && modules.srvActive)
+
+    const subGen = genVals.reduce((a, b) => a + b.total, 0)
+    const subSrv = srvVals.reduce((a, b) => a + b.total, 0)
+
+    const sub1 = (modules.paramsActive ? cBase + freteValor + gris + despacho : 0) + subGen + subSrv
+    const margin = modules.paramsActive ? sub1 * (params.marginPct / 100) : 0
     const sub2 = sub1 + margin
-    const tax = sub2 * (cfg.params.tax / 100)
+    const tax = modules.paramsActive ? sub2 * (params.taxPct / 100) : 0
+    const total = sub2 + tax
 
-    return { wTon, base, cBase, gris, genVals, srvVals, sub1, margin, sub2, tax, total: sub2 + tax }
-  }, [cfg, sim])
+    return {
+      baseFreight,
+      cBase,
+      freteValor,
+      gris,
+      despacho,
+      genVals,
+      srvVals,
+      subGen,
+      subSrv,
+      sub1,
+      margin,
+      sub2,
+      tax,
+      total,
+    }
+  }, [cfg])
 
   const fmt = (v: number) =>
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
-  const inputClass = 'bg-blue-50/30 border-blue-200 focus-visible:ring-blue-500 transition-colors'
+  const inputClass = 'bg-slate-50 border-slate-200 focus-visible:ring-primary transition-colors'
+  const editHighlight = 'border-blue-200 bg-blue-50/30 focus-visible:ring-blue-500'
 
-  const renderList = (list: 'gen' | 'srv', title: string) => (
-    <Card className="shadow-sm">
-      <CardHeader className="flex flex-row items-center justify-between pb-4">
-        <CardTitle className="text-lg">{title}</CardTitle>
-        <Button variant="outline" size="sm" onClick={() => handleItem(list, 'add')}>
-          <Plus className="w-4 h-4 mr-2" /> Adicionar
-        </Button>
+  const renderList = (
+    list: 'gen' | 'srv',
+    title: string,
+    icon: React.ReactNode,
+    activeKey: keyof typeof cfg.modules,
+    showAdd: boolean,
+  ) => (
+    <Card className={cn('shadow-sm transition-opacity', !cfg.modules[activeKey] && 'opacity-75')}>
+      <CardHeader className="flex flex-row items-center justify-between pb-4 border-b bg-slate-50/50">
+        <div className="flex items-center gap-2">
+          {icon}
+          <CardTitle className="text-lg">{title}</CardTitle>
+        </div>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <Label className="text-sm font-medium">Módulo</Label>
+            <Switch
+              checked={cfg.modules[activeKey]}
+              onCheckedChange={(c) => updateModule(activeKey, c)}
+            />
+          </div>
+          {showAdd && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleItem(list, 'add')}
+              disabled={!cfg.modules[activeKey]}
+            >
+              <Plus className="w-4 h-4 mr-2" /> Novo Item
+            </Button>
+          )}
+        </div>
       </CardHeader>
-      <CardContent className="space-y-3">
+      <CardContent className="space-y-3 pt-4">
         {cfg[list].map((i) => (
           <div
             key={i.id}
             className={cn(
               'flex flex-wrap md:flex-nowrap items-center gap-3 p-3 rounded-lg border transition-all',
-              i.active ? 'bg-white' : 'bg-slate-50 opacity-60',
+              i.active && cfg.modules[activeKey]
+                ? 'bg-white border-slate-200 shadow-sm'
+                : 'bg-slate-50/50 border-dashed opacity-70',
             )}
           >
             <Switch
               checked={i.active}
               onCheckedChange={(c) => handleItem(list, 'upd', i.id, 'active', c)}
+              disabled={!cfg.modules[activeKey]}
             />
             <Input
-              className={cn('min-w-[200px] flex-1', inputClass)}
+              className={cn('min-w-[200px] flex-1 font-medium', editHighlight)}
               value={i.name}
               onChange={(e) => handleItem(list, 'upd', i.id, 'name', e.target.value)}
+              disabled={!cfg.modules[activeKey]}
             />
-            <select
-              className={cn('h-10 rounded-md border border-input px-3 py-2 text-sm', inputClass)}
-              value={i.type}
-              onChange={(e) => handleItem(list, 'upd', i.id, 'type', e.target.value)}
-            >
-              <option value="fixed">Fixo (R$)</option>
-              <option value="pct">Percentual (%)</option>
-              <option value="emex">EMEX (Fixo + %)</option>
-            </select>
-            <Input
-              type="number"
-              className={cn('w-28', inputClass)}
-              value={i.val}
-              onChange={(e) => handleItem(list, 'upd', i.id, 'val', Number(e.target.value))}
-              placeholder="Valor"
-            />
-            {(i.type === 'pct' || i.type === 'emex') && (
+            {showAdd && (
+              <Select
+                value={i.type}
+                onValueChange={(v) => handleItem(list, 'upd', i.id, 'type', v)}
+                disabled={!cfg.modules[activeKey]}
+              >
+                <SelectTrigger className={cn('w-[160px]', editHighlight)}>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="fixed">Valor Fixo (R$)</SelectItem>
+                  <SelectItem value="pct">Percentual (%)</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
+            {!showAdd && (
+              <Badge
+                variant="outline"
+                className="w-[160px] justify-center text-slate-500 bg-slate-50 font-normal"
+              >
+                Valor Fixo (R$)
+              </Badge>
+            )}
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
+                {i.type === 'fixed' ? 'R$' : '%'}
+              </span>
               <Input
                 type="number"
-                className={cn('w-24', inputClass)}
-                value={i.pct}
-                onChange={(e) => handleItem(list, 'upd', i.id, 'pct', Number(e.target.value))}
-                placeholder="%"
+                className={cn('w-32 pl-8', editHighlight)}
+                value={i.val}
+                onChange={(e) => handleItem(list, 'upd', i.id, 'val', Number(e.target.value))}
+                disabled={!cfg.modules[activeKey]}
               />
+            </div>
+            {showAdd && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-destructive hover:bg-destructive/10"
+                onClick={() => handleItem(list, 'del', i.id)}
+                disabled={!cfg.modules[activeKey]}
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
             )}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-destructive"
-              onClick={() => handleItem(list, 'del', i.id)}
-            >
-              <Trash2 className="w-4 h-4" />
-            </Button>
           </div>
         ))}
+        {cfg[list].length === 0 && (
+          <div className="text-center py-6 text-muted-foreground text-sm border-2 border-dashed rounded-lg">
+            Nenhum item configurado.
+          </div>
+        )}
       </CardContent>
     </Card>
   )
 
   return (
     <div className="space-y-6 pb-12 max-w-[1600px] mx-auto">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-xl border shadow-sm">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-800 flex items-center gap-2">
+          <h1 className="text-3xl font-bold tracking-tight text-slate-800 flex items-center gap-3">
             <Train className="w-8 h-8 text-primary" /> Planilha de Precificação Ferroviária
           </h1>
-          <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
-            <span className="flex items-center gap-1">
-              <History className="w-4 h-4" /> Atualizado:{' '}
-              {new Date(cfg.updated).toLocaleString('pt-BR')}
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mt-3 text-sm text-slate-600">
+            <span className="flex items-center gap-1.5 font-medium text-slate-800">
+              <History className="w-4 h-4 text-primary" /> Atualizado:{' '}
+              {new Date(lastSaved).toLocaleString('pt-BR')}
             </span>
-            <span>Responsável: {cfg.info.resp}</span>
-            <Badge variant={cfg.info.active ? 'default' : 'secondary'}>
-              {cfg.info.active ? 'Cálculo Global Ativo' : 'Cálculo Suspenso'}
-            </Badge>
+            <span className="flex items-center gap-1.5 bg-slate-100 px-2 py-1 rounded-md">
+              <strong className="text-slate-500">Empresa:</strong> {cfg.info.company}
+            </span>
+            <span className="flex items-center gap-1.5 bg-slate-100 px-2 py-1 rounded-md">
+              <strong className="text-slate-500">Modal:</strong> {cfg.info.modal}
+            </span>
           </div>
         </div>
-        <Button onClick={handleSave} className="gap-2">
-          <Save className="w-4 h-4" /> Salvar Planilha
+        <Button onClick={handleSave} size="lg" className="gap-2 shadow-md">
+          <Save className="w-5 h-5" /> Salvar Versão Atual
         </Button>
       </div>
 
       <div className="grid lg:grid-cols-12 gap-6 items-start">
         <div className="lg:col-span-8 space-y-6">
-          <Card className="shadow-sm border-primary/10">
+          {/* Dados Gerais */}
+          <Card className="shadow-sm border-t-4 border-t-primary/60">
             <CardHeader className="pb-4 border-b bg-slate-50/50">
-              <div className="flex justify-between items-center">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <FileSpreadsheet className="w-5 h-5" /> Informações Gerais
-                </CardTitle>
-                <div className="flex items-center gap-2">
-                  <Label>Status Global</Label>
-                  <Switch
-                    checked={cfg.info.active}
-                    onCheckedChange={(c) => updateCfg('info', { ...cfg.info, active: c })}
-                  />
-                </div>
-              </div>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <FileSpreadsheet className="w-5 h-5 text-primary" /> Informações da Planilha
+              </CardTitle>
             </CardHeader>
-            <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4">
-              {[
-                { l: 'Nome da Tabela', k: 'name' },
-                { l: 'Modal', k: 'modal', ro: true },
-                { l: 'Empresa', k: 'company' },
-                { l: 'Versão', k: 'ver' },
-              ].map((f) => (
-                <div key={f.k} className="space-y-1.5">
-                  <Label>{f.l}</Label>
-                  <Input
-                    value={cfg.info[f.k as keyof typeof cfg.info] as string}
-                    onChange={(e) => updateCfg('info', { ...cfg.info, [f.k]: e.target.value })}
-                    readOnly={f.ro}
-                    className={f.ro ? 'bg-muted' : inputClass}
-                  />
-                </div>
-              ))}
+            <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6">
+              <div className="space-y-2">
+                <Label className="text-xs font-semibold uppercase text-slate-500">
+                  Nome da Tabela
+                </Label>
+                <Input
+                  value={cfg.info.name}
+                  onChange={(e) => updateInfo('name', e.target.value)}
+                  className={editHighlight}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs font-semibold uppercase text-slate-500">
+                  Versão da Planilha
+                </Label>
+                <Input
+                  value={cfg.info.version}
+                  onChange={(e) => updateInfo('version', e.target.value)}
+                  className={editHighlight}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs font-semibold uppercase text-slate-500">
+                  Responsável pela Alteração
+                </Label>
+                <Input
+                  value={cfg.info.responsible}
+                  onChange={(e) => updateInfo('responsible', e.target.value)}
+                  className={editHighlight}
+                />
+              </div>
             </CardContent>
           </Card>
 
+          {/* Dados de Simulação */}
           <Card className="shadow-sm">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-lg">Parâmetros Principais de Custo</CardTitle>
+            <CardHeader className="pb-4 border-b bg-slate-50/50">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Route className="w-5 h-5 text-primary" /> Variáveis de Simulação (Inputs)
+              </CardTitle>
+              <CardDescription>
+                Dados operacionais da rota e carga para o cálculo do frete.
+              </CardDescription>
             </CardHeader>
-            <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <CardContent className="pt-6">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-x-6 gap-y-5">
+                <div className="space-y-2 md:col-span-2">
+                  <Label className="text-xs font-semibold uppercase text-slate-500">Origem</Label>
+                  <Input
+                    value={cfg.sim.origin}
+                    onChange={(e) => updateSim('origin', e.target.value)}
+                    className={inputClass}
+                  />
+                </div>
+                <div className="space-y-2 md:col-span-2">
+                  <Label className="text-xs font-semibold uppercase text-slate-500">Destino</Label>
+                  <Input
+                    value={cfg.sim.destination}
+                    onChange={(e) => updateSim('destination', e.target.value)}
+                    className={inputClass}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-xs font-semibold uppercase text-slate-500">
+                    Distância (KM)
+                  </Label>
+                  <Input
+                    type="number"
+                    value={cfg.sim.dist}
+                    onChange={(e) => updateSim('dist', Number(e.target.value))}
+                    className={inputClass}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs font-semibold uppercase text-slate-500">
+                    Peso (KG)
+                  </Label>
+                  <Input
+                    type="number"
+                    value={cfg.sim.weight}
+                    onChange={(e) => updateSim('weight', Number(e.target.value))}
+                    className={inputClass}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs font-semibold uppercase text-slate-500">
+                    Volume (m³)
+                  </Label>
+                  <Input
+                    type="number"
+                    value={cfg.sim.volume}
+                    onChange={(e) => updateSim('volume', Number(e.target.value))}
+                    className={inputClass}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs font-semibold uppercase text-slate-500">
+                    Valor da Carga (R$)
+                  </Label>
+                  <Input
+                    type="number"
+                    value={cfg.sim.value}
+                    onChange={(e) => updateSim('value', Number(e.target.value))}
+                    className={inputClass}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-xs font-semibold uppercase text-slate-500">
+                    Tipo de Carga
+                  </Label>
+                  <Input
+                    value={cfg.sim.cargoType}
+                    onChange={(e) => updateSim('cargoType', e.target.value)}
+                    className={inputClass}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs font-semibold uppercase text-slate-500">
+                    Tipo de Operação
+                  </Label>
+                  <Input
+                    value={cfg.sim.operationType}
+                    onChange={(e) => updateSim('operationType', e.target.value)}
+                    className={inputClass}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs font-semibold uppercase text-slate-500">
+                    Frequência
+                  </Label>
+                  <Input
+                    value={cfg.sim.frequency}
+                    onChange={(e) => updateSim('frequency', e.target.value)}
+                    className={inputClass}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs font-semibold uppercase text-slate-500">
+                    SLA / Prazo
+                  </Label>
+                  <Input
+                    value={cfg.sim.sla}
+                    onChange={(e) => updateSim('sla', e.target.value)}
+                    className={inputClass}
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Parâmetros de Custo */}
+          <Card
+            className={cn(
+              'shadow-sm transition-opacity',
+              !cfg.modules.paramsActive && 'opacity-75',
+            )}
+          >
+            <CardHeader className="flex flex-row items-center justify-between pb-4 border-b bg-slate-50/50">
+              <div className="flex items-center gap-2">
+                <Settings2 className="w-5 h-5 text-primary" />
+                <CardTitle className="text-lg">Parâmetros Principais de Custo</CardTitle>
+              </div>
+              <div className="flex items-center gap-2">
+                <Label className="text-sm font-medium">Módulo Base</Label>
+                <Switch
+                  checked={cfg.modules.paramsActive}
+                  onCheckedChange={(c) => updateModule('paramsActive', c)}
+                />
+              </div>
+            </CardHeader>
+            <CardContent className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 pt-6">
               {[
+                { l: 'Tarifa base por faixa (R$)', k: 'baseTariff' },
                 { l: 'Valor por Tonelada (R$)', k: 'valTon' },
-                { l: 'Valor por KM (R$)', k: 'valKm' },
-                { l: 'Taxa de Despacho (R$)', k: 'disp' },
-                { l: 'Fator de Correção', k: 'corr' },
-                { l: 'GRIS Ferroviário (%)', k: 'gris' },
-                { l: 'Margem Comercial (%)', k: 'margin' },
-                { l: 'Impostos (%)', k: 'tax' },
+                { l: 'Valor por KM Ferroviário (R$)', k: 'valKm' },
+                { l: 'Frete Valor (%)', k: 'freteValorPct' },
+                { l: 'GRIS Ferroviário (%)', k: 'grisPct' },
+                { l: 'Taxa de Despacho (R$)', k: 'despacho' },
+                { l: 'Fator de Correção', k: 'correcao' },
+                { l: 'Margem Comercial (%)', k: 'marginPct' },
+                { l: 'Tributos (%)', k: 'taxPct' },
               ].map((f) => (
-                <div key={f.k} className="space-y-1.5">
-                  <Label>{f.l}</Label>
+                <div key={f.k} className="space-y-2">
+                  <Label className="text-xs font-semibold uppercase text-slate-500">{f.l}</Label>
                   <Input
                     type="number"
                     step="0.01"
                     value={cfg.params[f.k as keyof typeof cfg.params]}
                     onChange={(e) => updateParam(f.k as keyof typeof cfg.params, e.target.value)}
-                    className={inputClass}
+                    className={editHighlight}
+                    disabled={!cfg.modules.paramsActive}
                   />
                 </div>
               ))}
             </CardContent>
           </Card>
 
-          {renderList('gen', 'Generalidades Ferroviárias (Custos Acessórios)')}
-          {renderList('srv', 'Serviços Adicionais (Operacionais)')}
+          {renderList(
+            'gen',
+            'Generalidades Ferroviárias',
+            <ListTodo className="w-5 h-5 text-primary" />,
+            'genActive',
+            false,
+          )}
+          {renderList(
+            'srv',
+            'Serviços Adicionais',
+            <Blocks className="w-5 h-5 text-primary" />,
+            'srvActive',
+            true,
+          )}
         </div>
 
-        <div className="lg:col-span-4 sticky top-6 space-y-6">
-          <Card className="border-primary/20 shadow-md bg-slate-50/30">
-            <CardHeader className="pb-4 border-b">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Calculator className="w-5 h-5 text-primary" /> Simulador e Memória
-              </CardTitle>
-              <CardDescription>Cálculo auditável em tempo real</CardDescription>
-            </CardHeader>
-            <CardContent className="pt-4 space-y-6">
-              <div className="grid grid-cols-3 gap-2">
-                <div className="space-y-1">
-                  <Label className="text-xs">Distância (KM)</Label>
-                  <Input
-                    type="number"
-                    value={sim.d}
-                    onChange={(e) => updateSim('d', e.target.value)}
-                    className="h-8 text-sm"
-                  />
+        <div className="lg:col-span-4 lg:sticky lg:top-6 space-y-6">
+          <Card className="border-primary/20 shadow-xl bg-white overflow-hidden">
+            <div className="bg-slate-800 text-white p-4 flex items-center gap-3">
+              <Calculator className="w-6 h-6 text-primary" />
+              <div>
+                <h3 className="font-bold text-lg leading-tight">Memória de Cálculo</h3>
+                <p className="text-slate-300 text-xs">Simulação em tempo real</p>
+              </div>
+            </div>
+
+            <CardContent className="p-0">
+              <div className="max-h-[calc(100vh-200px)] overflow-y-auto p-5 space-y-4 text-sm font-mono tracking-tight">
+                {/* Parâmetros */}
+                <div>
+                  <div className="text-xs font-bold text-slate-400 uppercase mb-2 flex items-center gap-2">
+                    <div className="h-px bg-slate-200 flex-1" />
+                    Frete Base e Taxas
+                    <div className="h-px bg-slate-200 flex-1" />
+                  </div>
+                  {!cfg.modules.paramsActive && (
+                    <div className="text-center text-slate-400 italic py-2 text-xs">
+                      Módulo Inativo
+                    </div>
+                  )}
+                  {cfg.modules.paramsActive && (
+                    <div className="space-y-2 text-slate-600">
+                      <div className="flex justify-between">
+                        <span>Frete Peso Bruto</span>
+                        <span>{fmt(mem.baseFreight)}</span>
+                      </div>
+                      <div className="flex justify-between text-slate-900 font-semibold bg-slate-50 p-1 rounded">
+                        <span>Frete Corrigido (x{cfg.params.correcao})</span>
+                        <span>{fmt(mem.cBase)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Frete Valor ({cfg.params.freteValorPct}%)</span>
+                        <span>{fmt(mem.freteValor)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>GRIS ({cfg.params.grisPct}%)</span>
+                        <span>{fmt(mem.gris)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Despacho</span>
+                        <span>{fmt(mem.despacho)}</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
-                <div className="space-y-1">
-                  <Label className="text-xs">Peso (KG)</Label>
-                  <Input
-                    type="number"
-                    value={sim.w}
-                    onChange={(e) => updateSim('w', e.target.value)}
-                    className="h-8 text-sm"
-                  />
+
+                {/* Generalidades */}
+                <div>
+                  <div className="text-xs font-bold text-slate-400 uppercase mb-2 flex items-center gap-2 mt-4">
+                    <div className="h-px bg-slate-200 flex-1" />
+                    Generalidades
+                    <div className="h-px bg-slate-200 flex-1" />
+                  </div>
+                  {!cfg.modules.genActive && (
+                    <div className="text-center text-slate-400 italic py-2 text-xs">
+                      Módulo Inativo
+                    </div>
+                  )}
+                  {cfg.modules.genActive && mem.genVals.length === 0 && (
+                    <div className="text-center text-slate-400 italic py-2 text-xs">
+                      Nenhum item ativo
+                    </div>
+                  )}
+                  {cfg.modules.genActive && mem.genVals.length > 0 && (
+                    <div className="space-y-1.5 text-slate-600">
+                      {mem.genVals.map((g) => (
+                        <div
+                          key={g.id}
+                          className="flex justify-between pl-2 border-l-2 border-primary/30"
+                        >
+                          <span className="truncate pr-2">{g.name}</span>
+                          <span>{fmt(g.total)}</span>
+                        </div>
+                      ))}
+                      <div className="flex justify-between font-medium text-slate-800 pt-1 border-t border-dashed mt-2">
+                        <span>Subtotal Gen.</span>
+                        <span>{fmt(mem.subGen)}</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
-                <div className="space-y-1">
-                  <Label className="text-xs">Valor Carga (R$)</Label>
-                  <Input
-                    type="number"
-                    value={sim.v}
-                    onChange={(e) => updateSim('v', e.target.value)}
-                    className="h-8 text-sm"
-                  />
+
+                {/* Serviços */}
+                <div>
+                  <div className="text-xs font-bold text-slate-400 uppercase mb-2 flex items-center gap-2 mt-4">
+                    <div className="h-px bg-slate-200 flex-1" />
+                    Serviços Adicionais
+                    <div className="h-px bg-slate-200 flex-1" />
+                  </div>
+                  {!cfg.modules.srvActive && (
+                    <div className="text-center text-slate-400 italic py-2 text-xs">
+                      Módulo Inativo
+                    </div>
+                  )}
+                  {cfg.modules.srvActive && mem.srvVals.length === 0 && (
+                    <div className="text-center text-slate-400 italic py-2 text-xs">
+                      Nenhum serviço ativo
+                    </div>
+                  )}
+                  {cfg.modules.srvActive && mem.srvVals.length > 0 && (
+                    <div className="space-y-1.5 text-slate-600">
+                      {mem.srvVals.map((s) => (
+                        <div
+                          key={s.id}
+                          className="flex justify-between pl-2 border-l-2 border-primary/30"
+                        >
+                          <span className="truncate pr-2">
+                            {s.name} {s.type === 'pct' && `(${s.val}%)`}
+                          </span>
+                          <span>{fmt(s.total)}</span>
+                        </div>
+                      ))}
+                      <div className="flex justify-between font-medium text-slate-800 pt-1 border-t border-dashed mt-2">
+                        <span>Subtotal Serv.</span>
+                        <span>{fmt(mem.subSrv)}</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Fechamento */}
+                <div className="pt-4 mt-6 border-t-2 border-slate-800">
+                  <div className="space-y-2">
+                    <div className="flex justify-between font-bold text-slate-800">
+                      <span>Subtotal Operacional</span>
+                      <span>{fmt(mem.sub1)}</span>
+                    </div>
+
+                    {cfg.modules.paramsActive && (
+                      <>
+                        <div className="flex justify-between text-slate-600 pl-4 border-l-2 border-slate-200">
+                          <span>Margem Comercial ({cfg.params.marginPct}%)</span>
+                          <span>{fmt(mem.margin)}</span>
+                        </div>
+                        <div className="flex justify-between font-bold text-slate-800">
+                          <span>Subtotal com Margem</span>
+                          <span>{fmt(mem.sub2)}</span>
+                        </div>
+                        <div className="flex justify-between text-slate-600 pl-4 border-l-2 border-slate-200">
+                          <span>Tributos Estimados ({cfg.params.taxPct}%)</span>
+                          <span>{fmt(mem.tax)}</span>
+                        </div>
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
 
-              <div className="space-y-2 text-sm bg-white p-4 rounded-lg border font-mono tracking-tight">
-                <div className="flex justify-between text-slate-500 mb-2 font-sans font-semibold border-b pb-2">
-                  <span>Rubrica</span>
-                  <span>Valor Calculado</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Frete Base Bruto</span>
-                  <span>{fmt(mem.base)}</span>
-                </div>
-                <div className="flex justify-between text-primary">
-                  <span>Frete Base Corrigido</span>
-                  <span>{fmt(mem.cBase)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Taxa de Despacho</span>
-                  <span>{fmt(cfg.info.active ? cfg.params.disp : 0)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>GRIS ({cfg.params.gris}%)</span>
-                  <span>{fmt(cfg.info.active ? mem.gris : 0)}</span>
-                </div>
-
-                {mem.genVals.length > 0 && (
-                  <div className="pt-2 border-t mt-2 text-xs text-slate-400 uppercase">
-                    Generalidades Ativas
-                  </div>
-                )}
-                {mem.genVals.map((g) => (
-                  <div
-                    key={g.id}
-                    className="flex justify-between text-slate-600 pl-2 border-l-2 border-slate-200"
-                  >
-                    <span>{g.name}</span>
-                    <span>{fmt(g.total)}</span>
-                  </div>
-                ))}
-
-                {mem.srvVals.length > 0 && (
-                  <div className="pt-2 border-t mt-2 text-xs text-slate-400 uppercase">
-                    Serviços Ativos
-                  </div>
-                )}
-                {mem.srvVals.map((s) => (
-                  <div
-                    key={s.id}
-                    className="flex justify-between text-slate-600 pl-2 border-l-2 border-slate-200"
-                  >
-                    <span>{s.name}</span>
-                    <span>{fmt(s.total)}</span>
-                  </div>
-                ))}
-
-                <Separator className="my-3" />
-                <div className="flex justify-between font-medium">
-                  <span>Subtotal Operacional</span>
-                  <span>{fmt(mem.sub1)}</span>
-                </div>
-                <div className="flex justify-between text-slate-600">
-                  <span>Margem Comercial ({cfg.params.margin}%)</span>
-                  <span>{fmt(mem.margin)}</span>
-                </div>
-                <div className="flex justify-between text-slate-600">
-                  <span>Impostos ({cfg.params.tax}%)</span>
-                  <span>{fmt(mem.tax)}</span>
-                </div>
-
-                <Separator className="my-3" />
+              <div className="bg-primary/10 p-5 border-t border-primary/20">
                 <div className="flex justify-between items-end font-sans">
-                  <span className="text-base font-bold text-slate-800">Preço Final Sugerido</span>
-                  <span className="text-2xl font-black text-primary">{fmt(mem.total)}</span>
+                  <div className="space-y-1">
+                    <span className="text-sm font-bold text-slate-600 block uppercase tracking-wider">
+                      Preço Final Sugerido
+                    </span>
+                    <span className="text-xs text-slate-500">Valor para negociação</span>
+                  </div>
+                  <span className="text-3xl font-black text-primary tracking-tight">
+                    {fmt(mem.total)}
+                  </span>
                 </div>
               </div>
             </CardContent>
