@@ -29,7 +29,7 @@ export type Company = {
   cnpj: string
   razaoSocial: string
   nomeFantasia: string
-  tipoCarga: string
+  tipoCarga?: string
   endereco: string
   descricaoNegocio?: string
   siteProspectado?: string
@@ -64,7 +64,7 @@ export type Interaction = {
 export type CustomFieldDef = {
   id: string
   name: string
-  type: 'text' | 'select' | 'number'
+  type: 'text' | 'select' | 'number' | 'date'
   options?: string[]
 }
 

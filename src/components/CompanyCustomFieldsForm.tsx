@@ -58,7 +58,7 @@ export function CompanyCustomFieldsForm({ formData, setFormData }: Props) {
             size="sm"
             className="h-8 text-blue-600 hover:bg-blue-50"
           >
-            Gerenciar
+            Gerenciar (Master)
           </Button>
         )}
       </div>
@@ -80,6 +80,32 @@ export function CompanyCustomFieldsForm({ formData, setFormData }: Props) {
                   className="bg-slate-50"
                 />
               )}
+              {field.type === 'number' && (
+                <Input
+                  type="number"
+                  value={formData.customData?.[field.id] || ''}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      customData: { ...(formData.customData || {}), [field.id]: e.target.value },
+                    })
+                  }
+                  className="bg-slate-50"
+                />
+              )}
+              {field.type === 'date' && (
+                <Input
+                  type="date"
+                  value={formData.customData?.[field.id] || ''}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      customData: { ...(formData.customData || {}), [field.id]: e.target.value },
+                    })
+                  }
+                  className="bg-slate-50"
+                />
+              )}
               {field.type === 'select' && (
                 <Select
                   value={formData.customData?.[field.id] || ''}
@@ -91,7 +117,7 @@ export function CompanyCustomFieldsForm({ formData, setFormData }: Props) {
                   }
                 >
                   <SelectTrigger className="bg-slate-50">
-                    <SelectValue />
+                    <SelectValue placeholder="Selecione..." />
                   </SelectTrigger>
                   <SelectContent>
                     {field.options?.map((opt) => (
@@ -114,15 +140,16 @@ export function CompanyCustomFieldsForm({ formData, setFormData }: Props) {
           <h4 className="font-semibold text-sm">Criar Novo Campo</h4>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label className="text-xs">Nome</Label>
+              <Label className="text-xs">Nome do Campo</Label>
               <Input
                 value={newDef.name}
                 onChange={(e) => setNewDef({ ...newDef, name: e.target.value })}
                 className="h-8 bg-white"
+                placeholder="Ex: Data de Fundação"
               />
             </div>
             <div>
-              <Label className="text-xs">Tipo</Label>
+              <Label className="text-xs">Tipo de Dado</Label>
               <Select
                 value={newDef.type}
                 onValueChange={(v) => setNewDef({ ...newDef, type: v as any, options: [] })}
@@ -131,21 +158,35 @@ export function CompanyCustomFieldsForm({ formData, setFormData }: Props) {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="text">Texto</SelectItem>
-                  <SelectItem value="select">Lista</SelectItem>
+                  <SelectItem value="text">Texto Curto</SelectItem>
+                  <SelectItem value="number">Número</SelectItem>
+                  <SelectItem value="date">Data</SelectItem>
+                  <SelectItem value="select">Lista de Opções</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
           {newDef.type === 'select' && (
             <div className="space-y-2">
-              <Label className="text-xs">Opções</Label>
+              <Label className="text-xs">Opções da Lista</Label>
               <div className="flex gap-2">
                 <Input
                   value={newOpt}
                   onChange={(e) => setNewOpt(e.target.value)}
                   className="h-8 bg-white"
-                  placeholder="Opção..."
+                  placeholder="Nova opção..."
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault()
+                      if (newOpt.trim()) {
+                        setNewDef({
+                          ...newDef,
+                          options: [...(newDef.options || []), newOpt.trim()],
+                        })
+                        setNewOpt('')
+                      }
+                    }
+                  }}
                 />
                 <Button
                   type="button"
@@ -190,7 +231,7 @@ export function CompanyCustomFieldsForm({ formData, setFormData }: Props) {
             <Button variant="outline" size="sm" onClick={() => setShowBuilder(false)}>
               Cancelar
             </Button>
-            <Button size="sm" onClick={addDef}>
+            <Button size="sm" onClick={addDef} disabled={!newDef.name.trim()}>
               Salvar Campo
             </Button>
           </div>
