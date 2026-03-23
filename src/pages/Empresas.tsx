@@ -1,4 +1,4 @@
-import { Plus, Eye, Edit } from 'lucide-react'
+import { Plus, FolderOpen } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Table,
@@ -51,16 +51,9 @@ export default function Empresas() {
                   <TableCell>{c.nomeFantasia || '-'}</TableCell>
                   <TableCell>
                     <div className="flex gap-2">
-                      {canEdit && (
-                        <Button variant="ghost" size="sm" asChild>
-                          <Link to={`/empresa/${c.id}/editar`}>
-                            <Edit className="w-4 h-4 mr-2" /> Editar
-                          </Link>
-                        </Button>
-                      )}
-                      <Button variant="ghost" size="sm" asChild>
-                        <Link to={`/empresa/${c.id}/360`}>
-                          <Eye className="w-4 h-4 mr-2" /> 360º
+                      <Button variant="outline" size="sm" asChild>
+                        <Link to={`/empresa/${c.id}/editar`}>
+                          <FolderOpen className="w-4 h-4 mr-2" /> Abrir Ficha
                         </Link>
                       </Button>
                     </div>

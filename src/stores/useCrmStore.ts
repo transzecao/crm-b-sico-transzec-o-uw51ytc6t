@@ -34,6 +34,9 @@ export type Company = {
   descricaoNegocio?: string
   siteProspectado?: string
   sitePesquisado?: string
+  pipeline?: string
+  origin?: string
+  customData?: Record<string, any>
 }
 
 export type Contact = {
@@ -49,11 +52,29 @@ export type Contact = {
   }[]
 }
 
+export type Interaction = {
+  id: string
+  companyId: string
+  type: 'email' | 'whatsapp' | 'phone' | 'note'
+  content: string
+  date: string
+  author: string
+}
+
+export type CustomFieldDef = {
+  id: string
+  name: string
+  type: 'text' | 'select' | 'number'
+  options?: string[]
+}
+
 type CrmState = {
   role: Role
   companies: Company[]
   leads: Lead[]
   contacts: Contact[]
+  interactions: Interaction[]
+  customFieldDefs: CustomFieldDef[]
 }
 
 const mockCompanies: Company[] = [
@@ -66,6 +87,8 @@ const mockCompanies: Company[] = [
     endereco: 'Rua A, 123',
     descricaoNegocio: 'Indústria metalúrgica focada em peças pesadas.',
     siteProspectado: 'https://www.indpaulista.com.br',
+    pipeline: 'Pipeline de Prospecção',
+    origin: 'Comercial',
   },
   {
     id: '2',
@@ -76,24 +99,7 @@ const mockCompanies: Company[] = [
     endereco: 'Av. Autopeças, 456',
     descricaoNegocio: 'Distribuição de autopeças em grande escala.',
     sitePesquisado: 'https://br.linkedin.com/company/skautomotive',
-  },
-  {
-    id: '3',
-    cnpj: '30.689.437/0001-45',
-    razaoSocial: 'E F METALÚRGICA',
-    nomeFantasia: 'EF Met',
-    tipoCarga: 'Seca',
-    endereco: 'Rodovia Industrial, km 10',
-    descricaoNegocio: 'Usinagem e produção de moldes metálicos.',
-  },
-  {
-    id: '4',
-    cnpj: '45.123.456/0001-12',
-    razaoSocial: 'IMA USINAGEM',
-    nomeFantasia: 'IMA Usinagem',
-    tipoCarga: 'Seca',
-    endereco: 'Rua das Máquinas, 88',
-    descricaoNegocio: 'Serviços de precisão e usinagem CNC.',
+    pipeline: 'Pipeline de Nutrição',
   },
 ]
 
@@ -111,45 +117,6 @@ const mockLeads: Lead[] = [
     updatedAt: '23/02/2026 17:29:24',
     createdAt: '23 de fevereiro de 2026',
   },
-  {
-    id: '2',
-    companyId: '2',
-    title: 'Sk Automotive Distribuidora de Autopeças LTDA',
-    pipeline: 'Prospection',
-    stage: '1º contato sem resposta',
-    value: 0,
-    owner: 'NICOLY',
-    ownerAvatar: 'https://img.usecurling.com/ppl/thumbnail?gender=female&seed=2',
-    updatedBy: 'NICOLY',
-    updatedAt: '05/03/2026 15:59:05',
-    createdAt: '24 de fevereiro de 2026',
-  },
-  {
-    id: '3',
-    companyId: '3',
-    title: 'E F METALÚRGICA',
-    pipeline: 'Prospection',
-    stage: 'Qualificação',
-    value: 0,
-    owner: 'NICOLY',
-    ownerAvatar: 'https://img.usecurling.com/ppl/thumbnail?gender=female&seed=2',
-    updatedBy: 'NICOLY',
-    updatedAt: '17/03/2026 16:10:08',
-    createdAt: '16 de março de 2026',
-  },
-  {
-    id: '4',
-    companyId: '4',
-    title: 'IMA USINAGEM',
-    pipeline: 'Prospection',
-    stage: 'Negociação',
-    value: 15000,
-    owner: 'NICOLY',
-    ownerAvatar: 'https://img.usecurling.com/ppl/thumbnail?gender=female&seed=2',
-    updatedBy: 'NICOLY',
-    updatedAt: '18/03/2026 10:00:00',
-    createdAt: '18 de março de 2026',
-  },
 ]
 
 const mockContacts: Contact[] = [
@@ -165,11 +132,41 @@ const mockContacts: Contact[] = [
   },
 ]
 
+const mockInteractions: Interaction[] = [
+  {
+    id: 'int1',
+    companyId: '1',
+    type: 'whatsapp',
+    content: 'Mensagem enviada com proposta inicial para o diretor comercial. Aguardando feedback.',
+    date: '20/03/2026 10:30',
+    author: 'Bruna Araujo',
+  },
+  {
+    id: 'int2',
+    companyId: '1',
+    type: 'email',
+    content: 'E-mail enviado contendo a apresentação institucional da Transzecão.',
+    date: '19/03/2026 14:15',
+    author: 'Bruna Araujo',
+  },
+]
+
+const mockCustomFieldDefs: CustomFieldDef[] = [
+  {
+    id: 'cf1',
+    name: 'Segmento de Mercado',
+    type: 'select',
+    options: ['Varejo', 'Indústria', 'Serviços', 'Agro', 'Outro'],
+  },
+]
+
 let globalState: CrmState = {
   role: 'Master',
   companies: mockCompanies,
   leads: mockLeads,
   contacts: mockContacts,
+  interactions: mockInteractions,
+  customFieldDefs: mockCustomFieldDefs,
 }
 
 const listeners = new Set<(state: CrmState) => void>()
