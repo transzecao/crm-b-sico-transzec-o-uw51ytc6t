@@ -26,12 +26,14 @@ export type Company = {
   nomeFantasia: string
   tipoCarga: string
   endereco: string
+  descricaoNegocio?: string
 }
 
 export type Contact = {
   id: string
   companyId: string
   name: string
+  isPrincipal?: boolean
   methods: {
     id: string
     type: 'email' | 'whatsapp' | 'phone'
@@ -55,6 +57,8 @@ const mockCompanies: Company[] = [
     nomeFantasia: 'Alpha Log',
     tipoCarga: 'Seca',
     endereco: 'Rua A, 123',
+    descricaoNegocio:
+      'Especializada em transporte rodoviário de cargas secas fracionadas para o interior paulista. Possui frota própria de 50 caminhões.',
   },
   {
     id: '2',
@@ -63,6 +67,7 @@ const mockCompanies: Company[] = [
     nomeFantasia: 'TransBeta',
     tipoCarga: 'Refrigerada',
     endereco: 'Av B, 456',
+    descricaoNegocio: '',
   },
 ]
 
@@ -98,10 +103,19 @@ const mockContacts: Contact[] = [
     id: '1',
     companyId: '1',
     name: 'João Silva',
+    isPrincipal: true,
     methods: [
       { id: 'm1', type: 'email', value: 'joao@alpha.com', isPrincipal: true },
-      { id: 'm2', type: 'whatsapp', value: '11999999999', isPrincipal: false },
+      { id: 'm2', type: 'whatsapp', value: '11999999999', isPrincipal: true },
+      { id: 'm3', type: 'phone', value: '1133334444', isPrincipal: false },
     ],
+  },
+  {
+    id: '2',
+    companyId: '1',
+    name: 'Maria Souza',
+    isPrincipal: false,
+    methods: [{ id: 'm4', type: 'email', value: 'maria@alpha.com', isPrincipal: true }],
   },
 ]
 

@@ -6,6 +6,7 @@ import { TooltipProvider } from '@/components/ui/tooltip'
 import Layout from './components/Layout'
 import Index from './pages/Index'
 import Empresas from './pages/Empresas'
+import EmpresaForm from './pages/EmpresaForm'
 import Contatos from './pages/Contatos'
 import Pipeline1 from './pages/Pipeline1'
 import Pipeline2 from './pages/Pipeline2'
@@ -23,6 +24,8 @@ const App = () => (
         <Route element={<Layout />}>
           <Route path="/" element={<Index />} />
           <Route path="/empresas" element={<Empresas />} />
+          <Route path="/empresa/nova" element={<EmpresaForm />} />
+          <Route path="/empresa/:id/editar" element={<EmpresaForm />} />
           <Route path="/contatos" element={<Contatos />} />
           <Route path="/pipeline/1" element={<Pipeline1 />} />
           <Route path="/pipeline/2" element={<Pipeline2 />} />
