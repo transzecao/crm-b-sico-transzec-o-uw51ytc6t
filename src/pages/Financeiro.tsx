@@ -12,18 +12,6 @@ import { Calculator, Download, Package, Truck, AlertCircle } from 'lucide-react'
 export default function Financeiro() {
   const { state } = useCrmStore()
 
-  if (!['Master', 'Financeiro'].includes(state.role)) {
-    return (
-      <div className="flex flex-col items-center justify-center h-64 text-center space-y-4">
-        <AlertCircle className="w-12 h-12 text-destructive" />
-        <div>
-          <h2 className="text-2xl font-bold text-slate-800">Acesso Restrito</h2>
-          <p className="text-muted-foreground">Apenas perfis Financeiro ou Master podem acessar.</p>
-        </div>
-      </div>
-    )
-  }
-
   const [s, setS] = useState({
     dist: 0,
     weight: 0,
@@ -39,6 +27,18 @@ export default function Financeiro() {
     agendamento: false,
     canhoto: false,
   })
+
+  if (!['Master', 'Financeiro'].includes(state.role)) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 text-center space-y-4">
+        <AlertCircle className="w-12 h-12 text-destructive" />
+        <div>
+          <h2 className="text-2xl font-bold text-slate-800">Acesso Restrito</h2>
+          <p className="text-muted-foreground">Apenas perfis Financeiro ou Master podem acessar.</p>
+        </div>
+      </div>
+    )
+  }
 
   const update = (k: keyof typeof s, v: any) => setS((p) => ({ ...prev(p), [k]: v }))
   const prev = (p: typeof s) => p
