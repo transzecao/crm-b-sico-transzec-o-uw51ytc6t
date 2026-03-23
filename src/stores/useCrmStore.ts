@@ -16,6 +16,11 @@ export type Lead = {
   pipeline: 'Prospection' | 'Nutrition'
   stage: string
   value: number
+  owner: string
+  ownerAvatar?: string
+  updatedBy: string
+  updatedAt: string
+  createdAt: string
   lastInteraction?: string
 }
 
@@ -52,22 +57,39 @@ type CrmState = {
 const mockCompanies: Company[] = [
   {
     id: '1',
-    cnpj: '12.345.678/0001-90',
-    razaoSocial: 'Logistica Alpha LTDA',
-    nomeFantasia: 'Alpha Log',
+    cnpj: '08.237.002/0042-89',
+    razaoSocial: 'INDUSTRIAL PAULISTA DE METALURGIA LTDA',
+    nomeFantasia: 'Ind. Paulista',
     tipoCarga: 'Seca',
     endereco: 'Rua A, 123',
-    descricaoNegocio:
-      'Especializada em transporte rodoviário de cargas secas fracionadas para o interior paulista. Possui frota própria de 50 caminhões.',
+    descricaoNegocio: 'Indústria metalúrgica focada em peças pesadas.',
   },
   {
     id: '2',
-    cnpj: '98.765.432/0001-10',
-    razaoSocial: 'Transportes Beta S.A.',
-    nomeFantasia: 'TransBeta',
-    tipoCarga: 'Refrigerada',
-    endereco: 'Av B, 456',
-    descricaoNegocio: '',
+    cnpj: '12.345.678/0001-90',
+    razaoSocial: 'Sk Automotive Distribuidora de Autopeças LTDA',
+    nomeFantasia: 'Sk Auto',
+    tipoCarga: 'Seca',
+    endereco: 'Av. Autopeças, 456',
+    descricaoNegocio: 'Distribuição de autopeças em grande escala.',
+  },
+  {
+    id: '3',
+    cnpj: '30.689.437/0001-45',
+    razaoSocial: 'E F METALÚRGICA',
+    nomeFantasia: 'EF Met',
+    tipoCarga: 'Seca',
+    endereco: 'Rodovia Industrial, km 10',
+    descricaoNegocio: 'Usinagem e produção de moldes metálicos.',
+  },
+  {
+    id: '4',
+    cnpj: '45.123.456/0001-12',
+    razaoSocial: 'IMA USINAGEM',
+    nomeFantasia: 'IMA Usinagem',
+    tipoCarga: 'Seca',
+    endereco: 'Rua das Máquinas, 88',
+    descricaoNegocio: 'Serviços de precisão e usinagem CNC.',
   },
 ]
 
@@ -75,26 +97,54 @@ const mockLeads: Lead[] = [
   {
     id: '1',
     companyId: '1',
-    title: 'Negociação Alpha',
+    title: 'INDUSTRIAL PAULISTA DE METALURGIA LTDA',
     pipeline: 'Prospection',
-    stage: 'Negociação',
-    value: 15000,
+    stage: 'Primeiro contato',
+    value: 0,
+    owner: 'Bruna Araujo',
+    ownerAvatar: 'https://img.usecurling.com/ppl/thumbnail?gender=female&seed=1',
+    updatedBy: 'Bruna Araujo',
+    updatedAt: '23/02/2026 17:29:24',
+    createdAt: '23 de fevereiro de 2026',
   },
   {
     id: '2',
     companyId: '2',
-    title: 'Contato Inicial Beta',
+    title: 'Sk Automotive Distribuidora de Autopeças LTDA',
     pipeline: 'Prospection',
-    stage: 'Primeiro contato',
-    value: 5000,
+    stage: '1º contato sem resposta',
+    value: 0,
+    owner: 'NICOLY',
+    ownerAvatar: 'https://img.usecurling.com/ppl/thumbnail?gender=female&seed=2',
+    updatedBy: 'NICOLY',
+    updatedAt: '05/03/2026 15:59:05',
+    createdAt: '24 de fevereiro de 2026',
   },
   {
     id: '3',
-    companyId: '1',
-    title: 'Retomada Alpha',
-    pipeline: 'Nutrition',
-    stage: 'Mercado',
+    companyId: '3',
+    title: 'E F METALÚRGICA',
+    pipeline: 'Prospection',
+    stage: 'Qualificação',
     value: 0,
+    owner: 'NICOLY',
+    ownerAvatar: 'https://img.usecurling.com/ppl/thumbnail?gender=female&seed=2',
+    updatedBy: 'NICOLY',
+    updatedAt: '17/03/2026 16:10:08',
+    createdAt: '16 de março de 2026',
+  },
+  {
+    id: '4',
+    companyId: '4',
+    title: 'IMA USINAGEM',
+    pipeline: 'Prospection',
+    stage: 'Negociação',
+    value: 15000,
+    owner: 'NICOLY',
+    ownerAvatar: 'https://img.usecurling.com/ppl/thumbnail?gender=female&seed=2',
+    updatedBy: 'NICOLY',
+    updatedAt: '18/03/2026 10:00:00',
+    createdAt: '18 de março de 2026',
   },
 ]
 
@@ -107,15 +157,7 @@ const mockContacts: Contact[] = [
     methods: [
       { id: 'm1', type: 'email', value: 'joao@alpha.com', isPrincipal: true },
       { id: 'm2', type: 'whatsapp', value: '11999999999', isPrincipal: true },
-      { id: 'm3', type: 'phone', value: '1133334444', isPrincipal: false },
     ],
-  },
-  {
-    id: '2',
-    companyId: '1',
-    name: 'Maria Souza',
-    isPrincipal: false,
-    methods: [{ id: 'm4', type: 'email', value: 'maria@alpha.com', isPrincipal: true }],
   },
 ]
 
