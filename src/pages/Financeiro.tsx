@@ -1,13 +1,12 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Button } from '@/components/ui/button'
-import { Separator } from '@/components/ui/separator'
 import { Badge } from '@/components/ui/badge'
 import {
-  Train,
+  Truck,
   Calculator,
   Plus,
   Trash2,
@@ -29,7 +28,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 
-type ItemType = 'fixed' | 'pct'
+type ItemType = 'fixed' | 'pct' | 'pct_frete'
 type CfgItem = {
   id: string
   name: string
@@ -39,23 +38,29 @@ type CfgItem = {
 }
 
 const defaultGen: CfgItem[] = [
-  { id: 'g1', name: 'Manobra especial', type: 'fixed', val: 850, active: true },
-  { id: 'g2', name: 'Permanência em pátio', type: 'fixed', val: 1200, active: false },
-  { id: 'g3', name: 'Espera de composição', type: 'fixed', val: 500, active: true },
-  { id: 'g4', name: 'Necessidade de operação noturna', type: 'fixed', val: 300, active: false },
-  { id: 'g5', name: 'Transbordo', type: 'fixed', val: 2000, active: false },
-  { id: 'g6', name: 'Armazenagem temporária', type: 'fixed', val: 1500, active: false },
-  { id: 'g7', name: 'Reprogramação', type: 'fixed', val: 400, active: false },
-  { id: 'g8', name: 'Remarcação de janela operacional', type: 'fixed', val: 600, active: false },
+  { id: 'g1', name: 'GRIS', type: 'pct', val: 0.3, active: true },
+  { id: 'g2', name: 'Taxa de Despacho', type: 'fixed', val: 66.08, active: true },
+  { id: 'g3', name: 'EMEX', type: 'fixed', val: 150.0, active: false },
+  { id: 'g4', name: 'TDA/TFD', type: 'fixed', val: 100.0, active: false },
+  { id: 'g5', name: 'TRF', type: 'fixed', val: 80.0, active: false },
+  { id: 'g6', name: 'Seguro Fluvial', type: 'pct', val: 0.2, active: false },
+  { id: 'g7', name: 'SUFRAMA', type: 'fixed', val: 50.0, active: false },
+]
+
+const defaultSrv: CfgItem[] = [
+  { id: 's1', name: 'Paletização', type: 'fixed', val: 45.0, active: false },
+  { id: 's2', name: 'Agendamento', type: 'fixed', val: 120.0, active: false },
+  { id: 's3', name: 'Devolução de Recebimento', type: 'fixed', val: 80.0, active: false },
+  { id: 's4', name: 'Reentrega', type: 'pct_frete', val: 50.0, active: false },
 ]
 
 export default function Financeiro() {
   const [cfg, setCfg] = useState({
     info: {
-      name: 'Tabela Padrão Ferroviária',
-      modal: 'Transporte Ferroviário',
+      name: 'Tabela Padrão Rodoviária',
+      modal: 'Transporte Rodoviário',
       company: 'Transzecão LTDA',
-      version: '1.2.0',
+      version: '2.0.0',
       responsible: 'Admin Financeiro',
       updated: new Date().toISOString(),
     },
@@ -65,39 +70,29 @@ export default function Financeiro() {
       srvActive: true,
     },
     params: {
-      baseTariff: 1200.0,
-      valTon: 150.0,
-      valKm: 12.5,
+      baseTariff: 150.0,
+      valTon: 85.0,
+      valKm: 4.5,
       freteValorPct: 0.5,
-      grisPct: 0.3,
-      despacho: 66.08,
-      correcao: 1.05,
+      correcao: 1.0,
       marginPct: 15.0,
       taxPct: 14.25,
     },
     sim: {
-      weight: 50000,
-      volume: 120,
-      dist: 1200,
-      value: 500000,
-      origin: 'Campinas, SP',
-      destination: 'Rondonópolis, MT',
-      operationType: 'Ponto a Ponto',
-      cargoType: 'Granel Sólido',
-      sla: 'Padrão (15 dias)',
-      frequency: 'Semanal',
+      weight: 12500,
+      volume: 45,
+      dist: 850,
+      value: 150000,
+      origin: 'São Paulo, SP',
+      destination: 'Goiânia, AM',
+      operationType: 'Carga Fracionada (LTL)',
+      cargoType: 'Eletrônicos',
+      sla: 'Expresso (5 dias)',
+      frequency: 'Diário',
       condition: 'Normal',
     },
     gen: defaultGen,
-    srv: [
-      {
-        id: 's1',
-        name: 'Seguro Adicional de Carga',
-        type: 'pct',
-        val: 1.5,
-        active: true,
-      } as CfgItem,
-    ],
+    srv: defaultSrv,
   })
 
   const [lastSaved, setLastSaved] = useState(cfg.info.updated)
@@ -154,23 +149,19 @@ export default function Financeiro() {
     let baseFreight = 0
     let cBase = 0
     let freteValor = 0
-    let gris = 0
-    let despacho = 0
 
     if (modules.paramsActive) {
       baseFreight = params.baseTariff + sim.dist * params.valKm + wTon * params.valTon
       cBase = baseFreight * params.correcao
       freteValor = sim.value * (params.freteValorPct / 100)
-      gris = sim.value * (params.grisPct / 100)
-      despacho = params.despacho
     }
-
-    const baseForPct = cBase > 0 ? cBase : sim.value
 
     const calcItem = (i: CfgItem, activeMod: boolean) => {
       if (!i.active || !activeMod) return 0
       if (i.type === 'fixed') return i.val
-      return baseForPct * (i.val / 100)
+      if (i.type === 'pct') return sim.value * (i.val / 100)
+      if (i.type === 'pct_frete') return cBase > 0 ? cBase * (i.val / 100) : 0
+      return 0
     }
 
     const genVals = gen
@@ -183,7 +174,7 @@ export default function Financeiro() {
     const subGen = genVals.reduce((a, b) => a + b.total, 0)
     const subSrv = srvVals.reduce((a, b) => a + b.total, 0)
 
-    const sub1 = (modules.paramsActive ? cBase + freteValor + gris + despacho : 0) + subGen + subSrv
+    const sub1 = (modules.paramsActive ? cBase + freteValor : 0) + subGen + subSrv
     const margin = modules.paramsActive ? sub1 * (params.marginPct / 100) : 0
     const sub2 = sub1 + margin
     const tax = modules.paramsActive ? sub2 * (params.taxPct / 100) : 0
@@ -193,8 +184,6 @@ export default function Financeiro() {
       baseFreight,
       cBase,
       freteValor,
-      gris,
-      despacho,
       genVals,
       srvVals,
       subGen,
@@ -267,35 +256,27 @@ export default function Financeiro() {
               onChange={(e) => handleItem(list, 'upd', i.id, 'name', e.target.value)}
               disabled={!cfg.modules[activeKey]}
             />
-            {showAdd && (
-              <Select
-                value={i.type}
-                onValueChange={(v) => handleItem(list, 'upd', i.id, 'type', v)}
-                disabled={!cfg.modules[activeKey]}
-              >
-                <SelectTrigger className={cn('w-[160px]', editHighlight)}>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="fixed">Valor Fixo (R$)</SelectItem>
-                  <SelectItem value="pct">Percentual (%)</SelectItem>
-                </SelectContent>
-              </Select>
-            )}
-            {!showAdd && (
-              <Badge
-                variant="outline"
-                className="w-[160px] justify-center text-slate-500 bg-slate-50 font-normal"
-              >
-                Valor Fixo (R$)
-              </Badge>
-            )}
+            <Select
+              value={i.type}
+              onValueChange={(v) => handleItem(list, 'upd', i.id, 'type', v)}
+              disabled={!cfg.modules[activeKey]}
+            >
+              <SelectTrigger className={cn('w-[180px]', editHighlight)}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="fixed">Valor Fixo (R$)</SelectItem>
+                <SelectItem value="pct">% sobre NF</SelectItem>
+                <SelectItem value="pct_frete">% sobre Frete Base</SelectItem>
+              </SelectContent>
+            </Select>
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
                 {i.type === 'fixed' ? 'R$' : '%'}
               </span>
               <Input
                 type="number"
+                step={i.type === 'fixed' ? '1' : '0.01'}
                 className={cn('w-32 pl-8', editHighlight)}
                 value={i.val}
                 onChange={(e) => handleItem(list, 'upd', i.id, 'val', Number(e.target.value))}
@@ -329,7 +310,7 @@ export default function Financeiro() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-xl border shadow-sm">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-slate-800 flex items-center gap-3">
-            <Train className="w-8 h-8 text-primary" /> Planilha de Precificação Ferroviária
+            <Truck className="w-8 h-8 text-primary" /> Planilha de Precificação Rodoviária
           </h1>
           <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mt-3 text-sm text-slate-600">
             <span className="flex items-center gap-1.5 font-medium text-slate-800">
@@ -399,7 +380,7 @@ export default function Financeiro() {
                 <Route className="w-5 h-5 text-primary" /> Variáveis de Simulação (Inputs)
               </CardTitle>
               <CardDescription>
-                Dados operacionais da rota e carga para o cálculo do frete.
+                Dados operacionais da rota e carga para o cálculo do frete rodoviário LTL.
               </CardDescription>
             </CardHeader>
             <CardContent className="pt-6">
@@ -434,7 +415,7 @@ export default function Financeiro() {
                 </div>
                 <div className="space-y-2">
                   <Label className="text-xs font-semibold uppercase text-slate-500">
-                    Peso (KG)
+                    Peso Bruto (KG)
                   </Label>
                   <Input
                     type="number"
@@ -456,7 +437,7 @@ export default function Financeiro() {
                 </div>
                 <div className="space-y-2">
                   <Label className="text-xs font-semibold uppercase text-slate-500">
-                    Valor da Carga (R$)
+                    Valor da Mercadoria (R$)
                   </Label>
                   <Input
                     type="number"
@@ -520,7 +501,12 @@ export default function Financeiro() {
             <CardHeader className="flex flex-row items-center justify-between pb-4 border-b bg-slate-50/50">
               <div className="flex items-center gap-2">
                 <Settings2 className="w-5 h-5 text-primary" />
-                <CardTitle className="text-lg">Parâmetros Principais de Custo</CardTitle>
+                <div>
+                  <CardTitle className="text-lg">Parâmetros Principais de Custo</CardTitle>
+                  <CardDescription className="text-xs mt-1">
+                    Taxas base que compõem o frete peso e frete valor.
+                  </CardDescription>
+                </div>
               </div>
               <div className="flex items-center gap-2">
                 <Label className="text-sm font-medium">Módulo Base</Label>
@@ -532,18 +518,21 @@ export default function Financeiro() {
             </CardHeader>
             <CardContent className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 pt-6">
               {[
-                { l: 'Tarifa base por faixa (R$)', k: 'baseTariff' },
+                { l: 'Tarifa Base por Faixa (R$)', k: 'baseTariff' },
                 { l: 'Valor por Tonelada (R$)', k: 'valTon' },
-                { l: 'Valor por KM Ferroviário (R$)', k: 'valKm' },
-                { l: 'Frete Valor (%)', k: 'freteValorPct' },
-                { l: 'GRIS Ferroviário (%)', k: 'grisPct' },
-                { l: 'Taxa de Despacho (R$)', k: 'despacho' },
+                { l: 'Valor por KM (R$)', k: 'valKm' },
+                { l: 'Frete Valor / Ad Valorem (%)', k: 'freteValorPct' },
                 { l: 'Fator de Correção', k: 'correcao' },
                 { l: 'Margem Comercial (%)', k: 'marginPct' },
                 { l: 'Tributos (%)', k: 'taxPct' },
               ].map((f) => (
                 <div key={f.k} className="space-y-2">
-                  <Label className="text-xs font-semibold uppercase text-slate-500">{f.l}</Label>
+                  <Label
+                    className="text-[11px] font-semibold uppercase text-slate-500 block truncate"
+                    title={f.l}
+                  >
+                    {f.l}
+                  </Label>
                   <Input
                     type="number"
                     step="0.01"
@@ -559,10 +548,10 @@ export default function Financeiro() {
 
           {renderList(
             'gen',
-            'Generalidades Ferroviárias',
+            'Generalidades Rodoviárias',
             <ListTodo className="w-5 h-5 text-primary" />,
             'genActive',
-            false,
+            true, // Allow adding custom generalities as requested
           )}
           {renderList(
             'srv',
@@ -589,7 +578,7 @@ export default function Financeiro() {
                 <div>
                   <div className="text-xs font-bold text-slate-400 uppercase mb-2 flex items-center gap-2">
                     <div className="h-px bg-slate-200 flex-1" />
-                    Frete Base e Taxas
+                    Frete Base (Peso e Valor)
                     <div className="h-px bg-slate-200 flex-1" />
                   </div>
                   {!cfg.modules.paramsActive && (
@@ -611,14 +600,6 @@ export default function Financeiro() {
                         <span>Frete Valor ({cfg.params.freteValorPct}%)</span>
                         <span>{fmt(mem.freteValor)}</span>
                       </div>
-                      <div className="flex justify-between">
-                        <span>GRIS ({cfg.params.grisPct}%)</span>
-                        <span>{fmt(mem.gris)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Despacho</span>
-                        <span>{fmt(mem.despacho)}</span>
-                      </div>
                     </div>
                   )}
                 </div>
@@ -627,7 +608,7 @@ export default function Financeiro() {
                 <div>
                   <div className="text-xs font-bold text-slate-400 uppercase mb-2 flex items-center gap-2 mt-4">
                     <div className="h-px bg-slate-200 flex-1" />
-                    Generalidades
+                    Generalidades e Taxas
                     <div className="h-px bg-slate-200 flex-1" />
                   </div>
                   {!cfg.modules.genActive && (
@@ -647,12 +628,14 @@ export default function Financeiro() {
                           key={g.id}
                           className="flex justify-between pl-2 border-l-2 border-primary/30"
                         >
-                          <span className="truncate pr-2">{g.name}</span>
+                          <span className="truncate pr-2">
+                            {g.name} {g.type.startsWith('pct') && `(${g.val}%)`}
+                          </span>
                           <span>{fmt(g.total)}</span>
                         </div>
                       ))}
                       <div className="flex justify-between font-medium text-slate-800 pt-1 border-t border-dashed mt-2">
-                        <span>Subtotal Gen.</span>
+                        <span>Subtotal Generalidades</span>
                         <span>{fmt(mem.subGen)}</span>
                       </div>
                     </div>
@@ -684,13 +667,13 @@ export default function Financeiro() {
                           className="flex justify-between pl-2 border-l-2 border-primary/30"
                         >
                           <span className="truncate pr-2">
-                            {s.name} {s.type === 'pct' && `(${s.val}%)`}
+                            {s.name} {s.type.startsWith('pct') && `(${s.val}%)`}
                           </span>
                           <span>{fmt(s.total)}</span>
                         </div>
                       ))}
                       <div className="flex justify-between font-medium text-slate-800 pt-1 border-t border-dashed mt-2">
-                        <span>Subtotal Serv.</span>
+                        <span>Subtotal Serviços</span>
                         <span>{fmt(mem.subSrv)}</span>
                       </div>
                     </div>
@@ -731,7 +714,7 @@ export default function Financeiro() {
                     <span className="text-sm font-bold text-slate-600 block uppercase tracking-wider">
                       Preço Final Sugerido
                     </span>
-                    <span className="text-xs text-slate-500">Valor para negociação</span>
+                    <span className="text-xs text-slate-500">Valor para negociação (LTL)</span>
                   </div>
                   <span className="text-3xl font-black text-primary tracking-tight">
                     {fmt(mem.total)}
