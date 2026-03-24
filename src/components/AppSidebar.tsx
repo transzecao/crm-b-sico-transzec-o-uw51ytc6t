@@ -20,6 +20,7 @@ import {
   SidebarHeader,
 } from '@/components/ui/sidebar'
 import useCrmStore from '@/stores/useCrmStore'
+import { cn } from '@/lib/utils'
 
 export function AppSidebar() {
   const location = useLocation()
@@ -67,6 +68,20 @@ export function AppSidebar() {
 
   const visibleItems = items.filter((item) => item.roles.includes(state.role))
 
+  const getThemeClasses = (url: string) => {
+    if (url.startsWith('/financeiro'))
+      return 'data-[active=true]:bg-emerald-100 data-[active=true]:text-emerald-800 hover:bg-emerald-50 hover:text-emerald-700'
+    if (url.startsWith('/contatos'))
+      return 'data-[active=true]:bg-orange-100 data-[active=true]:text-orange-800 hover:bg-orange-50 hover:text-orange-700'
+    if (url.startsWith('/pipeline'))
+      return 'data-[active=true]:bg-purple-100 data-[active=true]:text-purple-800 hover:bg-purple-50 hover:text-purple-700'
+    if (url.startsWith('/empresas'))
+      return 'data-[active=true]:bg-blue-100 data-[active=true]:text-blue-800 hover:bg-blue-50 hover:text-blue-700'
+    if (url.startsWith('/analytics'))
+      return 'data-[active=true]:bg-teal-100 data-[active=true]:text-teal-800 hover:bg-teal-50 hover:text-teal-700'
+    return 'data-[active=true]:bg-indigo-100 data-[active=true]:text-indigo-800 hover:bg-indigo-50 hover:text-indigo-700'
+  }
+
   return (
     <Sidebar>
       <SidebarHeader className="p-4">
@@ -82,7 +97,11 @@ export function AppSidebar() {
             <SidebarMenu>
               {visibleItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={location.pathname === item.url}>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={location.pathname === item.url}
+                    className={cn('transition-colors', getThemeClasses(item.url))}
+                  >
                     <Link to={item.url}>
                       <item.icon className="w-4 h-4" />
                       <span>{item.title}</span>

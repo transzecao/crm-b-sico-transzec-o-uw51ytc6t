@@ -81,18 +81,24 @@ export function ContatoModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>{contact ? 'Editar Contato' : 'Novo Contato'}</DialogTitle>
+          <DialogTitle className="text-orange-950">
+            {contact ? 'Editar Contato' : 'Novo Contato'}
+          </DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Nome</Label>
-              <Input value={name} onChange={(e) => setName(e.target.value)} />
+              <Label className="text-orange-900">Nome</Label>
+              <Input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="focus-visible:ring-orange-500"
+              />
             </div>
             <div className="space-y-2">
-              <Label>Empresa</Label>
+              <Label className="text-orange-900">Empresa</Label>
               <Select value={companyId} onValueChange={setCompanyId}>
-                <SelectTrigger>
+                <SelectTrigger className="focus:ring-orange-500">
                   <SelectValue placeholder="Selecione..." />
                 </SelectTrigger>
                 <SelectContent>
@@ -106,10 +112,16 @@ export function ContatoModal({
             </div>
           </div>
 
-          <div className="space-y-4 border rounded-md p-4 bg-muted/30">
+          <div className="space-y-4 border border-orange-100 rounded-md p-4 bg-orange-50/30">
             <div className="flex justify-between items-center">
-              <Label>Informações de Contato</Label>
-              <Button type="button" variant="outline" size="sm" onClick={addMethod}>
+              <Label className="text-orange-900">Informações de Contato</Label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={addMethod}
+                className="text-orange-700 border-orange-200 hover:bg-orange-50 hover:text-orange-800"
+              >
                 <Plus className="w-4 h-4 mr-2" /> Adicionar Meio
               </Button>
             </div>
@@ -123,13 +135,13 @@ export function ContatoModal({
                   onClick={() => togglePrincipal(m.id)}
                   className={cn(
                     'shrink-0',
-                    m.isPrincipal ? 'text-warning' : 'text-muted-foreground',
+                    m.isPrincipal ? 'text-orange-500' : 'text-slate-300 hover:text-orange-300',
                   )}
                 >
                   <Star className="w-4 h-4" fill={m.isPrincipal ? 'currentColor' : 'none'} />
                 </Button>
                 <Select value={m.type} onValueChange={(v) => updateMethod(m.id, 'type', v)}>
-                  <SelectTrigger className="w-[130px]">
+                  <SelectTrigger className="w-[130px] focus:ring-orange-500">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -139,7 +151,7 @@ export function ContatoModal({
                   </SelectContent>
                 </Select>
                 <Input
-                  className="flex-1"
+                  className="flex-1 focus-visible:ring-orange-500"
                   value={m.value}
                   onChange={(e) => updateMethod(m.id, 'value', e.target.value)}
                   placeholder={`Digite o ${m.type}...`}
@@ -149,7 +161,7 @@ export function ContatoModal({
                   variant="ghost"
                   size="icon"
                   onClick={() => removeMethod(m.id)}
-                  className="text-destructive shrink-0"
+                  className="text-destructive shrink-0 hover:bg-red-50 hover:text-red-600"
                 >
                   <Trash className="w-4 h-4" />
                 </Button>
@@ -161,7 +173,9 @@ export function ContatoModal({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancelar
           </Button>
-          <Button onClick={handleSave}>Salvar</Button>
+          <Button className="bg-orange-600 hover:bg-orange-700 text-white" onClick={handleSave}>
+            Salvar
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

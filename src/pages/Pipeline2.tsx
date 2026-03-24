@@ -16,15 +16,24 @@ export default function Pipeline2() {
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Pipeline de Nutrição</h1>
-        <p className="text-muted-foreground">
+    <div className="flex flex-col h-[calc(100vh-2rem)] relative overflow-hidden bg-purple-50/20 rounded-lg border border-purple-100 shadow-sm">
+      <div className="absolute inset-0 bg-gradient-to-b from-purple-100/60 to-slate-100/90 z-0" />
+
+      <div className="relative z-10 p-6 pb-2 border-b border-purple-200/50 bg-white/40 backdrop-blur-sm">
+        <h1 className="text-3xl font-bold tracking-tight text-purple-950">Pipeline de Nutrição</h1>
+        <p className="text-purple-800/70 mt-1">
           Reaquecimento de leads parados ou perdidos por timing.
         </p>
       </div>
 
-      <KanbanBoard columns={COLUMNS} leads={nutritionLeads} onMove={handleMove} />
+      <div className="relative z-10 flex-1 p-6 overflow-hidden">
+        <KanbanBoard
+          columns={COLUMNS}
+          leads={nutritionLeads}
+          companies={state.companies}
+          onMove={handleMove}
+        />
+      </div>
     </div>
   )
 }

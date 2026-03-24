@@ -235,8 +235,9 @@ export default function Financeiro() {
 
   const fmt = (v: number) =>
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
-  const inputClass = 'bg-slate-50 border-slate-200 focus-visible:ring-primary transition-colors'
-  const editHighlight = 'border-blue-200 bg-blue-50/30 focus-visible:ring-blue-500'
+  const inputClass =
+    'bg-white border-emerald-100 focus-visible:ring-emerald-500 transition-colors shadow-sm'
+  const editHighlight = 'border-emerald-200 bg-emerald-50/30 focus-visible:ring-emerald-500'
 
   const renderList = (
     list: 'gen' | 'srv',
@@ -244,17 +245,26 @@ export default function Financeiro() {
     icon: React.ReactNode,
     activeKey: keyof typeof cfg.modules,
     showAdd: boolean,
+    headerBg: string,
   ) => (
-    <Card className={cn('shadow-sm transition-opacity', !cfg.modules[activeKey] && 'opacity-75')}>
-      <CardHeader className="flex flex-row items-center justify-between pb-4 border-b bg-slate-50/50">
-        <div className="flex items-center gap-2">
+    <Card
+      className={cn(
+        'shadow-sm border-emerald-100 transition-opacity',
+        !cfg.modules[activeKey] && 'opacity-75',
+      )}
+    >
+      <CardHeader
+        className={cn('flex flex-row items-center justify-between pb-4 border-b', headerBg)}
+      >
+        <div className="flex items-center gap-2 text-emerald-900">
           {icon}
           <CardTitle className="text-lg">{title}</CardTitle>
         </div>
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
-            <Label className="text-sm font-medium">Módulo</Label>
+            <Label className="text-sm font-medium text-emerald-800">Módulo</Label>
             <Switch
+              className="data-[state=checked]:bg-emerald-600"
               checked={cfg.modules[activeKey]}
               onCheckedChange={(c) => updateModule(activeKey, c)}
             />
@@ -263,6 +273,7 @@ export default function Financeiro() {
             <Button
               variant="outline"
               size="sm"
+              className="border-emerald-200 text-emerald-700 hover:bg-emerald-100 hover:text-emerald-800"
               onClick={() => handleItem(list, 'add')}
               disabled={!cfg.modules[activeKey]}
             >
@@ -278,11 +289,12 @@ export default function Financeiro() {
             className={cn(
               'flex flex-wrap md:flex-nowrap items-center gap-3 p-3 rounded-lg border transition-all',
               i.active && cfg.modules[activeKey]
-                ? 'bg-white border-slate-200 shadow-sm'
-                : 'bg-slate-50/50 border-dashed opacity-70',
+                ? 'bg-white border-emerald-100 shadow-sm'
+                : 'bg-emerald-50/20 border-dashed border-emerald-200 opacity-70',
             )}
           >
             <Switch
+              className="data-[state=checked]:bg-emerald-600"
               checked={i.active}
               onCheckedChange={(c) => handleItem(list, 'upd', i.id, 'active', c)}
               disabled={!cfg.modules[activeKey]}
@@ -324,7 +336,7 @@ export default function Financeiro() {
               <Button
                 variant="ghost"
                 size="icon"
-                className="text-destructive hover:bg-destructive/10"
+                className="text-red-500 hover:bg-red-50 hover:text-red-600"
                 onClick={() => handleItem(list, 'del', i.id)}
                 disabled={!cfg.modules[activeKey]}
               >
@@ -334,7 +346,7 @@ export default function Financeiro() {
           </div>
         ))}
         {cfg[list].length === 0 && (
-          <div className="text-center py-6 text-muted-foreground text-sm border-2 border-dashed rounded-lg">
+          <div className="text-center py-6 text-emerald-600/60 text-sm border-2 border-dashed border-emerald-100 rounded-lg">
             Nenhum item configurado.
           </div>
         )}
@@ -343,41 +355,45 @@ export default function Financeiro() {
   )
 
   return (
-    <div className="space-y-6 pb-12 max-w-[1600px] mx-auto">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-xl border shadow-sm">
+    <div className="space-y-6 pb-12 max-w-[1600px] mx-auto bg-emerald-50/10 min-h-full">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-xl border border-emerald-100 shadow-sm">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-800 flex items-center gap-3">
-            <Truck className="w-8 h-8 text-primary" /> Planilha de Precificação Rodoviária
+          <h1 className="text-3xl font-bold tracking-tight text-emerald-950 flex items-center gap-3">
+            <Truck className="w-8 h-8 text-emerald-600" /> Planilha de Precificação Rodoviária
           </h1>
           <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mt-3 text-sm text-slate-600">
-            <span className="flex items-center gap-1.5 font-medium text-slate-800">
-              <History className="w-4 h-4 text-primary" /> Atualizado:{' '}
+            <span className="flex items-center gap-1.5 font-medium text-emerald-800">
+              <History className="w-4 h-4 text-emerald-600" /> Atualizado:{' '}
               {new Date(lastSaved).toLocaleString('pt-BR')}
             </span>
-            <span className="flex items-center gap-1.5 bg-slate-100 px-2 py-1 rounded-md">
-              <strong className="text-slate-500">Empresa:</strong> {cfg.info.company}
+            <span className="flex items-center gap-1.5 bg-emerald-50 text-emerald-800 px-2 py-1 rounded-md border border-emerald-100">
+              <strong className="text-emerald-700">Empresa:</strong> {cfg.info.company}
             </span>
-            <span className="flex items-center gap-1.5 bg-slate-100 px-2 py-1 rounded-md">
-              <strong className="text-slate-500">Modal:</strong> {cfg.info.modal}
+            <span className="flex items-center gap-1.5 bg-emerald-50 text-emerald-800 px-2 py-1 rounded-md border border-emerald-100">
+              <strong className="text-emerald-700">Modal:</strong> {cfg.info.modal}
             </span>
           </div>
         </div>
-        <Button onClick={handleSave} size="lg" className="gap-2 shadow-md">
+        <Button
+          onClick={handleSave}
+          size="lg"
+          className="gap-2 shadow-md bg-emerald-600 hover:bg-emerald-700 text-white"
+        >
           <Save className="w-5 h-5" /> Salvar Versão Atual
         </Button>
       </div>
 
       <div className="grid lg:grid-cols-12 gap-6 items-start">
         <div className="lg:col-span-8 space-y-6">
-          <Card className="shadow-sm border-t-4 border-t-primary/60">
-            <CardHeader className="pb-4 border-b bg-slate-50/50">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <FileSpreadsheet className="w-5 h-5 text-primary" /> Informações da Planilha
+          <Card className="shadow-sm border-t-4 border-t-emerald-500 border-emerald-100">
+            <CardHeader className="pb-4 border-b bg-emerald-50/20">
+              <CardTitle className="text-lg flex items-center gap-2 text-emerald-900">
+                <FileSpreadsheet className="w-5 h-5 text-emerald-600" /> Informações da Planilha
               </CardTitle>
             </CardHeader>
             <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6">
               <div className="space-y-2">
-                <Label className="text-xs font-semibold uppercase text-slate-500">
+                <Label className="text-xs font-semibold uppercase text-emerald-700">
                   Nome da Tabela
                 </Label>
                 <Input
@@ -387,7 +403,7 @@ export default function Financeiro() {
                 />
               </div>
               <div className="space-y-2">
-                <Label className="text-xs font-semibold uppercase text-slate-500">
+                <Label className="text-xs font-semibold uppercase text-emerald-700">
                   Versão da Planilha
                 </Label>
                 <Input
@@ -397,7 +413,7 @@ export default function Financeiro() {
                 />
               </div>
               <div className="space-y-2">
-                <Label className="text-xs font-semibold uppercase text-slate-500">
+                <Label className="text-xs font-semibold uppercase text-emerald-700">
                   Responsável pela Alteração
                 </Label>
                 <Input
@@ -409,19 +425,19 @@ export default function Financeiro() {
             </CardContent>
           </Card>
 
-          <Card className="shadow-sm">
-            <CardHeader className="pb-4 border-b bg-slate-50/50">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Route className="w-5 h-5 text-primary" /> Variáveis de Simulação (Inputs)
+          <Card className="shadow-sm border-emerald-100">
+            <CardHeader className="pb-4 border-b bg-emerald-50/40">
+              <CardTitle className="text-lg flex items-center gap-2 text-emerald-900">
+                <Route className="w-5 h-5 text-emerald-600" /> Variáveis de Simulação (Inputs)
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-emerald-700/70">
                 Dados operacionais da rota e carga para o cálculo do frete rodoviário LTL.
               </CardDescription>
             </CardHeader>
             <CardContent className="pt-6">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-x-6 gap-y-5">
                 <div className="space-y-2 md:col-span-2">
-                  <Label className="text-xs font-semibold uppercase text-slate-500">Origem</Label>
+                  <Label className="text-xs font-semibold uppercase text-emerald-700">Origem</Label>
                   <Input
                     value={cfg.sim.origin}
                     onChange={(e) => updateSim('origin', e.target.value)}
@@ -429,7 +445,9 @@ export default function Financeiro() {
                   />
                 </div>
                 <div className="space-y-2 md:col-span-2">
-                  <Label className="text-xs font-semibold uppercase text-slate-500">Destino</Label>
+                  <Label className="text-xs font-semibold uppercase text-emerald-700">
+                    Destino
+                  </Label>
                   <Input
                     value={cfg.sim.destination}
                     onChange={(e) => updateSim('destination', e.target.value)}
@@ -438,7 +456,7 @@ export default function Financeiro() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-xs font-semibold uppercase text-slate-500">
+                  <Label className="text-xs font-semibold uppercase text-emerald-700">
                     Distância (KM)
                   </Label>
                   <Input
@@ -449,7 +467,7 @@ export default function Financeiro() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-xs font-semibold uppercase text-slate-500">
+                  <Label className="text-xs font-semibold uppercase text-emerald-700">
                     Peso Bruto (KG)
                   </Label>
                   <Input
@@ -460,7 +478,7 @@ export default function Financeiro() {
                   />
                 </div>
                 <div className="space-y-2 md:col-span-2">
-                  <Label className="text-xs font-semibold uppercase text-slate-500">
+                  <Label className="text-xs font-semibold uppercase text-emerald-700">
                     Valor da Mercadoria (R$)
                   </Label>
                   <Input
@@ -471,20 +489,21 @@ export default function Financeiro() {
                   />
                 </div>
 
-                <div className="space-y-2 md:col-span-2 border border-slate-200 bg-slate-50/50 rounded-lg p-4">
+                <div className="space-y-2 md:col-span-2 border border-emerald-200 bg-emerald-50/30 rounded-lg p-4">
                   <div className="flex items-center justify-between mb-4">
-                    <Label className="text-xs font-semibold uppercase text-slate-700">
+                    <Label className="text-xs font-semibold uppercase text-emerald-800">
                       Volume (m³)
                     </Label>
-                    <div className="flex items-center gap-2 bg-white px-2 py-1 rounded shadow-sm border">
+                    <div className="flex items-center gap-2 bg-white px-2 py-1 rounded shadow-sm border border-emerald-100">
                       <Switch
                         id="calc-vol"
+                        className="data-[state=checked]:bg-emerald-600"
                         checked={cfg.sim.calcVolume}
                         onCheckedChange={toggleCalcVolume}
                       />
                       <Label
                         htmlFor="calc-vol"
-                        className="text-[10px] uppercase font-bold text-slate-500 cursor-pointer"
+                        className="text-[10px] uppercase font-bold text-emerald-700 cursor-pointer"
                       >
                         Por Dimensões
                       </Label>
@@ -494,7 +513,7 @@ export default function Financeiro() {
                   {cfg.sim.calcVolume ? (
                     <div className="grid grid-cols-3 gap-3">
                       <div className="space-y-1">
-                        <Label className="text-[10px] font-semibold text-slate-500">
+                        <Label className="text-[10px] font-semibold text-emerald-600">
                           Altura (m)
                         </Label>
                         <Input
@@ -506,7 +525,7 @@ export default function Financeiro() {
                         />
                       </div>
                       <div className="space-y-1">
-                        <Label className="text-[10px] font-semibold text-slate-500">
+                        <Label className="text-[10px] font-semibold text-emerald-600">
                           Largura (m)
                         </Label>
                         <Input
@@ -518,7 +537,7 @@ export default function Financeiro() {
                         />
                       </div>
                       <div className="space-y-1">
-                        <Label className="text-[10px] font-semibold text-slate-500">
+                        <Label className="text-[10px] font-semibold text-emerald-600">
                           Espessura (m)
                         </Label>
                         <Input
@@ -530,9 +549,9 @@ export default function Financeiro() {
                         />
                       </div>
                       <div className="col-span-3 pt-2">
-                        <div className="flex justify-between items-center text-sm px-3 py-2 bg-primary/10 rounded border border-primary/20 text-primary-foreground font-medium">
-                          <span className="text-primary font-bold">Total M³:</span>
-                          <span className="text-primary font-bold">
+                        <div className="flex justify-between items-center text-sm px-3 py-2 bg-emerald-100/60 rounded border border-emerald-200 text-emerald-800 font-medium">
+                          <span className="font-bold">Total M³:</span>
+                          <span className="font-bold">
                             {cfg.sim.volume.toLocaleString('pt-BR', { maximumFractionDigits: 4 })}{' '}
                             m³
                           </span>
@@ -548,7 +567,7 @@ export default function Financeiro() {
                         onChange={(e) => updateSim('volume', Number(e.target.value))}
                         className={inputClass}
                       />
-                      <div className="text-[10px] text-slate-400 mt-1">
+                      <div className="text-[10px] text-emerald-600/70 mt-1">
                         Insira o volume manualmente ou ative o cálculo por dimensões.
                       </div>
                     </div>
@@ -558,7 +577,7 @@ export default function Financeiro() {
                 <div className="space-y-2 md:col-span-2">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-full">
                     <div className="space-y-2">
-                      <Label className="text-xs font-semibold uppercase text-slate-500">
+                      <Label className="text-xs font-semibold uppercase text-emerald-700">
                         Tipo de Carga
                       </Label>
                       <Input
@@ -568,7 +587,7 @@ export default function Financeiro() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-xs font-semibold uppercase text-slate-500">
+                      <Label className="text-xs font-semibold uppercase text-emerald-700">
                         Tipo de Operação
                       </Label>
                       <Input
@@ -578,7 +597,7 @@ export default function Financeiro() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-xs font-semibold uppercase text-slate-500">
+                      <Label className="text-xs font-semibold uppercase text-emerald-700">
                         Frequência
                       </Label>
                       <Input
@@ -588,7 +607,7 @@ export default function Financeiro() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-xs font-semibold uppercase text-slate-500">
+                      <Label className="text-xs font-semibold uppercase text-emerald-700">
                         SLA / Prazo
                       </Label>
                       <Input
@@ -605,23 +624,24 @@ export default function Financeiro() {
 
           <Card
             className={cn(
-              'shadow-sm transition-opacity',
+              'shadow-sm border-emerald-100 transition-opacity',
               !cfg.modules.paramsActive && 'opacity-75',
             )}
           >
-            <CardHeader className="flex flex-row items-center justify-between pb-4 border-b bg-slate-50/50">
-              <div className="flex items-center gap-2">
-                <Settings2 className="w-5 h-5 text-primary" />
+            <CardHeader className="flex flex-row items-center justify-between pb-4 border-b bg-emerald-50/60">
+              <div className="flex items-center gap-2 text-emerald-900">
+                <Settings2 className="w-5 h-5 text-emerald-600" />
                 <div>
                   <CardTitle className="text-lg">Parâmetros Principais de Custo</CardTitle>
-                  <CardDescription className="text-xs mt-1">
+                  <CardDescription className="text-xs mt-1 text-emerald-700/70">
                     Taxas base que compõem o frete peso e frete valor.
                   </CardDescription>
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <Label className="text-sm font-medium">Módulo Base</Label>
+                <Label className="text-sm font-medium text-emerald-800">Módulo Base</Label>
                 <Switch
+                  className="data-[state=checked]:bg-emerald-600"
                   checked={cfg.modules.paramsActive}
                   onCheckedChange={(c) => updateModule('paramsActive', c)}
                 />
@@ -640,7 +660,7 @@ export default function Financeiro() {
               ].map((f) => (
                 <div key={f.k} className="space-y-2">
                   <Label
-                    className="text-[11px] font-semibold uppercase text-slate-500 block truncate"
+                    className="text-[11px] font-semibold uppercase text-emerald-700 block truncate"
                     title={f.l}
                   >
                     {f.l}
@@ -661,36 +681,40 @@ export default function Financeiro() {
           {renderList(
             'gen',
             'Generalidades Rodoviárias',
-            <ListTodo className="w-5 h-5 text-primary" />,
+            <ListTodo className="w-5 h-5 text-emerald-600" />,
             'genActive',
             true,
+            'bg-emerald-50/80',
           )}
           {renderList(
             'srv',
             'Serviços Adicionais',
-            <Blocks className="w-5 h-5 text-primary" />,
+            <Blocks className="w-5 h-5 text-emerald-600" />,
             'srvActive',
             true,
+            'bg-emerald-100/50',
           )}
         </div>
 
         <div className="lg:col-span-4 lg:sticky lg:top-6 space-y-6">
-          <Card className="border-primary/20 shadow-xl bg-white overflow-hidden">
-            <div className="bg-slate-800 text-white p-4 flex items-center gap-3">
-              <Calculator className="w-6 h-6 text-primary" />
+          <Card className="border-emerald-200 shadow-xl bg-white overflow-hidden">
+            <div className="bg-emerald-950 text-white p-4 flex items-center gap-3">
+              <Calculator className="w-6 h-6 text-emerald-400" />
               <div>
-                <h3 className="font-bold text-lg leading-tight">Memória de Cálculo</h3>
-                <p className="text-slate-300 text-xs">Simulação em tempo real</p>
+                <h3 className="font-bold text-lg leading-tight text-emerald-50">
+                  Memória de Cálculo
+                </h3>
+                <p className="text-emerald-200/80 text-xs">Simulação em tempo real</p>
               </div>
             </div>
 
             <CardContent className="p-0">
               <div className="max-h-[calc(100vh-200px)] overflow-y-auto p-5 space-y-4 text-sm font-mono tracking-tight">
                 <div>
-                  <div className="text-xs font-bold text-slate-400 uppercase mb-2 flex items-center gap-2">
-                    <div className="h-px bg-slate-200 flex-1" />
+                  <div className="text-xs font-bold text-emerald-700/60 uppercase mb-2 flex items-center gap-2">
+                    <div className="h-px bg-emerald-100 flex-1" />
                     Frete Base (Peso e Valor)
-                    <div className="h-px bg-slate-200 flex-1" />
+                    <div className="h-px bg-emerald-100 flex-1" />
                   </div>
                   {!cfg.modules.paramsActive && (
                     <div className="text-center text-slate-400 italic py-2 text-xs">
@@ -720,7 +744,7 @@ export default function Financeiro() {
                           {mem.cubedWeight.toLocaleString('pt-BR', { maximumFractionDigits: 2 })} kg
                         </span>
                       </div>
-                      <div className="flex justify-between text-xs font-semibold text-slate-700 bg-slate-100/50 p-1 rounded">
+                      <div className="flex justify-between text-xs font-semibold text-emerald-800 bg-emerald-50 p-1 rounded">
                         <span>Peso Taxável</span>
                         <span>
                           {mem.taxableWeight.toLocaleString('pt-BR', { maximumFractionDigits: 2 })}{' '}
@@ -728,17 +752,17 @@ export default function Financeiro() {
                         </span>
                       </div>
 
-                      <div className="h-px bg-slate-100 my-2" />
+                      <div className="h-px bg-emerald-50 my-2" />
 
-                      <div className="flex justify-between">
+                      <div className="flex justify-between text-slate-700">
                         <span>Frete Peso Bruto</span>
                         <span>{fmt(mem.baseFreight)}</span>
                       </div>
-                      <div className="flex justify-between text-slate-900 font-semibold bg-slate-50 p-1 rounded">
+                      <div className="flex justify-between text-emerald-900 font-semibold bg-emerald-100/40 p-1 rounded border border-emerald-100/50">
                         <span>Frete Corrigido (x{cfg.params.correcao})</span>
                         <span>{fmt(mem.cBase)}</span>
                       </div>
-                      <div className="flex justify-between">
+                      <div className="flex justify-between text-slate-700">
                         <span>Frete Valor ({cfg.params.freteValorPct}%)</span>
                         <span>{fmt(mem.freteValor)}</span>
                       </div>
@@ -747,10 +771,10 @@ export default function Financeiro() {
                 </div>
 
                 <div>
-                  <div className="text-xs font-bold text-slate-400 uppercase mb-2 flex items-center gap-2 mt-4">
-                    <div className="h-px bg-slate-200 flex-1" />
+                  <div className="text-xs font-bold text-emerald-700/60 uppercase mb-2 flex items-center gap-2 mt-4">
+                    <div className="h-px bg-emerald-100 flex-1" />
                     Generalidades e Taxas
-                    <div className="h-px bg-slate-200 flex-1" />
+                    <div className="h-px bg-emerald-100 flex-1" />
                   </div>
                   {!cfg.modules.genActive && (
                     <div className="text-center text-slate-400 italic py-2 text-xs">
@@ -767,7 +791,7 @@ export default function Financeiro() {
                       {mem.genVals.map((g) => (
                         <div
                           key={g.id}
-                          className="flex justify-between pl-2 border-l-2 border-primary/30"
+                          className="flex justify-between pl-2 border-l-2 border-emerald-300"
                         >
                           <span className="truncate pr-2">
                             {g.name} {g.type.startsWith('pct') && `(${g.val}%)`}
@@ -775,7 +799,7 @@ export default function Financeiro() {
                           <span>{fmt(g.total)}</span>
                         </div>
                       ))}
-                      <div className="flex justify-between font-medium text-slate-800 pt-1 border-t border-dashed mt-2">
+                      <div className="flex justify-between font-medium text-emerald-900 pt-1 border-t border-dashed border-emerald-200 mt-2">
                         <span>Subtotal Generalidades</span>
                         <span>{fmt(mem.subGen)}</span>
                       </div>
@@ -784,10 +808,10 @@ export default function Financeiro() {
                 </div>
 
                 <div>
-                  <div className="text-xs font-bold text-slate-400 uppercase mb-2 flex items-center gap-2 mt-4">
-                    <div className="h-px bg-slate-200 flex-1" />
+                  <div className="text-xs font-bold text-emerald-700/60 uppercase mb-2 flex items-center gap-2 mt-4">
+                    <div className="h-px bg-emerald-100 flex-1" />
                     Serviços Adicionais
-                    <div className="h-px bg-slate-200 flex-1" />
+                    <div className="h-px bg-emerald-100 flex-1" />
                   </div>
                   {!cfg.modules.srvActive && (
                     <div className="text-center text-slate-400 italic py-2 text-xs">
@@ -804,7 +828,7 @@ export default function Financeiro() {
                       {mem.srvVals.map((s) => (
                         <div
                           key={s.id}
-                          className="flex justify-between pl-2 border-l-2 border-primary/30"
+                          className="flex justify-between pl-2 border-l-2 border-emerald-300"
                         >
                           <span className="truncate pr-2">
                             {s.name} {s.type.startsWith('pct') && `(${s.val}%)`}
@@ -812,7 +836,7 @@ export default function Financeiro() {
                           <span>{fmt(s.total)}</span>
                         </div>
                       ))}
-                      <div className="flex justify-between font-medium text-slate-800 pt-1 border-t border-dashed mt-2">
+                      <div className="flex justify-between font-medium text-emerald-900 pt-1 border-t border-dashed border-emerald-200 mt-2">
                         <span>Subtotal Serviços</span>
                         <span>{fmt(mem.subSrv)}</span>
                       </div>
@@ -820,24 +844,24 @@ export default function Financeiro() {
                   )}
                 </div>
 
-                <div className="pt-4 mt-6 border-t-2 border-slate-800">
+                <div className="pt-4 mt-6 border-t-2 border-emerald-900">
                   <div className="space-y-2">
-                    <div className="flex justify-between font-bold text-slate-800">
+                    <div className="flex justify-between font-bold text-emerald-950">
                       <span>Subtotal Operacional</span>
                       <span>{fmt(mem.sub1)}</span>
                     </div>
 
                     {cfg.modules.paramsActive && (
                       <>
-                        <div className="flex justify-between text-slate-600 pl-4 border-l-2 border-slate-200">
+                        <div className="flex justify-between text-slate-600 pl-4 border-l-2 border-emerald-100">
                           <span>Margem Comercial ({cfg.params.marginPct}%)</span>
                           <span>{fmt(mem.margin)}</span>
                         </div>
-                        <div className="flex justify-between font-bold text-slate-800">
+                        <div className="flex justify-between font-bold text-emerald-950">
                           <span>Subtotal com Margem</span>
                           <span>{fmt(mem.sub2)}</span>
                         </div>
-                        <div className="flex justify-between text-slate-600 pl-4 border-l-2 border-slate-200">
+                        <div className="flex justify-between text-slate-600 pl-4 border-l-2 border-emerald-100">
                           <span>Tributos Estimados ({cfg.params.taxPct}%)</span>
                           <span>{fmt(mem.tax)}</span>
                         </div>
@@ -847,15 +871,15 @@ export default function Financeiro() {
                 </div>
               </div>
 
-              <div className="bg-primary/10 p-5 border-t border-primary/20">
+              <div className="bg-emerald-50 p-5 border-t border-emerald-200">
                 <div className="flex justify-between items-end font-sans">
                   <div className="space-y-1">
-                    <span className="text-sm font-bold text-slate-600 block uppercase tracking-wider">
+                    <span className="text-sm font-bold text-emerald-800 block uppercase tracking-wider">
                       Preço Final Sugerido
                     </span>
-                    <span className="text-xs text-slate-500">Valor para negociação (LTL)</span>
+                    <span className="text-xs text-emerald-600">Valor para negociação (LTL)</span>
                   </div>
-                  <span className="text-3xl font-black text-primary tracking-tight">
+                  <span className="text-3xl font-black text-emerald-700 tracking-tight">
                     {fmt(mem.total)}
                   </span>
                 </div>
