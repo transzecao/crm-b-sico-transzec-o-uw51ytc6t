@@ -83,6 +83,16 @@ export type PipelineRule = {
   inactivityDaysToNutrition: number
 }
 
+export type UserLogin = {
+  id: string
+  name: string
+  sector: string
+  accessLink: string
+  status: 'Ativo' | 'Inativo'
+  createdAt: string
+  updatedAt: string
+}
+
 type CrmState = {
   role: Role
   currentUser: { name: string; avatar: string }
@@ -93,7 +103,9 @@ type CrmState = {
   interactions: Interaction[]
   customFieldDefs: CustomFieldDef[]
   pipelineRules: PipelineRule
+  userLogins: UserLogin[]
   accessLogs: { date: string; user: string; role: string; module: string }[]
+  loginAuditLogs: { date: string; user: string; action: string }[]
 }
 
 const mockCompanies: Company[] = [
@@ -186,7 +198,6 @@ const mockContacts: Contact[] = [
   },
 ]
 
-// Note: No 'já tenho parceiro' string in the mock initially, to demonstrate the AI trigger later.
 const mockInteractions: Interaction[] = [
   {
     id: 'int1',
@@ -212,6 +223,36 @@ const mockInteractions: Interaction[] = [
   },
 ]
 
+const mockLogins: UserLogin[] = [
+  {
+    id: 'l1',
+    name: 'Carlos Oliveira',
+    sector: 'Coleta',
+    accessLink: 'https://transzecao.com.br/login/carlos-oliveira-coleta',
+    status: 'Ativo',
+    createdAt: new Date(Date.now() - 86400000).toLocaleString('pt-BR'),
+    updatedAt: new Date(Date.now() - 86400000).toLocaleString('pt-BR'),
+  },
+  {
+    id: 'l2',
+    name: 'Bruna Araujo',
+    sector: 'Comercial',
+    accessLink: 'https://transzecao.com.br/login/bruna-araujo-comercial',
+    status: 'Ativo',
+    createdAt: new Date(Date.now() - 172800000).toLocaleString('pt-BR'),
+    updatedAt: new Date().toLocaleString('pt-BR'),
+  },
+  {
+    id: 'l3',
+    name: 'Mariana Costa',
+    sector: 'Financeiro',
+    accessLink: 'https://transzecao.com.br/login/mariana-costa-financeiro',
+    status: 'Inativo',
+    createdAt: new Date(Date.now() - 259200000).toLocaleString('pt-BR'),
+    updatedAt: new Date().toLocaleString('pt-BR'),
+  },
+]
+
 let globalState: CrmState = {
   role: 'Master',
   currentUser: {
@@ -228,8 +269,16 @@ let globalState: CrmState = {
     negotiationMaxDays: 21,
     inactivityDaysToNutrition: 1,
   },
+  userLogins: mockLogins,
   accessLogs: [
     { date: new Date().toISOString(), user: 'Bruna Araujo', role: 'Master', module: 'Login' },
+  ],
+  loginAuditLogs: [
+    {
+      date: new Date().toLocaleString('pt-BR'),
+      user: 'Sistema',
+      action: 'Geração inicial de links de acesso',
+    },
   ],
 }
 

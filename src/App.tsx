@@ -13,6 +13,7 @@ import Pipeline2 from './pages/Pipeline2'
 import Company360 from './pages/Company360'
 import Financeiro from './pages/Financeiro'
 import Analytics from './pages/Analytics'
+import LoginAdmin from './pages/LoginAdmin'
 import NotFound from './pages/NotFound'
 import IA from './pages/IA'
 
@@ -33,6 +34,7 @@ const App = () => (
           <Route path="/empresa/:id/360" element={<Company360 />} />
           <Route path="/financeiro" element={<Financeiro />} />
           <Route path="/analytics" element={<Analytics />} />
+          <Route path="/admin/logins" element={<LoginAdmin />} />
           <Route path="/ia" element={<IA />} />
         </Route>
         <Route path="*" element={<NotFound />} />

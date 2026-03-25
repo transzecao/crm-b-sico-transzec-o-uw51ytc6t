@@ -51,7 +51,6 @@ export function BrainAnalysis({ interactions }: { interactions: Interaction[] })
 
   const [analysis, setAnalysis] = useState(defaultAnalysis)
 
-  // AI Logic for processing interactions and finding specific triggers
   useEffect(() => {
     if (interactions.length === 0) return
 
@@ -98,14 +97,12 @@ export function BrainAnalysis({ interactions }: { interactions: Interaction[] })
           copy: strictCopy,
         })
 
-        // Auto-log the AI finding if not already logged for this lead
         const alreadyLogged = interactions.some(
           (i) =>
             i.author === 'The Brain (IA)' && i.subject === '⚡ Diagnóstico de Objeção Automático',
         )
 
         if (!alreadyLogged) {
-          // Timeout prevents state updates during render phase
           setTimeout(() => {
             const newInteraction: Interaction = {
               id: Math.random().toString(36).substring(7),
@@ -114,7 +111,7 @@ export function BrainAnalysis({ interactions }: { interactions: Interaction[] })
               author: 'The Brain (IA)',
               date: new Date().toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }),
               subject: '⚡ Diagnóstico de Objeção Automático',
-              content: `Objeção Identificada: "Já tenho parceiro"\n\nEstratégia Sugerida:\nAplicar framework de Validação de Parceiro + Teste Leve + Coleta de Dados.\n\nSmart Copy gerada e disponível no painel The Brain.`,
+              content: `Objeção Identificada: "Já tenho parceiro"\n\nEstratégia Sugerida:\nAplicar framework de Validação de Parceiro + Teste Leve + Coleta de Dados.\n\nSmart Copy gerada e disponível no painel The Brain:\n${strictCopy}`,
             }
             updateState({ interactions: [...state.interactions, newInteraction] })
             toast({
@@ -127,7 +124,7 @@ export function BrainAnalysis({ interactions }: { interactions: Interaction[] })
         setAnalysis(defaultAnalysis)
       }
       setLoading(false)
-    }, 1200) // Simulating AI processing time
+    }, 1200)
 
     return () => clearTimeout(timer)
   }, [interactions])

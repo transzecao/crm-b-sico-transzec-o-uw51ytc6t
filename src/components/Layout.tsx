@@ -1,4 +1,4 @@
-import { Outlet, useLocation } from 'react-router-dom'
+import { Outlet, useLocation, Link } from 'react-router-dom'
 import { SidebarProvider } from '@/components/ui/sidebar'
 import { AppSidebar } from './AppSidebar'
 import { AppHeader } from './AppHeader'
@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Shield } from 'lucide-react'
+import { Shield, Settings } from 'lucide-react'
 
 export default function Layout() {
   const location = useLocation()
@@ -35,20 +35,28 @@ export default function Layout() {
                 Simulador de Perfil (Governança):
               </span>
             </div>
-            <Select value={state.role} onValueChange={(val: any) => updateState({ role: val })}>
-              <SelectTrigger className="w-[180px] h-8 text-xs bg-slate-50 border-slate-200 focus:ring-indigo-500">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Master">Master (Acesso Total)</SelectItem>
-                <SelectItem value="Supervisor">Supervisor</SelectItem>
-                <SelectItem value="Comercial">Comercial</SelectItem>
-                <SelectItem value="Financeiro">Financeiro</SelectItem>
-                <SelectItem value="Coleta">Coleta</SelectItem>
-                <SelectItem value="Marketing">Marketing</SelectItem>
-                <SelectItem value="Diretoria">Diretoria (Apenas Leitura)</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="flex items-center gap-4">
+              <Link
+                to="/admin/logins"
+                className="text-xs font-semibold bg-indigo-50 text-indigo-700 px-3 py-1.5 rounded-md hover:bg-indigo-100 transition-colors flex items-center gap-1.5 border border-indigo-200/50 shadow-sm"
+              >
+                <Settings className="w-3.5 h-3.5" /> Administrar Logins
+              </Link>
+              <Select value={state.role} onValueChange={(val: any) => updateState({ role: val })}>
+                <SelectTrigger className="w-[180px] h-8 text-xs bg-slate-50 border-slate-200 focus:ring-indigo-500">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Master">Master (Acesso Total)</SelectItem>
+                  <SelectItem value="Supervisor">Supervisor</SelectItem>
+                  <SelectItem value="Comercial">Comercial</SelectItem>
+                  <SelectItem value="Financeiro">Financeiro</SelectItem>
+                  <SelectItem value="Coleta">Coleta</SelectItem>
+                  <SelectItem value="Marketing">Marketing</SelectItem>
+                  <SelectItem value="Diretoria">Diretoria (Apenas Leitura)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           <main className="flex-1 p-3 md:p-6 overflow-auto">
