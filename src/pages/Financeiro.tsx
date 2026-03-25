@@ -10,13 +10,13 @@ import {
   Plus,
   Trash2,
   Save,
-  FileSpreadsheet,
   History,
   Settings2,
   ListTodo,
   Blocks,
   Route,
   MapPin,
+  RefreshCw,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
@@ -41,13 +41,14 @@ type Cluster = {
   id: string
   name: string
   avgKm: number
+  active: boolean
 }
 
 const defaultClusters: Cluster[] = [
-  { id: 'c1', name: 'Campinas e Região', avgKm: 50 },
-  { id: 'c2', name: 'Grande SP', avgKm: 120 },
-  { id: 'c3', name: 'Vale do Paraíba', avgKm: 180 },
-  { id: 'c4', name: 'Sul de Minas', avgKm: 350 },
+  { id: 'c1', name: 'Campinas e Região', avgKm: 50, active: true },
+  { id: 'c2', name: 'Grande SP', avgKm: 120, active: true },
+  { id: 'c3', name: 'Vale do Paraíba', avgKm: 180, active: true },
+  { id: 'c4', name: 'Sul de Minas', avgKm: 350, active: false },
 ]
 
 const defaultGen: CfgItem[] = [
@@ -81,6 +82,7 @@ export default function Financeiro() {
       paramsActive: true,
       genActive: true,
       srvActive: true,
+      syncEnabled: false,
     },
     params: {
       baseTariff: 150.0,
@@ -121,8 +123,14 @@ export default function Financeiro() {
 
   const updateInfo = (k: keyof typeof cfg.info, v: string) =>
     setCfg((p) => ({ ...p, info: { ...p.info, [k]: v } }))
-  const updateModule = (k: keyof typeof cfg.modules, v: boolean) =>
+  const updateModule = (k: keyof typeof cfg.modules, v: boolean) => {
     setCfg((p) => ({ ...p, modules: { ...p.modules, [k]: v } }))
+    if (k === 'syncEnabled' && v) {
+      toast.success('Sincronização Automática Ativada', {
+        description: 'Buscando atualizações externas...',
+      })
+    }
+  }
   const updateParam = (k: keyof typeof cfg.params, v: string) =>
     setCfg((p) => ({ ...p, params: { ...p.params, [k]: Number(v) } }))
   const updateSim = (k: keyof typeof cfg.sim, v: string | number | boolean) =>
@@ -138,6 +146,13 @@ export default function Financeiro() {
     } else {
       updateSim('clusterId', '')
     }
+  }
+
+  const toggleClusterActive = (id: string, active: boolean) => {
+    setCfg((p) => ({
+      ...p,
+      clusters: p.clusters.map((c) => (c.id === id ? { ...c, active } : c)),
+    }))
   }
 
   const updateSimDim = (k: keyof typeof cfg.sim.dim, v: number) => {
@@ -398,6 +413,17 @@ export default function Financeiro() {
             <span className="flex items-center gap-1.5 bg-emerald-50/80 text-emerald-800 px-2 py-1 rounded-md border border-emerald-100/50">
               <strong className="text-emerald-700">Empresa:</strong> {cfg.info.company}
             </span>
+            <div className="flex items-center gap-2 border-l border-emerald-200 pl-6">
+              <Label className="text-xs font-semibold text-emerald-800 uppercase">Auto Sync</Label>
+              <Switch
+                className="data-[state=checked]:bg-emerald-600"
+                checked={cfg.modules.syncEnabled}
+                onCheckedChange={(c) => updateModule('syncEnabled', c)}
+              />
+              {cfg.modules.syncEnabled && (
+                <RefreshCw className="w-3.5 h-3.5 text-emerald-600 animate-spin" />
+              )}
+            </div>
           </div>
         </div>
         <Button
@@ -431,11 +457,13 @@ export default function Financeiro() {
                       <SelectItem value="none" className="text-muted-foreground italic">
                         Personalizado (Preenchimento Manual)
                       </SelectItem>
-                      {cfg.clusters.map((c) => (
-                        <SelectItem key={c.id} value={c.id}>
-                          {c.name} (Méd. {c.avgKm}km)
-                        </SelectItem>
-                      ))}
+                      {cfg.clusters
+                        .filter((c) => c.active)
+                        .map((c) => (
+                          <SelectItem key={c.id} value={c.id}>
+                            {c.name} (Méd. {c.avgKm}km)
+                          </SelectItem>
+                        ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -652,6 +680,37 @@ export default function Financeiro() {
                     onChange={(e) => updateParam(f.k as keyof typeof cfg.params, e.target.value)}
                     className={cn(editHighlight, 'bg-white/50')}
                     disabled={!cfg.modules.paramsActive}
+                  />
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
+          <Card className="shadow-sm border-emerald-100/50 bg-white/70 backdrop-blur-md">
+            <CardHeader className="pb-4 border-b border-emerald-100/50 bg-emerald-50/40">
+              <CardTitle className="text-lg flex items-center gap-2 text-emerald-900">
+                <MapPin className="w-5 h-5 text-emerald-600" /> Clusters de Destino (Gestão)
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+              {cfg.clusters.map((c) => (
+                <div
+                  key={c.id}
+                  className={cn(
+                    'flex items-center justify-between p-3 border rounded-lg',
+                    c.active
+                      ? 'bg-white border-emerald-200'
+                      : 'bg-emerald-50/30 border-dashed opacity-60',
+                  )}
+                >
+                  <div>
+                    <p className="font-semibold text-sm text-emerald-900">{c.name}</p>
+                    <p className="text-xs text-emerald-700">Méd: {c.avgKm} km</p>
+                  </div>
+                  <Switch
+                    checked={c.active}
+                    onCheckedChange={(v) => toggleClusterActive(c.id, v)}
+                    className="data-[state=checked]:bg-emerald-600"
                   />
                 </div>
               ))}

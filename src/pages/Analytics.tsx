@@ -50,6 +50,12 @@ const lossReasonsData = [
   { name: 'others', value: 5, fill: 'var(--color-others)' },
 ]
 
+const distData = [
+  { name: 'Ganhos', value: 35, fill: '#10b981' },
+  { name: 'Perdidos', value: 50, fill: '#ef4444' },
+  { name: 'Fora de FIT', value: 15, fill: '#94a3b8' },
+]
+
 const timePerStageData = [
   { stage: '1º Contato', days: 2 },
   { stage: 'Qualificação', days: 5 },
@@ -223,7 +229,7 @@ export default function Analytics() {
           </CardContent>
         </Card>
 
-        <Card className="col-span-1 lg:col-span-3 flex flex-col bg-white/80 border-slate-200 shadow-sm relative overflow-hidden backdrop-blur-sm">
+        <Card className="col-span-1 lg:col-span-2 flex flex-col bg-white/80 border-slate-200 shadow-sm relative overflow-hidden backdrop-blur-sm">
           <div className="absolute top-5 left-5 flex items-center gap-2 text-blue-900 bg-blue-50/80 px-3 py-1.5 rounded-md border border-blue-100 backdrop-blur-md shadow-sm z-10">
             <Clock className="w-5 h-5 text-blue-600" />
             <span className="font-bold text-sm tracking-wide">Tempo Médio por Etapa (Dias)</span>
@@ -261,6 +267,43 @@ export default function Analytics() {
                     dot={{ r: 4, fill: '#3b82f6' }}
                   />
                 </LineChart>
+              </ResponsiveContainer>
+            </ChartContainer>
+          </CardContent>
+        </Card>
+
+        <Card className="flex flex-col bg-white/80 border-slate-200 shadow-sm relative overflow-hidden backdrop-blur-sm">
+          <div className="absolute top-5 left-5 flex items-center gap-2 text-slate-800 bg-slate-100/80 px-3 py-1.5 rounded-md border border-slate-200 backdrop-blur-md shadow-sm z-10">
+            <Target className="w-5 h-5 text-slate-600" />
+            <span className="font-bold text-sm tracking-wide">Distribuição Ganhos/Perdas</span>
+          </div>
+          <CardHeader className="pt-20 pb-0 px-6 text-center">
+            <CardTitle className="sr-only">Distribuição</CardTitle>
+          </CardHeader>
+          <CardContent className="pt-6 pb-6 px-2 flex-1 min-h-[250px]">
+            <ChartContainer config={analyticsConfig} className="h-full w-full min-h-[200px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+                  <Pie
+                    data={distData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={40}
+                    outerRadius={70}
+                    paddingAngle={3}
+                    dataKey="value"
+                    nameKey="name"
+                  >
+                    {distData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.fill} />
+                    ))}
+                  </Pie>
+                  <ChartTooltip content={<ChartTooltipContent hideLabel />} />
+                  <ChartLegend
+                    content={<ChartLegendContent />}
+                    className="flex-wrap mt-6 gap-2 px-4"
+                  />
+                </PieChart>
               </ResponsiveContainer>
             </ChartContainer>
           </CardContent>

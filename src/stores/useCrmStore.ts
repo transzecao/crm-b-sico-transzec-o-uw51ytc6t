@@ -23,7 +23,7 @@ export type Lead = {
   createdAt: string
   lastInteraction?: string
   score?: 'Hot' | 'Warm' | 'Cold'
-  isStalled?: boolean // For negotiation warning
+  isStalled?: boolean
 }
 
 export type Company = {
@@ -75,6 +75,8 @@ export type CustomFieldDef = {
 
 type CrmState = {
   role: Role
+  currentUser: { name: string; avatar: string }
+  mandatoryFields: string[]
   companies: Company[]
   leads: Lead[]
   contacts: Contact[]
@@ -154,7 +156,7 @@ const mockLeads: Lead[] = [
     updatedAt: '01/03/2026 10:00:00',
     createdAt: '01 de março de 2026',
     score: 'Hot',
-    isStalled: true, // Em Negociação há muito tempo
+    isStalled: true,
   },
 ]
 
@@ -190,21 +192,18 @@ const mockInteractions: Interaction[] = [
   },
 ]
 
-const mockCustomFieldDefs: CustomFieldDef[] = [
-  {
-    id: 'cf1',
-    name: 'Concorrente Atual',
-    type: 'text',
-  },
-]
-
 let globalState: CrmState = {
   role: 'Master',
+  currentUser: {
+    name: 'Bruna Araujo',
+    avatar: 'https://img.usecurling.com/ppl/thumbnail?gender=female&seed=1',
+  },
+  mandatoryFields: ['nomeFantasia'],
   companies: mockCompanies,
   leads: mockLeads,
   contacts: mockContacts,
   interactions: mockInteractions,
-  customFieldDefs: mockCustomFieldDefs,
+  customFieldDefs: [{ id: 'cf1', name: 'Concorrente Atual', type: 'text' }],
 }
 
 const listeners = new Set<(state: CrmState) => void>()

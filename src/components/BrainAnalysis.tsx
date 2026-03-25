@@ -63,7 +63,7 @@ export function BrainAnalysis({ interactions }: { interactions: Interaction[] })
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-3">
             <h4 className="text-[11px] font-bold text-indigo-800 uppercase tracking-wider flex items-center gap-1.5">
-              <CheckCircle className="w-3.5 h-3.5 text-emerald-500" /> Objetivos Alcançados
+              <CheckCircle className="w-3.5 h-3.5 text-emerald-500" /> 1) Objetivos Alcançados
             </h4>
             <ul className="text-sm text-slate-600 list-disc pl-5 space-y-1 bg-emerald-50/30 p-2.5 rounded-md border border-emerald-100/50">
               <li>Apresentação institucional enviada e lida.</li>
@@ -73,7 +73,7 @@ export function BrainAnalysis({ interactions }: { interactions: Interaction[] })
 
           <div className="space-y-3">
             <h4 className="text-[11px] font-bold text-indigo-800 uppercase tracking-wider flex items-center gap-1.5">
-              <AlertTriangle className="w-3.5 h-3.5 text-rose-500" /> Pontos Críticos
+              <AlertTriangle className="w-3.5 h-3.5 text-rose-500" /> 3) Pontos Críticos
             </h4>
             <div className="text-sm text-slate-600 bg-rose-50/30 p-2.5 rounded-md border border-rose-100/50 space-y-2">
               <p>Falta mapeamento claro de volumetria mensal e SLA do contrato atual.</p>
@@ -84,7 +84,7 @@ export function BrainAnalysis({ interactions }: { interactions: Interaction[] })
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-3">
             <h4 className="text-[11px] font-bold text-indigo-800 uppercase tracking-wider flex items-center gap-1.5">
-              <ShieldAlert className="w-3.5 h-3.5 text-orange-500" /> Objeções Não Quebradas
+              <ShieldAlert className="w-3.5 h-3.5 text-orange-500" /> 4) Objeções Não Quebradas
             </h4>
             <div className="text-sm text-slate-600 bg-orange-50/30 p-2.5 rounded-md border border-orange-100/50">
               <p className="italic font-medium text-orange-800">
@@ -95,7 +95,7 @@ export function BrainAnalysis({ interactions }: { interactions: Interaction[] })
 
           <div className="space-y-3">
             <h4 className="text-[11px] font-bold text-indigo-800 uppercase tracking-wider flex items-center gap-1.5">
-              <Zap className="w-3.5 h-3.5 text-amber-500" /> Avaliação de FIT
+              <Zap className="w-3.5 h-3.5 text-amber-500" /> 5) Avaliação de FIT
             </h4>
             <div className="flex items-center gap-3 bg-amber-50/30 p-2.5 rounded-md border border-amber-100/50">
               <div className="text-xl font-black text-amber-600">85%</div>
@@ -109,7 +109,7 @@ export function BrainAnalysis({ interactions }: { interactions: Interaction[] })
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-3">
             <h4 className="text-[11px] font-bold text-indigo-800 uppercase tracking-wider flex items-center gap-1.5">
-              <TrendingUp className="w-3.5 h-3.5 text-blue-500" /> Próximos Passos Sugeridos
+              <TrendingUp className="w-3.5 h-3.5 text-blue-500" /> 2) Próximos Passos
             </h4>
             <ul className="text-sm text-slate-600 list-none space-y-1.5 bg-blue-50/30 p-2.5 rounded-md border border-blue-100/50">
               <li className="flex items-start gap-1.5">
@@ -124,17 +124,16 @@ export function BrainAnalysis({ interactions }: { interactions: Interaction[] })
           </div>
           <div className="space-y-3">
             <h4 className="text-[11px] font-bold text-indigo-800 uppercase tracking-wider flex items-center gap-1.5">
-              <ArrowRightLeft className="w-3.5 h-3.5 text-violet-500" /> Sinais de
-              Progresso/Regresso
+              <ArrowRightLeft className="w-3.5 h-3.5 text-violet-500" /> 6) Sinais de Avanço/Recuo
             </h4>
             <div className="text-sm text-slate-600 bg-violet-50/30 p-2.5 rounded-md border border-violet-100/50 space-y-2">
               <p>
-                <span className="text-emerald-600 font-bold">Progresso:</span> Abertura para receber
+                <span className="text-emerald-600 font-bold">Avanço:</span> Abertura para receber
                 material.
               </p>
               <p>
-                <span className="text-rose-600 font-bold">Atenção:</span> "Aguardando feedback"
-                indica possível lentidão no processo decisório.
+                <span className="text-rose-600 font-bold">Recuo:</span> "Aguardando feedback" indica
+                possível lentidão no processo decisório.
               </p>
             </div>
           </div>
@@ -142,7 +141,7 @@ export function BrainAnalysis({ interactions }: { interactions: Interaction[] })
 
         <div className="pt-3 border-t border-indigo-100/60 space-y-3">
           <h4 className="text-xs font-bold text-indigo-800 uppercase tracking-wider flex items-center gap-1.5">
-            <Target className="w-4 h-4 text-indigo-500" /> Copy Pronta para Próxima Ação
+            <Target className="w-4 h-4 text-indigo-500" /> 7) Copy Pronta para Próxima Mensagem
           </h4>
           <div className="bg-white rounded-lg p-3.5 border border-indigo-100 shadow-sm relative group">
             <div

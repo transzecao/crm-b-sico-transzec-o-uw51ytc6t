@@ -42,12 +42,25 @@ export default function Pipeline1() {
       return
     }
 
+    if (stage === 'Ganho') {
+      updateState({
+        leads: state.leads.map((l) => (l.id === id ? { ...l, stage, score: 'Hot' } : l)),
+      })
+      toast({
+        title: 'Parabéns!',
+        description: 'Negócio marcado como Ganho. Aceitou cotação/teste.',
+      })
+      return
+    }
+
     if (stage === '3º contato sem resposta') {
       toast({
         title: 'Atenção Automática',
         description: 'Lead será movido para Nutrição em 1 dia útil (Regra de 3º sem resposta).',
       })
-      updateState({ leads: state.leads.map((l) => (l.id === id ? { ...l, stage } : l)) })
+      updateState({
+        leads: state.leads.map((l) => (l.id === id ? { ...l, stage, score: 'Cold' } : l)),
+      })
       return
     }
 
@@ -57,7 +70,9 @@ export default function Pipeline1() {
   const confirmLoss = (reason: string, details?: string) => {
     if (pendingMove) {
       updateState({
-        leads: state.leads.map((l) => (l.id === pendingMove.id ? { ...l, stage: 'Perda' } : l)),
+        leads: state.leads.map((l) =>
+          l.id === pendingMove.id ? { ...l, stage: 'Perda', score: 'Cold' } : l,
+        ),
       })
       toast({ title: 'Perda registrada', description: `Motivo: ${reason}`, variant: 'destructive' })
     }

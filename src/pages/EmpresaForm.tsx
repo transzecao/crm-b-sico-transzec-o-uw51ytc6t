@@ -8,6 +8,7 @@ import {
   Briefcase,
   MapPin,
   AlignLeft,
+  Star,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -59,6 +60,8 @@ export default function EmpresaForm() {
   const [contacts, setContacts] = useState<Partial<Contact>[]>([])
   const [error, setError] = useState({ cnpj: '', form: '' })
 
+  const isMaster = state.role === 'Master'
+
   useEffect(() => {
     if (existingCompany) {
       setFormData({
@@ -86,9 +89,27 @@ export default function EmpresaForm() {
     }
   }, [id])
 
+  const toggleMandatory = (field: string) => {
+    if (!isMaster) return
+    const newMandatory = new Set(state.mandatoryFields)
+    if (newMandatory.has(field)) newMandatory.delete(field)
+    else newMandatory.add(field)
+    updateState({ mandatoryFields: Array.from(newMandatory) })
+  }
+
+  const isMandatory = (field: string) =>
+    state.mandatoryFields.includes(field) || field === 'nomeFantasia'
+
   const handleSave = () => {
     let hasError = false
     const newError = { cnpj: '', form: '' }
+
+    state.mandatoryFields.forEach((field) => {
+      if (!(formData as any)[field] || !(formData as any)[field].toString().trim()) {
+        newError.form = 'Preencha todos os campos obrigatórios (*)'
+        hasError = true
+      }
+    })
 
     if (!formData.nomeFantasia?.trim()) {
       newError.form = 'Nome Fantasia é obrigatório.'
@@ -103,7 +124,11 @@ export default function EmpresaForm() {
 
     setError(newError)
     if (hasError) {
-      toast({ title: 'Corrija os erros do formulário.', variant: 'destructive' })
+      toast({
+        title: 'Corrija os erros do formulário.',
+        variant: 'destructive',
+        description: newError.form || newError.cnpj,
+      })
       return
     }
 
@@ -153,6 +178,22 @@ export default function EmpresaForm() {
   const pageTitle = !existingCompany
     ? 'Nova Empresa'
     : formData.nomeFantasia || formData.razaoSocial || 'Ficha da Empresa'
+
+  const renderLabel = (label: string, field: string) => (
+    <Label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+      {label} {isMandatory(field) && <span className="text-red-500">*</span>}
+      {isMaster && field !== 'nomeFantasia' && (
+        <button
+          type="button"
+          onClick={() => toggleMandatory(field)}
+          className="text-slate-300 hover:text-amber-500 ml-1"
+          title="Tornar obrigatório (Master)"
+        >
+          <Star className="w-3 h-3" fill={isMandatory(field) ? 'currentColor' : 'none'} />
+        </button>
+      )}
+    </Label>
+  )
 
   return (
     <div className="flex flex-col h-[calc(100vh-3.5rem)] -mx-4 -mt-4 bg-slate-50/50 text-slate-800 font-sans">
@@ -210,9 +251,7 @@ export default function EmpresaForm() {
               <CardContent className="p-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">
-                      Nome Fantasia <span className="text-red-500">*</span>
-                    </Label>
+                    {renderLabel('Nome Fantasia', 'nomeFantasia')}
                     <Input
                       value={formData.nomeFantasia || ''}
                       onChange={(e) => setFormData({ ...formData, nomeFantasia: e.target.value })}
@@ -223,9 +262,7 @@ export default function EmpresaForm() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">
-                      Razão Social
-                    </Label>
+                    {renderLabel('Razão Social', 'razaoSocial')}
                     <Input
                       value={formData.razaoSocial || ''}
                       onChange={(e) => setFormData({ ...formData, razaoSocial: e.target.value })}
@@ -233,9 +270,7 @@ export default function EmpresaForm() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">
-                      CNPJ
-                    </Label>
+                    {renderLabel('CNPJ', 'cnpj')}
                     <Input
                       value={formData.cnpj || ''}
                       onChange={(e) =>
@@ -253,9 +288,7 @@ export default function EmpresaForm() {
                     )}
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">
-                      Endereço Principal
-                    </Label>
+                    {renderLabel('Endereço Principal', 'endereco')}
                     <Input
                       value={formData.endereco || ''}
                       onChange={(e) => setFormData({ ...formData, endereco: e.target.value })}
@@ -315,9 +348,7 @@ export default function EmpresaForm() {
               <CardContent className="p-6">
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                   <div className="space-y-2 md:col-span-2">
-                    <Label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">
-                      Pipeline de Destino
-                    </Label>
+                    {renderLabel('Pipeline de Destino', 'pipeline')}
                     <Select
                       value={formData.pipeline || ''}
                       onValueChange={(v) => setFormData({ ...formData, pipeline: v })}
@@ -334,9 +365,7 @@ export default function EmpresaForm() {
                     </Select>
                   </div>
                   <div className="space-y-2 md:col-span-2">
-                    <Label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">
-                      Segmento de Atuação
-                    </Label>
+                    {renderLabel('Segmento de Atuação', 'segmento')}
                     <Select
                       value={formData.segmento || ''}
                       onValueChange={(v) => setFormData({ ...formData, segmento: v })}

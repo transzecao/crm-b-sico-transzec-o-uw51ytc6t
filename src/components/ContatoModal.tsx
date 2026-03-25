@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -16,8 +16,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Star, Plus, Trash } from 'lucide-react'
 import useCrmStore, { Contact } from '@/stores/useCrmStore'
+import { Plus, Trash, Star, Users } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
 
@@ -27,129 +27,160 @@ export function ContatoModal({
   contact,
 }: {
   open: boolean
-  onOpenChange: (o: boolean) => void
+  onOpenChange: (open: boolean) => void
   contact?: Contact
 }) {
   const { state, updateState } = useCrmStore()
   const { toast } = useToast()
 
-  const [name, setName] = useState(contact?.name || '')
-  const [companyId, setCompanyId] = useState(contact?.companyId || '')
-  const [methods, setMethods] = useState(
-    contact?.methods || [{ id: '1', type: 'email' as const, value: '', isPrincipal: true }],
-  )
+  const [formData, setFormData] = useState<Partial<Contact>>({
+    name: '',
+    companyId: '',
+    isPrincipal: false,
+    methods: [
+      { id: Math.random().toString(36).substr(2, 9), type: 'email', value: '', isPrincipal: true },
+    ],
+  })
 
-  const addMethod = () =>
-    setMethods([
-      ...methods,
-      { id: Math.random().toString(), type: 'email', value: '', isPrincipal: methods.length === 0 },
-    ])
+  useEffect(() => {
+    if (contact) {
+      setFormData(JSON.parse(JSON.stringify(contact)))
+    } else {
+      setFormData({
+        name: '',
+        companyId: '',
+        isPrincipal: false,
+        methods: [
+          {
+            id: Math.random().toString(36).substr(2, 9),
+            type: 'email',
+            value: '',
+            isPrincipal: true,
+          },
+        ],
+      })
+    }
+  }, [contact, open])
 
-  const updateMethod = (id: string, field: string, val: any) => {
-    setMethods(methods.map((m) => (m.id === id ? { ...m, [field]: val } : m)))
+  const handleSave = () => {
+    if (!formData.name?.trim() || !formData.companyId) {
+      toast({ title: 'Nome e Empresa são obrigatórios', variant: 'destructive' })
+      return
+    }
+
+    const newContact = {
+      ...formData,
+      id: contact ? contact.id : Math.random().toString(36).substr(2, 9),
+    } as Contact
+
+    if (contact) {
+      updateState({
+        contacts: state.contacts.map((c) => (c.id === contact.id ? newContact : c)),
+      })
+      toast({ title: 'Contato atualizado com sucesso!' })
+    } else {
+      updateState({
+        contacts: [...state.contacts, newContact],
+      })
+      toast({ title: 'Contato criado com sucesso!' })
+    }
+    onOpenChange(false)
   }
 
-  const togglePrincipal = (id: string) => {
-    setMethods(methods.map((m) => ({ ...m, isPrincipal: m.id === id })))
+  const addMethod = () => {
+    setFormData((prev) => ({
+      ...prev,
+      methods: [
+        ...(prev.methods || []),
+        {
+          id: Math.random().toString(36).substr(2, 9),
+          type: 'email',
+          value: '',
+          isPrincipal: false,
+        },
+      ],
+    }))
+  }
+
+  const updateMethod = (id: string, field: string, value: any) => {
+    setFormData((prev) => ({
+      ...prev,
+      methods: prev.methods?.map((m) => (m.id === id ? { ...m, [field]: value } : m)),
+    }))
   }
 
   const removeMethod = (id: string) => {
-    const newMethods = methods.filter((m) => m.id !== id)
-    if (newMethods.length > 0 && !newMethods.find((m) => m.isPrincipal))
-      newMethods[0].isPrincipal = true
-    setMethods(newMethods)
-  }
-
-  const sortedMethods = [...methods].sort((a, b) =>
-    a.isPrincipal === b.isPrincipal ? 0 : a.isPrincipal ? -1 : 1,
-  )
-
-  const handleSave = () => {
-    if (!name || !companyId)
-      return toast({ title: 'Preencha nome e empresa', variant: 'destructive' })
-    const newContact = { id: contact?.id || Math.random().toString(), companyId, name, methods }
-
-    if (contact)
-      updateState({ contacts: state.contacts.map((c) => (c.id === contact.id ? newContact : c)) })
-    else updateState({ contacts: [...state.contacts, newContact] })
-
-    toast({ title: 'Contato salvo com sucesso!' })
-    onOpenChange(false)
+    setFormData((prev) => ({
+      ...prev,
+      methods: prev.methods?.filter((m) => m.id !== id),
+    }))
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl border-blue-200 shadow-xl bg-white/95 backdrop-blur-md">
+      <DialogContent className="sm:max-w-[500px] border-blue-200 shadow-xl bg-slate-50">
         <DialogHeader className="border-b border-blue-100 pb-4">
-          <DialogTitle className="text-2xl font-bold text-blue-950 flex items-center gap-2">
-            {contact ? 'Editar Ficha do Contato' : 'Cadastrar Novo Contato'}
+          <DialogTitle className="flex items-center gap-2 text-blue-950">
+            <Users className="w-5 h-5 text-blue-600" />
+            {contact ? 'Editar Contato' : 'Novo Contato'}
           </DialogTitle>
         </DialogHeader>
-        <div className="space-y-6 py-4">
-          <div className="grid grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <Label className="text-blue-900 font-semibold">Nome Completo</Label>
-              <Input
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="focus-visible:ring-blue-500 border-blue-200 bg-blue-50/30"
-                placeholder="Ex: João da Silva"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-blue-900 font-semibold">Empresa Comercial</Label>
-              <Select value={companyId} onValueChange={setCompanyId}>
-                <SelectTrigger className="focus:ring-blue-500 border-blue-200 bg-blue-50/30">
-                  <SelectValue placeholder="Vincular à empresa..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {state.companies.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>
-                      {c.razaoSocial || c.cnpj}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+
+        <div className="space-y-5 py-4">
+          <div className="space-y-2">
+            <Label className="text-xs font-semibold uppercase text-slate-500">Nome Completo</Label>
+            <Input
+              value={formData.name || ''}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              className="bg-white"
+            />
           </div>
 
-          <div className="space-y-4 border border-blue-100 rounded-xl p-5 bg-blue-50/40 shadow-inner">
-            <div className="flex justify-between items-center pb-2 border-b border-blue-100/50">
-              <Label className="text-blue-950 font-bold text-base">Canais de Comunicação</Label>
+          <div className="space-y-2">
+            <Label className="text-xs font-semibold uppercase text-slate-500">
+              Empresa Vinculada
+            </Label>
+            <Select
+              value={formData.companyId}
+              onValueChange={(v) => setFormData({ ...formData, companyId: v })}
+            >
+              <SelectTrigger className="bg-white">
+                <SelectValue placeholder="Selecione a empresa..." />
+              </SelectTrigger>
+              <SelectContent>
+                {state.companies.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.nomeFantasia || c.razaoSocial}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-3 pt-2">
+            <div className="flex items-center justify-between">
+              <Label className="text-xs font-semibold uppercase text-slate-500">
+                Meios de Contato
+              </Label>
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
                 onClick={addMethod}
-                className="text-blue-700 border-blue-300 bg-white hover:bg-blue-100 hover:text-blue-900 hover:border-blue-400 shadow-sm"
+                className="h-7 text-xs"
               >
-                <Plus className="w-4 h-4 mr-2" /> Adicionar Canal
+                <Plus className="w-3 h-3 mr-1" /> Adicionar
               </Button>
             </div>
 
-            <div className="space-y-3 pt-2">
-              {sortedMethods.map((m) => (
+            <div className="space-y-3">
+              {formData.methods?.map((m, index) => (
                 <div
                   key={m.id}
-                  className="flex items-center gap-3 bg-white p-2 rounded-lg border border-blue-100 shadow-sm"
+                  className="flex items-center gap-2 bg-white p-2 rounded-md border border-slate-200"
                 >
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => togglePrincipal(m.id)}
-                    className={cn(
-                      'shrink-0 hover:bg-blue-50',
-                      m.isPrincipal
-                        ? 'text-blue-600 bg-blue-50'
-                        : 'text-slate-300 hover:text-blue-400',
-                    )}
-                    title={m.isPrincipal ? 'Contato Principal' : 'Tornar Principal'}
-                  >
-                    <Star className="w-5 h-5" fill={m.isPrincipal ? 'currentColor' : 'none'} />
-                  </Button>
                   <Select value={m.type} onValueChange={(v) => updateMethod(m.id, 'type', v)}>
-                    <SelectTrigger className="w-[140px] focus:ring-blue-500 border-blue-200 bg-blue-50/30 font-medium text-blue-900">
+                    <SelectTrigger className="w-[120px] h-8 text-xs border-none bg-slate-50">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -159,38 +190,50 @@ export function ContatoModal({
                     </SelectContent>
                   </Select>
                   <Input
-                    className="flex-1 focus-visible:ring-blue-500 border-blue-200 bg-blue-50/30 text-blue-950 placeholder:text-blue-300"
                     value={m.value}
                     onChange={(e) => updateMethod(m.id, 'value', e.target.value)}
-                    placeholder={`Digite o ${m.type}...`}
+                    className="h-8 text-sm border-none shadow-none focus-visible:ring-0 px-2"
+                    placeholder="Valor..."
                   />
-                  <Button
+                  <button
                     type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => removeMethod(m.id)}
-                    className="text-rose-500 shrink-0 hover:bg-rose-50 hover:text-rose-700"
-                    title="Remover Canal"
+                    onClick={() => {
+                      const updated = formData.methods?.map((method) => ({
+                        ...method,
+                        isPrincipal: method.id === m.id,
+                      }))
+                      setFormData((prev) => ({ ...prev, methods: updated }))
+                    }}
+                    className={cn(
+                      'p-1.5 rounded-md transition-colors',
+                      m.isPrincipal
+                        ? 'text-amber-500 bg-amber-50'
+                        : 'text-slate-300 hover:text-amber-500 hover:bg-slate-100',
+                    )}
+                    title="Definir como principal"
                   >
-                    <Trash className="w-4 h-4" />
-                  </Button>
+                    <Star className="w-4 h-4" fill={m.isPrincipal ? 'currentColor' : 'none'} />
+                  </button>
+                  {formData.methods!.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeMethod(m.id)}
+                      className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                    >
+                      <Trash className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
           </div>
         </div>
+
         <DialogFooter className="border-t border-blue-100 pt-4">
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            className="border-blue-200 text-blue-800 hover:bg-blue-50"
-          >
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancelar
           </Button>
-          <Button
-            className="bg-blue-600 hover:bg-blue-700 text-white shadow-md px-6"
-            onClick={handleSave}
-          >
+          <Button onClick={handleSave} className="bg-blue-600 hover:bg-blue-700 text-white">
             Salvar Contato
           </Button>
         </DialogFooter>

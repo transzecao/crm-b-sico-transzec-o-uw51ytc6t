@@ -1,4 +1,4 @@
-import { Users, TrendingUp, CheckCircle2, DollarSign } from 'lucide-react'
+import { Users, TrendingUp, CheckCircle2, DollarSign, Clock } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import {
   ChartContainer,
@@ -28,9 +28,15 @@ import { formatCurrency } from '@/utils/formatters'
 export default function Index() {
   const { state } = useCrmStore()
 
-  const prospectionCount = state.leads.filter((l) => l.pipeline === 'Prospection').length
-  const nutritionCount = state.leads.filter((l) => l.pipeline === 'Nutrition').length
-  const totalValue = state.leads.reduce((acc, curr) => acc + curr.value, 0)
+  // Filter leads based on role (Comercial sees only their own data)
+  const visibleLeads =
+    state.role === 'Comercial'
+      ? state.leads.filter((l) => l.owner === state.currentUser.name)
+      : state.leads
+
+  const prospectionCount = visibleLeads.filter((l) => l.pipeline === 'Prospection').length
+  const nutritionCount = visibleLeads.filter((l) => l.pipeline === 'Nutrition').length
+  const totalValue = visibleLeads.reduce((acc, curr) => acc + curr.value, 0)
 
   const chartConfig = {
     pipeline: { label: 'Pipeline', color: '#8b5cf6' }, // Violet
@@ -40,7 +46,6 @@ export default function Index() {
     financeExp: { label: 'Despesas', color: '#ef4444' }, // Red/Alert
     operation: { label: 'Operação', color: '#64748b' }, // Blue-Grey
     marketing: { label: 'Marketing', color: '#f59e0b' }, // Amber
-    history: { label: 'Histórico', color: '#94a3b8' }, // Neutral
   } satisfies ChartConfig
 
   const barData = [
@@ -51,8 +56,8 @@ export default function Index() {
   ]
 
   const pieData = [
-    { name: 'commercial', value: prospectionCount, fill: 'var(--color-commercial)' },
-    { name: 'nutrition', value: nutritionCount, fill: 'var(--color-nutrition)' },
+    { name: 'commercial', value: prospectionCount || 1, fill: 'var(--color-commercial)' },
+    { name: 'nutrition', value: nutritionCount || 1, fill: 'var(--color-nutrition)' },
   ]
 
   const financeData = [
@@ -65,10 +70,10 @@ export default function Index() {
   ]
 
   const operationsData = [
-    { week: 'S1', operation: 45, marketing: 12, history: 3 },
-    { week: 'S2', operation: 52, marketing: 15, history: 4 },
-    { week: 'S3', operation: 38, marketing: 18, history: 2 },
-    { week: 'S4', operation: 65, marketing: 22, history: 5 },
+    { week: 'S1', operation: 45, marketing: 12 },
+    { week: 'S2', operation: 52, marketing: 15 },
+    { week: 'S3', operation: 38, marketing: 18 },
+    { week: 'S4', operation: 65, marketing: 22 },
   ]
 
   return (
@@ -88,7 +93,7 @@ export default function Index() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-950">{prospectionCount}</div>
-            <p className="text-xs text-blue-700/80">+20.1% em relação ao mês anterior</p>
+            <p className="text-xs text-blue-700/80">Ativos no funil de vendas</p>
           </CardContent>
         </Card>
         <Card className="bg-amber-50/30 border-amber-100/50 shadow-sm backdrop-blur-sm">
@@ -98,7 +103,7 @@ export default function Index() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-amber-950">{nutritionCount}</div>
-            <p className="text-xs text-amber-700/80">+5 novos essa semana</p>
+            <p className="text-xs text-amber-700/80">Aguardando aquecimento</p>
           </CardContent>
         </Card>
         <Card className="bg-violet-50/30 border-violet-100/50 shadow-sm backdrop-blur-sm">
@@ -108,17 +113,19 @@ export default function Index() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-violet-950">{formatCurrency(totalValue)}</div>
-            <p className="text-xs text-violet-700/80">Baseado no pipeline ativo</p>
+            <p className="text-xs text-violet-700/80">Valor potencial em andamento</p>
           </CardContent>
         </Card>
         <Card className="bg-emerald-50/30 border-emerald-100/50 shadow-sm backdrop-blur-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-semibold text-emerald-900">T. Conversão</CardTitle>
-            <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+            <CardTitle className="text-sm font-semibold text-emerald-900">
+              T. Conversão Média
+            </CardTitle>
+            <Clock className="h-4 w-4 text-emerald-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-emerald-950">24.3%</div>
-            <p className="text-xs text-emerald-700/80">+2.4% acima da meta</p>
+            <div className="text-2xl font-bold text-emerald-950">28 Dias</div>
+            <p className="text-xs text-emerald-700/80">Tempo total (Contato ao Ganho)</p>
           </CardContent>
         </Card>
       </div>
@@ -181,106 +188,115 @@ export default function Index() {
           </CardContent>
         </Card>
 
-        <Card className="col-span-4 shadow-sm bg-white/80 backdrop-blur-sm border-slate-200">
-          <CardHeader>
-            <CardTitle className="text-lg text-emerald-900">Performance Financeira</CardTitle>
-            <CardDescription>Evolução de receitas de frete e despesas operacionais</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ChartContainer config={chartConfig} className="h-[280px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={financeData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="var(--color-financeRev)" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="var(--color-financeRev)" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    vertical={false}
-                    stroke="hsl(var(--border))"
-                  />
-                  <XAxis
-                    dataKey="month"
-                    stroke="#888888"
-                    fontSize={12}
-                    tickLine={false}
-                    axisLine={false}
-                  />
-                  <YAxis
-                    stroke="#888888"
-                    fontSize={12}
-                    tickLine={false}
-                    axisLine={false}
-                    tickFormatter={(value) => `R$${value / 1000}k`}
-                  />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <ChartLegend content={<ChartLegendContent />} />
-                  <Area
-                    type="monotone"
-                    dataKey="financeRev"
-                    name="financeRev"
-                    stroke="var(--color-financeRev)"
-                    strokeWidth={2}
-                    fillOpacity={1}
-                    fill="url(#colorRev)"
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="financeExp"
-                    name="financeExp"
-                    stroke="var(--color-financeExp)"
-                    strokeWidth={2}
-                    fillOpacity={0.1}
-                    fill="var(--color-financeExp)"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </ChartContainer>
-          </CardContent>
-        </Card>
+        {['Master', 'Financeiro', 'Diretoria', 'Supervisor'].includes(state.role) && (
+          <Card className="col-span-4 shadow-sm bg-white/80 backdrop-blur-sm border-slate-200">
+            <CardHeader>
+              <CardTitle className="text-lg text-emerald-900">Performance Financeira</CardTitle>
+              <CardDescription>
+                Evolução de receitas de frete e despesas operacionais
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ChartContainer config={chartConfig} className="h-[280px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart
+                    data={financeData}
+                    margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                  >
+                    <defs>
+                      <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="var(--color-financeRev)" stopOpacity={0.3} />
+                        <stop offset="95%" stopColor="var(--color-financeRev)" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      vertical={false}
+                      stroke="hsl(var(--border))"
+                    />
+                    <XAxis
+                      dataKey="month"
+                      stroke="#888888"
+                      fontSize={12}
+                      tickLine={false}
+                      axisLine={false}
+                    />
+                    <YAxis
+                      stroke="#888888"
+                      fontSize={12}
+                      tickLine={false}
+                      axisLine={false}
+                      tickFormatter={(value) => `R$${value / 1000}k`}
+                    />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <ChartLegend content={<ChartLegendContent />} />
+                    <Area
+                      type="monotone"
+                      dataKey="financeRev"
+                      name="financeRev"
+                      stroke="var(--color-financeRev)"
+                      strokeWidth={2}
+                      fillOpacity={1}
+                      fill="url(#colorRev)"
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="financeExp"
+                      name="financeExp"
+                      stroke="var(--color-financeExp)"
+                      strokeWidth={2}
+                      fillOpacity={0.1}
+                      fill="var(--color-financeExp)"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </ChartContainer>
+            </CardContent>
+          </Card>
+        )}
 
-        <Card className="col-span-3 shadow-sm bg-white/80 backdrop-blur-sm border-slate-200">
-          <CardHeader>
-            <CardTitle className="text-lg text-slate-800">Métricas Operacionais</CardTitle>
-            <CardDescription>Acompanhamento de volume semanal (Coleta)</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ChartContainer config={chartConfig} className="h-[280px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart
-                  data={operationsData}
-                  margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
-                >
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    vertical={false}
-                    stroke="hsl(var(--border))"
-                  />
-                  <XAxis
-                    dataKey="week"
-                    stroke="#888888"
-                    fontSize={12}
-                    tickLine={false}
-                    axisLine={false}
-                  />
-                  <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <ChartLegend content={<ChartLegendContent />} />
-                  <Line
-                    type="monotone"
-                    dataKey="operation"
-                    name="operation"
-                    stroke="var(--color-operation)"
-                    strokeWidth={3}
-                    dot={{ r: 4 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </ChartContainer>
-          </CardContent>
-        </Card>
+        {['Master', 'Diretoria', 'Supervisor', 'Coleta'].includes(state.role) && (
+          <Card className="col-span-3 shadow-sm bg-white/80 backdrop-blur-sm border-slate-200">
+            <CardHeader>
+              <CardTitle className="text-lg text-slate-800">Métricas Operacionais</CardTitle>
+              <CardDescription>Acompanhamento de volume semanal (Coleta)</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ChartContainer config={chartConfig} className="h-[280px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart
+                    data={operationsData}
+                    margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                  >
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      vertical={false}
+                      stroke="hsl(var(--border))"
+                    />
+                    <XAxis
+                      dataKey="week"
+                      stroke="#888888"
+                      fontSize={12}
+                      tickLine={false}
+                      axisLine={false}
+                    />
+                    <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <ChartLegend content={<ChartLegendContent />} />
+                    <Line
+                      type="monotone"
+                      dataKey="operation"
+                      name="operation"
+                      stroke="var(--color-operation)"
+                      strokeWidth={3}
+                      dot={{ r: 4 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </ChartContainer>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   )
