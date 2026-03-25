@@ -1,20 +1,7 @@
 import { useState, useMemo } from 'react'
-import {
-  Plus,
-  Copy,
-  Edit2,
-  Trash2,
-  ShieldAlert,
-  KeyRound,
-  Filter,
-  Save,
-  History,
-  Mail,
-} from 'lucide-react'
+import { Plus, Copy, Edit2, Trash2, ShieldAlert, KeyRound, Filter, History } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import {
   Table,
   TableBody,
@@ -30,17 +17,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Switch } from '@/components/ui/switch'
 import { Badge } from '@/components/ui/badge'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog'
 import { useToast } from '@/hooks/use-toast'
 import useCrmStore, { UserLogin } from '@/stores/useCrmStore'
+import { LoginAdminModal } from '@/components/LoginAdminModal'
 import { cn } from '@/lib/utils'
 
 export default function LoginAdmin() {
@@ -50,10 +30,7 @@ export default function LoginAdmin() {
   const [filterSector, setFilterSector] = useState<string>('all')
   const [modalOpen, setModalOpen] = useState(false)
   const [editingLogin, setEditingLogin] = useState<UserLogin | null>(null)
-  const [formData, setFormData] = useState<Partial<UserLogin>>({})
-  const [formErrors, setFormErrors] = useState<Record<string, string>>({})
 
-  // Determine user permissions based on role
   const role = state.role
   const isMasterOrGen = role === 'Master' || role === 'Supervisor Geral'
   const isDir = role === 'Diretoria'
@@ -83,9 +60,7 @@ export default function LoginAdmin() {
 
   const visibleLogins = useMemo(() => {
     return state.userLogins.filter((l) => {
-      // Check viewing permission
       if (!canViewAny && l.sector !== mySector) return false
-      // Check selected filter
       if (filterSector !== 'all' && l.sector !== filterSector) return false
       return true
     })
@@ -97,117 +72,17 @@ export default function LoginAdmin() {
     return false
   }
 
-  const generateLink = (name: string, sector: string) => {
-    if (!name || !sector) return ''
-    const cleanName = name
-      .toLowerCase()
-      .trim()
-      .replace(/\s+/g, '-')
-      .replace(/[^a-z0-9-]/g, '')
-    return `https://transzecao.com.br/login/${cleanName}-${sector.toLowerCase()}`
-  }
-
-  const handleNameChange = (name: string) => {
-    setFormData((prev) => {
-      const newData = { ...prev, name }
-      if (!editingLogin && newData.sector) {
-        newData.accessLink = generateLink(name, newData.sector)
-      }
-      return newData
-    })
-  }
-
-  const handleSectorChange = (sector: string) => {
-    setFormData((prev) => {
-      const newData = { ...prev, sector }
-      if (!editingLogin && newData.name) {
-        newData.accessLink = generateLink(newData.name, sector)
-      }
-      return newData
-    })
-  }
-
-  const validateForm = () => {
-    const errors: Record<string, string> = {}
-    if (!formData.name?.trim()) errors.name = 'Nome do Usuário é obrigatório.'
-    if (!formData.sector) errors.sector = 'Selecione um setor.'
-
-    const linkPattern = /^https:\/\/[a-zA-Z0-9.-]+\.com(\.br)?\/[a-zA-Z0-9./-]+$/
-    if (!formData.accessLink || !linkPattern.test(formData.accessLink)) {
-      errors.accessLink = 'O link deve ser uma URL HTTPS válida da plataforma.'
-    }
-
-    setFormErrors(errors)
-    return Object.keys(errors).length === 0
-  }
-
-  const handleSave = () => {
-    if (!validateForm()) {
-      toast({
-        title: 'Erros no formulário',
-        description: 'Corrija os campos indicados antes de salvar.',
-        variant: 'destructive',
-      })
-      return
-    }
-
-    const now = new Date().toLocaleString('pt-BR')
-    const logAction = editingLogin
-      ? `Editou o login de ${formData.name}`
-      : `Criou novo login para ${formData.name}`
-
-    let updatedLogins = [...state.userLogins]
-
-    if (editingLogin) {
-      updatedLogins = updatedLogins.map((l) =>
-        l.id === editingLogin.id
-          ? ({
-              ...l,
-              ...formData,
-              updatedAt: now,
-            } as UserLogin)
-          : l,
-      )
-      toast({
-        title: 'Acesso Atualizado',
-        description: `Login de ${formData.name} salvo com sucesso.`,
-      })
-    } else {
-      const newLogin: UserLogin = {
-        id: Math.random().toString(36).substr(2, 9),
-        name: formData.name!,
-        sector: formData.sector!,
-        accessLink: formData.accessLink!,
-        status: (formData.status as 'Ativo' | 'Inativo') || 'Ativo',
-        createdAt: now,
-        updatedAt: now,
-      }
-      updatedLogins.push(newLogin)
-
-      toast({
-        title: 'Automação de E-mail Disparada',
-        description: `Link de acesso único enviado para ${newLogin.name}.`,
-      })
-    }
-
-    const newAuditLog = {
-      date: now,
-      user: state.currentUser.name,
-      action: logAction,
-    }
-
-    updateState({
-      userLogins: updatedLogins,
-      loginAuditLogs: [newAuditLog, ...state.loginAuditLogs].slice(0, 50),
-    })
-
-    setModalOpen(false)
+  const canDeleteLogin = (login: UserLogin) => {
+    if (canDeleteAny) return true
+    if (canEditMySector && login.sector === mySector) return true
+    return false
   }
 
   const handleDelete = (id: string, name: string) => {
-    if (!canDeleteAny) return
-    const updatedLogins = state.userLogins.filter((l) => l.id !== id)
+    const login = state.userLogins.find((l) => l.id === id)
+    if (!login || !canDeleteLogin(login)) return
 
+    const updatedLogins = state.userLogins.filter((l) => l.id !== id)
     const newAuditLog = {
       date: new Date().toLocaleString('pt-BR'),
       user: state.currentUser.name,
@@ -219,10 +94,7 @@ export default function LoginAdmin() {
       loginAuditLogs: [newAuditLog, ...state.loginAuditLogs].slice(0, 50),
     })
 
-    toast({
-      title: 'Login Excluído',
-      description: `O acesso de ${name} foi removido do sistema.`,
-    })
+    toast({ title: 'Login Excluído', description: `O acesso de ${name} foi removido do sistema.` })
   }
 
   const copyToClipboard = (link: string) => {
@@ -235,15 +107,11 @@ export default function LoginAdmin() {
 
   const openNewModal = () => {
     setEditingLogin(null)
-    setFormData({ status: 'Ativo', name: '', sector: '', accessLink: '' })
-    setFormErrors({})
     setModalOpen(true)
   }
 
   const openEditModal = (login: UserLogin) => {
     setEditingLogin(login)
-    setFormData({ ...login })
-    setFormErrors({})
     setModalOpen(true)
   }
 
@@ -287,8 +155,8 @@ export default function LoginAdmin() {
 
       <div className="grid lg:grid-cols-12 gap-6 items-start">
         <div className="lg:col-span-8 space-y-6">
-          <Card className="border-slate-200 shadow-sm bg-white/90 backdrop-blur-sm">
-            <CardHeader className="pb-4 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <Card className="border-slate-200 shadow-sm bg-white/90 backdrop-blur-sm overflow-hidden">
+            <CardHeader className="pb-4 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-50/30">
               <CardTitle className="text-lg text-slate-800 flex items-center gap-2">
                 Tabela de Usuários Ativos
               </CardTitle>
@@ -315,18 +183,15 @@ export default function LoginAdmin() {
                     <TableHead className="font-bold text-slate-700">Setor</TableHead>
                     <TableHead className="font-bold text-slate-700">Status</TableHead>
                     <TableHead className="font-bold text-slate-700">Link de Acesso</TableHead>
+                    <TableHead className="font-bold text-slate-700">Data de Criação</TableHead>
+                    <TableHead className="font-bold text-slate-700">Última Atualização</TableHead>
                     <TableHead className="text-right font-bold text-slate-700">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {visibleLogins.map((login) => (
                     <TableRow key={login.id} className="hover:bg-slate-50/50 transition-colors">
-                      <TableCell className="font-semibold text-slate-900">
-                        {login.name}
-                        <div className="text-[10px] text-slate-500 font-normal mt-0.5">
-                          Criado: {login.createdAt.split(' ')[0]}
-                        </div>
-                      </TableCell>
+                      <TableCell className="font-semibold text-slate-900">{login.name}</TableCell>
                       <TableCell>
                         <Badge
                           variant="outline"
@@ -340,15 +205,15 @@ export default function LoginAdmin() {
                           className={cn(
                             'font-bold',
                             login.status === 'Ativo'
-                              ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-100'
-                              : 'bg-slate-100 text-slate-600 hover:bg-slate-100',
+                              ? 'bg-emerald-100 text-emerald-700'
+                              : 'bg-slate-100 text-slate-600',
                           )}
                         >
                           {login.status}
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-2 max-w-[200px]">
+                        <div className="flex items-center gap-2 max-w-[150px]">
                           <span
                             className="text-xs text-slate-500 truncate"
                             title={login.accessLink}
@@ -357,12 +222,17 @@ export default function LoginAdmin() {
                           </span>
                           <button
                             onClick={() => copyToClipboard(login.accessLink)}
-                            className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors shrink-0"
-                            title="Copiar Link"
+                            className="p-1.5 text-slate-400 hover:text-indigo-600 rounded transition-colors shrink-0"
                           >
                             <Copy className="w-3.5 h-3.5" />
                           </button>
                         </div>
+                      </TableCell>
+                      <TableCell className="text-slate-500 text-xs font-medium">
+                        {login.createdAt.split(' ')[0]}
+                      </TableCell>
+                      <TableCell className="text-slate-500 text-xs font-medium">
+                        {login.updatedAt.split(' ')[0]}
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-1">
@@ -376,7 +246,7 @@ export default function LoginAdmin() {
                               <Edit2 className="w-4 h-4" />
                             </Button>
                           )}
-                          {canDeleteAny && (
+                          {canDeleteLogin(login) && (
                             <Button
                               variant="ghost"
                               size="icon"
@@ -392,7 +262,7 @@ export default function LoginAdmin() {
                   ))}
                   {visibleLogins.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={5} className="h-24 text-center text-slate-500">
+                      <TableCell colSpan={7} className="h-24 text-center text-slate-500">
                         Nenhum login encontrado para os filtros atuais.
                       </TableCell>
                     </TableRow>
@@ -411,7 +281,7 @@ export default function LoginAdmin() {
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
-              <div className="max-h-[400px] overflow-y-auto p-4 space-y-4">
+              <div className="max-h-[500px] overflow-y-auto p-4 space-y-4">
                 {state.loginAuditLogs.map((log, i) => (
                   <div
                     key={i}
@@ -430,137 +300,13 @@ export default function LoginAdmin() {
         </div>
       </div>
 
-      <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-        <DialogContent className="sm:max-w-md border-slate-200 shadow-xl bg-white">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-slate-900">
-              {editingLogin ? (
-                <Edit2 className="w-5 h-5 text-indigo-500" />
-              ) : (
-                <Plus className="w-5 h-5 text-indigo-500" />
-              )}
-              {editingLogin ? 'Editar Login' : 'Novo Login e Envio de Acesso'}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label className="text-slate-700 font-semibold">
-                Nome do Usuário <span className="text-rose-500">*</span>
-              </Label>
-              <Input
-                value={formData.name || ''}
-                onChange={(e) => handleNameChange(e.target.value)}
-                className={cn(
-                  'focus-visible:ring-indigo-500/50',
-                  formErrors.name && 'border-rose-400',
-                )}
-                placeholder="Ex: Carlos Silva"
-              />
-              {formErrors.name && (
-                <p className="text-[10px] text-rose-500 font-bold">{formErrors.name}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-slate-700 font-semibold">
-                Setor Operacional <span className="text-rose-500">*</span>
-              </Label>
-              <Select value={formData.sector || ''} onValueChange={handleSectorChange}>
-                <SelectTrigger
-                  className={cn(
-                    'w-full focus:ring-indigo-500/50',
-                    formErrors.sector && 'border-rose-400',
-                  )}
-                >
-                  <SelectValue placeholder="Selecione..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {(!canEditMySector || mySector === 'Coleta') && (
-                    <SelectItem value="Coleta">Coleta</SelectItem>
-                  )}
-                  {(!canEditMySector || mySector === 'Comercial') && (
-                    <SelectItem value="Comercial">Comercial</SelectItem>
-                  )}
-                  {(!canEditMySector || mySector === 'Financeiro') && (
-                    <SelectItem value="Financeiro">Financeiro</SelectItem>
-                  )}
-                </SelectContent>
-              </Select>
-              {formErrors.sector && (
-                <p className="text-[10px] text-rose-500 font-bold">{formErrors.sector}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-slate-700 font-semibold">Link de Acesso Único</Label>
-              <Input
-                value={formData.accessLink || ''}
-                onChange={(e) => setFormData({ ...formData, accessLink: e.target.value })}
-                className={cn(
-                  'bg-slate-50 font-mono text-xs focus-visible:ring-indigo-500/50',
-                  formErrors.accessLink && 'border-rose-400',
-                )}
-                placeholder="https://..."
-              />
-              {formErrors.accessLink && (
-                <p className="text-[10px] text-rose-500 font-bold">{formErrors.accessLink}</p>
-              )}
-              {!editingLogin && (
-                <p className="text-[10px] text-slate-500 flex items-center gap-1 mt-1">
-                  <Mail className="w-3 h-3" /> Um e-mail será disparado automaticamente com este
-                  link.
-                </p>
-              )}
-            </div>
-
-            <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-100 rounded-lg mt-2">
-              <div className="space-y-0.5">
-                <Label className="text-slate-800 font-bold">Status da Conta</Label>
-                <p className="text-xs text-slate-500">
-                  Contas inativas não podem acessar a plataforma.
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-slate-600 uppercase">
-                  {formData.status}
-                </span>
-                <Switch
-                  checked={formData.status === 'Ativo'}
-                  onCheckedChange={(v) =>
-                    setFormData({ ...formData, status: v ? 'Ativo' : 'Inativo' })
-                  }
-                  className="data-[state=checked]:bg-emerald-500"
-                />
-              </div>
-            </div>
-
-            {editingLogin && (
-              <div className="grid grid-cols-2 gap-4 mt-4 pt-4 border-t border-slate-100">
-                <div>
-                  <Label className="text-[10px] uppercase text-slate-500">Data de Criação</Label>
-                  <p className="text-sm font-medium text-slate-800 bg-slate-50 p-1.5 rounded">
-                    {editingLogin.createdAt}
-                  </p>
-                </div>
-                <div>
-                  <Label className="text-[10px] uppercase text-slate-500">Última Atualização</Label>
-                  <p className="text-sm font-medium text-slate-800 bg-slate-50 p-1.5 rounded">
-                    {editingLogin.updatedAt}
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setModalOpen(false)}>
-              Cancelar
-            </Button>
-            <Button onClick={handleSave} className="bg-indigo-600 hover:bg-indigo-700 text-white">
-              <Save className="w-4 h-4 mr-2" /> Salvar e Aplicar
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <LoginAdminModal
+        open={modalOpen}
+        setOpen={setModalOpen}
+        login={editingLogin}
+        canEditMySector={canEditMySector}
+        mySector={mySector}
+      />
     </div>
   )
 }
