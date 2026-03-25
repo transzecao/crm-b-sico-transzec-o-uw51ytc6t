@@ -41,7 +41,7 @@ export default function EmpresaForm() {
   const existingCompany = id ? state.companies.find((c) => c.id === id) : undefined
   const existingContacts = id ? state.contacts.filter((c) => c.companyId === id) : []
 
-  const isMaster = state.role === 'Master'
+  const isMaster = state.role === 'Master' || state.role === 'Supervisor'
   const isReadOnly = ['Diretoria', 'Coleta'].includes(state.role)
 
   const [formData, setFormData] = useState<Partial<Company>>({
@@ -103,7 +103,8 @@ export default function EmpresaForm() {
 
   const handleCnpjChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (isReadOnly) return
-    const rawVal = e.target.value.replace(/[^\d.\-/]/g, '')
+    // Prevent non-numeric characters before formatting
+    const rawVal = e.target.value.replace(/\D/g, '')
     const formatted = formatCnpj(rawVal)
     setFormData({ ...formData, cnpj: formatted })
 
@@ -163,6 +164,7 @@ export default function EmpresaForm() {
         ? existingCompany.id
         : Math.random().toString(36).substr(2, 9)
 
+      // Strict logic for new registrations to go to Pipeline de Prospecção
       const finalPipeline = existingCompany ? formData.pipeline : 'Pipeline de Prospecção'
 
       const newCompany = { ...formData, id: companyId, pipeline: finalPipeline } as Company
@@ -206,7 +208,8 @@ export default function EmpresaForm() {
         logAccess(`Cadastrou Nova Empresa (Lead Prospecção): ${newCompany.nomeFantasia}`)
         toast({
           title: 'Empresa e Negócio criados!',
-          description: 'Lead inserido automaticamente no pipeline de Prospecção.',
+          description:
+            'Lead inserido automaticamente no pipeline de Prospecção (Primeiro Contato).',
         })
         navigate(`/empresa/${companyId}/editar`, { replace: true })
       }

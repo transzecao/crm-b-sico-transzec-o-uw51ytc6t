@@ -31,7 +31,7 @@ export default function Company360() {
       companyId: company.id,
       type: 'email',
       content:
-        'Agradeço muito a apresentação enviada, mas no momento nós já temos um parceiro logístico consolidado que nos atende bem em todas as rotas e não pretendemos trocar.',
+        'Agradeço muito a apresentação enviada, mas no momento eu já tenho parceiro logístico consolidado que nos atende bem em todas as rotas e não pretendo trocar.',
       date: new Date().toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }),
       author: 'Cliente (Inbound)',
       subject: 'Re: Apresentação Comercial Transzecão',

@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import {
   BrainCircuit,
   CheckCircle,
@@ -21,7 +22,7 @@ import useCrmStore from '@/stores/useCrmStore'
 import { useToast } from '@/hooks/use-toast'
 
 export function BrainAnalysis({ interactions }: { interactions: Interaction[] }) {
-  const { state } = useCrmStore()
+  const { state, updateState } = useCrmStore()
   const { toast } = useToast()
   const [loading, setLoading] = useState(true)
   const [isEditing, setIsEditing] = useState(false)
@@ -52,6 +53,8 @@ export function BrainAnalysis({ interactions }: { interactions: Interaction[] })
 
   // AI Logic for processing interactions and finding specific triggers
   useEffect(() => {
+    if (interactions.length === 0) return
+
     setLoading(true)
     const timer = setTimeout(() => {
       let foundPartnerObjection = false
@@ -69,6 +72,8 @@ export function BrainAnalysis({ interactions }: { interactions: Interaction[] })
       })
 
       if (foundPartnerObjection) {
+        const strictCopy = `Obrigado por compartilhar! Gostaria de entender melhor como seu parceiro atual atende suas necessidades logísticas. Isso me ajuda a oferecer uma solução mais alinhada.\n\nPodemos testar uma rota específica (ex.: São Paulo–Campinas) com uma janela de entrega flexível (ex.: 2 dias úteis) e uma carga de teste (ex.: 5 unidades). Isso leva menos de 1 hora para validar.\n\nQual é a média de entregas por semana? E qual o custo médio por carga com seu parceiro atual?`
+
         setAnalysis({
           achieved: [
             'Apresentação institucional enviada e lida.',
@@ -77,7 +82,7 @@ export function BrainAnalysis({ interactions }: { interactions: Interaction[] })
           ],
           objections: [
             {
-              text: '"Já possuímos parceiro logístico consolidado."',
+              text: '"Já tenho parceiro logístico consolidado."',
               rebuttal:
                 'Aplicar framework de Validação de Parceiro + Teste Leve + Coleta de Dados.',
             },
@@ -90,13 +95,40 @@ export function BrainAnalysis({ interactions }: { interactions: Interaction[] })
             'Propor um "Teste Leve" em rota secundária.',
             'Solicitar dados básicos (volumetria/custo) para estudo comparativo.',
           ],
-          copy: 'Obrigado por compartilhar, [Nome]! Gostaria de entender melhor como seu parceiro atual atende suas necessidades logísticas. Isso me ajuda a oferecer uma solução mais alinhada.\n\nPodemos testar uma rota específica (ex.: São Paulo–Campinas) com uma janela de entrega flexível (ex.: 2 dias úteis) e uma carga de teste (ex.: 5 unidades). Isso leva menos de 1 hora para validar e não afeta sua operação principal.\n\nPara fins de estudo: Qual é a média de entregas por semana e o custo médio por carga com seu parceiro atual?',
+          copy: strictCopy,
         })
+
+        // Auto-log the AI finding if not already logged for this lead
+        const alreadyLogged = interactions.some(
+          (i) =>
+            i.author === 'The Brain (IA)' && i.subject === '⚡ Diagnóstico de Objeção Automático',
+        )
+
+        if (!alreadyLogged) {
+          // Timeout prevents state updates during render phase
+          setTimeout(() => {
+            const newInteraction: Interaction = {
+              id: Math.random().toString(36).substring(7),
+              companyId: interactions[0].companyId,
+              type: 'note',
+              author: 'The Brain (IA)',
+              date: new Date().toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }),
+              subject: '⚡ Diagnóstico de Objeção Automático',
+              content: `Objeção Identificada: "Já tenho parceiro"\n\nEstratégia Sugerida:\nAplicar framework de Validação de Parceiro + Teste Leve + Coleta de Dados.\n\nSmart Copy gerada e disponível no painel The Brain.`,
+            }
+            updateState({ interactions: [...state.interactions, newInteraction] })
+            toast({
+              title: 'Diagnóstico Salvo',
+              description: 'O The Brain registrou a objeção automaticamente no histórico.',
+            })
+          }, 500)
+        }
       } else {
         setAnalysis(defaultAnalysis)
       }
       setLoading(false)
     }, 1200) // Simulating AI processing time
+
     return () => clearTimeout(timer)
   }, [interactions])
 
@@ -199,7 +231,7 @@ export function BrainAnalysis({ interactions }: { interactions: Interaction[] })
                 <Input
                   value={analysis.fitText}
                   onChange={(e) => setAnalysis({ ...analysis, fitText: e.target.value })}
-                  className="text-sm h-9 flex-1"
+                  className="text-sm h-9 flex-1 bg-white"
                 />
               ) : (
                 <p className="text-sm text-slate-700 font-medium leading-snug flex-1">
@@ -242,27 +274,38 @@ export function BrainAnalysis({ interactions }: { interactions: Interaction[] })
             <Target className="w-4 h-4 text-indigo-500" /> Smart Copy (Mensagem Gerada)
           </h4>
           <div className="bg-white rounded-xl p-5 border border-indigo-200 shadow-sm relative group transition-all hover:border-indigo-300">
-            <Button
-              variant="outline"
-              size="sm"
-              className="absolute top-4 right-4 text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 h-8 px-3 shadow-sm"
-              onClick={() => {
-                navigator.clipboard.writeText(analysis.copy)
-                toast({
-                  title: 'Copy Copiada!',
-                  description: 'Pronta para colar no WhatsApp ou Email.',
-                })
-              }}
-            >
-              <FileText className="w-3.5 h-3.5 mr-1.5" /> Copiar
-            </Button>
+            <div className="absolute top-4 right-4 flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 h-8 px-3 shadow-sm"
+                onClick={() => {
+                  navigator.clipboard.writeText(analysis.copy)
+                  toast({
+                    title: 'Copy Copiada!',
+                    description: 'Pronta para colar no WhatsApp ou Email.',
+                  })
+                }}
+              >
+                <FileText className="w-3.5 h-3.5 mr-1.5" /> Copiar
+              </Button>
+            </div>
 
             <p className="text-[11px] font-bold text-indigo-400 mb-3 flex items-center gap-1.5 uppercase tracking-wider">
               <MessageSquareQuote className="w-3.5 h-3.5" /> Texto sugerido para o cliente
             </p>
-            <p className="text-sm font-medium text-slate-700 italic leading-relaxed pr-24 whitespace-pre-wrap">
-              {analysis.copy}
-            </p>
+
+            {isEditing ? (
+              <Textarea
+                value={analysis.copy}
+                onChange={(e) => setAnalysis({ ...analysis, copy: e.target.value })}
+                className="text-sm font-medium text-slate-700 italic leading-relaxed min-h-[150px] bg-indigo-50/30"
+              />
+            ) : (
+              <p className="text-sm font-medium text-slate-700 italic leading-relaxed pr-24 whitespace-pre-wrap">
+                {analysis.copy}
+              </p>
+            )}
           </div>
         </div>
       </CardContent>
