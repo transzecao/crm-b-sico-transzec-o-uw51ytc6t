@@ -31,38 +31,79 @@ export function BrainAnalysis({ interactions }: { interactions: Interaction[] })
   const defaultAnalysis = {
     achieved: [
       'Apresentação institucional enviada e lida.',
-      'Contato inicial estabelecido com o Diretor Comercial.',
+      'Contato inicial estabelecido com o decisor logístico.',
     ],
     objections: [
       {
-        text: '"Já possuímos parceiro logístico consolidado."',
-        rebuttal: 'Sugerir um teste leve com 1 carga fracionada para rota secundária.',
+        text: 'Nenhuma objeção explícita detectada recentemente.',
+        rebuttal: 'Manter cadência de nutrição padrão focada em valor e SLA.',
       },
     ],
     fit: '85',
-    fitText:
-      'Estrutura pronta para campos pré-definidos. Cluster alinhado com a malha da Transzecão.',
+    fitText: 'Cluster alinhado com a malha da Transzecão. Segmento compatível.',
     nextSteps: [
       'Agendar call de alinhamento técnico de 15min.',
-      'Solicitar fatura recente para simulação comparativa na nossa tabela.',
+      'Apresentar case de sucesso no mesmo segmento.',
     ],
-    copy: '"Olá [Nome], vi que receberam nossa apresentação. Sei que a rotina é corrida e já tem parceiro, mas queria propor um teste rápido. Se me passarem uma fatura recente, mostro na prática como otimizamos custo/prazo para seu cluster. O que acha?"',
+    copy: '"Olá [Nome], vimos que acompanhou nossa apresentação. Gostaria de agendar 15 minutos na próxima terça para mostrar como reduzimos o índice de avarias em 30% para clientes do seu segmento. Qual o melhor horário para você?"',
   }
 
   const [analysis, setAnalysis] = useState(defaultAnalysis)
 
+  // AI Logic for processing interactions and finding specific triggers
   useEffect(() => {
     setLoading(true)
     const timer = setTimeout(() => {
+      let foundPartnerObjection = false
+
+      interactions.forEach((i) => {
+        const text = (i.content + ' ' + (i.transcription || '')).toLowerCase()
+        if (
+          text.includes('já tenho parceiro') ||
+          text.includes('parceiro logístico') ||
+          text.includes('já possuímos parceiro') ||
+          text.includes('já somos atendidos')
+        ) {
+          foundPartnerObjection = true
+        }
+      })
+
+      if (foundPartnerObjection) {
+        setAnalysis({
+          achieved: [
+            'Apresentação institucional enviada e lida.',
+            'Contato estabelecido com a diretoria.',
+            'Objeção principal identificada (Concorrência Atual).',
+          ],
+          objections: [
+            {
+              text: '"Já possuímos parceiro logístico consolidado."',
+              rebuttal:
+                'Aplicar framework de Validação de Parceiro + Teste Leve + Coleta de Dados.',
+            },
+          ],
+          fit: '92',
+          fitText:
+            'Apesar do parceiro atual, o volume potencial e cluster são altamente estratégicos para a malha da Transzecão.',
+          nextSteps: [
+            'Enviar mensagem empática de validação do parceiro.',
+            'Propor um "Teste Leve" em rota secundária.',
+            'Solicitar dados básicos (volumetria/custo) para estudo comparativo.',
+          ],
+          copy: 'Obrigado por compartilhar, [Nome]! Gostaria de entender melhor como seu parceiro atual atende suas necessidades logísticas. Isso me ajuda a oferecer uma solução mais alinhada.\n\nPodemos testar uma rota específica (ex.: São Paulo–Campinas) com uma janela de entrega flexível (ex.: 2 dias úteis) e uma carga de teste (ex.: 5 unidades). Isso leva menos de 1 hora para validar e não afeta sua operação principal.\n\nPara fins de estudo: Qual é a média de entregas por semana e o custo médio por carga com seu parceiro atual?',
+        })
+      } else {
+        setAnalysis(defaultAnalysis)
+      }
       setLoading(false)
-    }, 1500)
+    }, 1200) // Simulating AI processing time
     return () => clearTimeout(timer)
   }, [interactions])
 
   if (interactions.length === 0) return null
   if (loading)
     return (
-      <Card className="border-indigo-200/50 shadow-sm bg-indigo-50/30">
+      <Card className="border-indigo-200/50 shadow-sm bg-indigo-50/30 animate-in fade-in duration-500">
         <CardHeader className="pb-3">
           <Skeleton className="h-6 w-[200px]" />
         </CardHeader>
@@ -75,21 +116,23 @@ export function BrainAnalysis({ interactions }: { interactions: Interaction[] })
     )
 
   return (
-    <Card className="border-indigo-200/80 shadow-md bg-gradient-to-br from-indigo-50/80 to-white relative overflow-hidden">
+    <Card className="border-indigo-200/80 shadow-md bg-gradient-to-br from-indigo-50/80 to-white relative overflow-hidden animate-in fade-in zoom-in-95 duration-500">
       <div className="absolute -top-4 -right-4 p-4 opacity-[0.03] pointer-events-none">
         <BrainCircuit className="w-40 h-40 text-indigo-900" />
       </div>
-      <CardHeader className="pb-3 flex flex-row items-center gap-2 border-b border-indigo-100/50 bg-indigo-50/50">
-        <div className="bg-indigo-100 p-1.5 rounded-lg border border-indigo-200 shadow-sm">
-          <BrainCircuit className="w-5 h-5 text-indigo-700" />
-        </div>
-        <div className="flex-1">
-          <CardTitle className="text-indigo-900 text-lg font-bold tracking-tight">
-            "O Cérebro" - Painel de Inteligência (IA)
-          </CardTitle>
-          <p className="text-xs text-indigo-600/80 font-medium">
-            Diagnóstico baseado nas últimas interações, emails e ligações.
-          </p>
+      <CardHeader className="pb-3 flex flex-col sm:flex-row items-start sm:items-center gap-4 border-b border-indigo-100/50 bg-indigo-50/50">
+        <div className="flex items-center gap-3 flex-1">
+          <div className="bg-indigo-100 p-1.5 rounded-lg border border-indigo-200 shadow-sm shrink-0">
+            <BrainCircuit className="w-5 h-5 text-indigo-700" />
+          </div>
+          <div>
+            <CardTitle className="text-indigo-900 text-lg font-bold tracking-tight">
+              "The Brain" - Diagnóstico da IA
+            </CardTitle>
+            <p className="text-xs text-indigo-600/80 font-medium mt-0.5">
+              Análise gerada com base nas últimas conversas e e-mails.
+            </p>
+          </div>
         </div>
         {canEditRules && (
           <Button
@@ -99,10 +142,10 @@ export function BrainAnalysis({ interactions }: { interactions: Interaction[] })
               if (isEditing) toast({ title: 'Critérios de FIT e Diagnóstico atualizados!' })
               setIsEditing(!isEditing)
             }}
-            className="text-indigo-700 border-indigo-200 bg-white shadow-sm"
+            className="text-indigo-700 border-indigo-200 bg-white shadow-sm shrink-0"
           >
-            {isEditing ? <Save className="w-4 h-4 mr-1" /> : <Edit2 className="w-4 h-4 mr-1" />}
-            {isEditing ? 'Salvar Análise' : 'Ajustar Critérios de FIT'}
+            {isEditing ? <Save className="w-4 h-4 mr-1.5" /> : <Edit2 className="w-4 h-4 mr-1.5" />}
+            {isEditing ? 'Salvar Análise' : 'Ajustar Parâmetros'}
           </Button>
         )}
       </CardHeader>
@@ -138,7 +181,7 @@ export function BrainAnalysis({ interactions }: { interactions: Interaction[] })
             <h4 className="text-[11px] font-bold text-indigo-800 uppercase tracking-wider flex items-center gap-1.5">
               <Zap className="w-3.5 h-3.5 text-amber-500" /> Avaliação de FIT (0-100)
             </h4>
-            <div className="flex items-center gap-4 bg-amber-50/40 p-3.5 rounded-lg border border-amber-200/50 shadow-inner">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 bg-amber-50/40 p-3.5 rounded-lg border border-amber-200/50 shadow-inner">
               {isEditing ? (
                 <Input
                   type="number"
@@ -147,9 +190,9 @@ export function BrainAnalysis({ interactions }: { interactions: Interaction[] })
                   className="w-24 font-black text-amber-600 h-9 text-lg"
                 />
               ) : (
-                <div className="text-3xl font-black text-amber-600 tracking-tight">
+                <div className="text-3xl font-black text-amber-600 tracking-tight shrink-0">
                   {analysis.fit}
-                  <span className="text-lg">%</span>
+                  <span className="text-lg text-amber-500/80">%</span>
                 </div>
               )}
               {isEditing ? (
@@ -168,25 +211,25 @@ export function BrainAnalysis({ interactions }: { interactions: Interaction[] })
 
           <div className="space-y-3 md:col-span-2">
             <h4 className="text-[11px] font-bold text-rose-800 uppercase tracking-wider flex items-center gap-1.5">
-              <MessageCircleQuestion className="w-3.5 h-3.5 text-rose-500" /> Quebra de Objeções
+              <MessageCircleQuestion className="w-3.5 h-3.5 text-rose-500" /> Detecção de Objeções
             </h4>
-            <div className="space-y-2">
+            <div className="space-y-3">
               {analysis.objections.map((obj, i) => (
                 <div
                   key={i}
-                  className="bg-rose-50/30 p-3 rounded-lg border border-rose-100 flex flex-col gap-2"
+                  className="bg-white p-3.5 rounded-xl border border-rose-100 flex flex-col gap-3 shadow-sm"
                 >
-                  <div className="text-sm font-semibold text-rose-900 border-l-2 border-rose-400 pl-2 italic">
+                  <div className="text-sm font-semibold text-rose-950 border-l-[3px] border-rose-400 pl-3 italic bg-rose-50/50 py-2 rounded-r-md">
                     {obj.text}
                   </div>
-                  <div className="text-xs font-semibold text-emerald-800 bg-emerald-100/50 px-3 py-2 rounded-md flex items-start gap-2 border border-emerald-200/50">
-                    <ShieldCheck className="w-4 h-4 shrink-0 mt-0.5 text-emerald-600" />
-                    <span>
-                      <span className="uppercase text-[10px] tracking-widest text-emerald-600 block mb-0.5">
-                        Sugestão da IA:
-                      </span>{' '}
-                      {obj.rebuttal}
-                    </span>
+                  <div className="text-xs font-medium text-emerald-900 bg-emerald-50 px-3 py-2.5 rounded-md flex items-start gap-2.5 border border-emerald-100 shadow-inner">
+                    <ShieldCheck className="w-5 h-5 shrink-0 text-emerald-600" />
+                    <div>
+                      <span className="uppercase text-[10px] font-bold tracking-widest text-emerald-700 block mb-0.5">
+                        Sugestão de Contorno da IA
+                      </span>
+                      <span className="leading-relaxed">{obj.rebuttal}</span>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -194,28 +237,30 @@ export function BrainAnalysis({ interactions }: { interactions: Interaction[] })
           </div>
         </div>
 
-        <div className="pt-4 mt-2 border-t border-indigo-100/80 space-y-3">
+        <div className="pt-5 mt-3 border-t border-indigo-100/80 space-y-3">
           <h4 className="text-xs font-bold text-indigo-800 uppercase tracking-wider flex items-center gap-1.5">
-            <Target className="w-4 h-4 text-indigo-500" /> Ready Copy (Mensagem Personalizada)
+            <Target className="w-4 h-4 text-indigo-500" /> Smart Copy (Mensagem Gerada)
           </h4>
-          <div className="bg-white rounded-xl p-4 border border-indigo-200 shadow-sm relative group">
+          <div className="bg-white rounded-xl p-5 border border-indigo-200 shadow-sm relative group transition-all hover:border-indigo-300">
             <Button
               variant="outline"
               size="sm"
-              className="absolute top-3 right-3 text-indigo-500 hover:text-indigo-700 hover:bg-indigo-50 h-8 px-2"
-              title="Copiar texto"
+              className="absolute top-4 right-4 text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 h-8 px-3 shadow-sm"
               onClick={() => {
                 navigator.clipboard.writeText(analysis.copy)
-                toast({ title: 'Copy Copiada para a área de transferência!' })
+                toast({
+                  title: 'Copy Copiada!',
+                  description: 'Pronta para colar no WhatsApp ou Email.',
+                })
               }}
             >
               <FileText className="w-3.5 h-3.5 mr-1.5" /> Copiar
             </Button>
 
-            <p className="text-[11px] font-bold text-indigo-400 mb-2.5 flex items-center gap-1.5 uppercase tracking-wider">
-              <MessageSquareQuote className="w-3.5 h-3.5" /> Mensagem Gerada para o Lead
+            <p className="text-[11px] font-bold text-indigo-400 mb-3 flex items-center gap-1.5 uppercase tracking-wider">
+              <MessageSquareQuote className="w-3.5 h-3.5" /> Texto sugerido para o cliente
             </p>
-            <p className="text-sm font-medium text-slate-700 italic leading-relaxed pr-20">
+            <p className="text-sm font-medium text-slate-700 italic leading-relaxed pr-24 whitespace-pre-wrap">
               {analysis.copy}
             </p>
           </div>

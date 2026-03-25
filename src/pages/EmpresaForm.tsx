@@ -23,7 +23,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { formatCnpj } from '@/utils/formatters'
-import useCrmStore, { Company, Contact } from '@/stores/useCrmStore'
+import useCrmStore, { Company, Contact, Lead } from '@/stores/useCrmStore'
 import { useToast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
 
@@ -35,14 +35,14 @@ import { Badge } from '@/components/ui/badge'
 export default function EmpresaForm() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { state, updateState } = useCrmStore()
+  const { state, updateState, logAccess } = useCrmStore()
   const { toast } = useToast()
 
   const existingCompany = id ? state.companies.find((c) => c.id === id) : undefined
   const existingContacts = id ? state.contacts.filter((c) => c.companyId === id) : []
 
   const isMaster = state.role === 'Master'
-  const isDiretoria = state.role === 'Diretoria'
+  const isReadOnly = ['Diretoria', 'Coleta'].includes(state.role)
 
   const [formData, setFormData] = useState<Partial<Company>>({
     cnpj: '',
@@ -102,23 +102,26 @@ export default function EmpresaForm() {
     state.mandatoryFields.includes(field) || field === 'nomeFantasia'
 
   const handleCnpjChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const formatted = formatCnpj(e.target.value)
+    if (isReadOnly) return
+    const rawVal = e.target.value.replace(/[^\d.\-/]/g, '')
+    const formatted = formatCnpj(rawVal)
     setFormData({ ...formData, cnpj: formatted })
 
     const rawCnpj = formatted.replace(/\D/g, '')
-    // Immediate feedback while typing
-    if (rawCnpj.length > 0 && rawCnpj.length < 14 && formatted.length >= 18) {
+    if (rawCnpj.length > 0 && rawCnpj.length < 14) {
       setError((prev) => ({ ...prev, cnpj: 'CNPJ Incompleto (14 dígitos obrigatórios)' }))
     } else if (rawCnpj.length === 14) {
       setError((prev) => ({ ...prev, cnpj: '' }))
+    } else if (rawCnpj.length > 14) {
+      setError((prev) => ({ ...prev, cnpj: 'CNPJ Inválido (Excesso de dígitos)' }))
     }
   }
 
   const handleSave = () => {
-    if (isDiretoria) {
+    if (isReadOnly) {
       toast({
         title: 'Acesso Negado',
-        description: 'Diretoria possui apenas permissão de visualização.',
+        description: 'Seu perfil possui apenas permissão de leitura nesta tela.',
         variant: 'destructive',
       })
       return
@@ -141,7 +144,7 @@ export default function EmpresaForm() {
 
     const rawCnpj = formData.cnpj?.replace(/\D/g, '') || ''
     if (formData.cnpj && rawCnpj.length !== 14) {
-      newError.cnpj = 'O CNPJ deve conter exatamente 14 dígitos válidos.'
+      newError.cnpj = 'O CNPJ deve conter exatamente 14 dígitos numéricos válidos.'
       hasError = true
     }
 
@@ -159,7 +162,11 @@ export default function EmpresaForm() {
       const companyId = existingCompany
         ? existingCompany.id
         : Math.random().toString(36).substr(2, 9)
-      const newCompany = { ...formData, id: companyId } as Company
+
+      const finalPipeline = existingCompany ? formData.pipeline : 'Pipeline de Prospecção'
+
+      const newCompany = { ...formData, id: companyId, pipeline: finalPipeline } as Company
+
       const finalContacts = contacts.map((c) => ({
         ...c,
         id: c.id || Math.random().toString(36).substr(2, 9),
@@ -173,13 +180,34 @@ export default function EmpresaForm() {
           companies: state.companies.map((c) => (c.id === companyId ? newCompany : c)),
           contacts: [...state.contacts.filter((c) => c.companyId !== companyId), ...finalContacts],
         })
+        logAccess(`Editou Empresa/Conta: ${newCompany.nomeFantasia}`)
         toast({ title: 'Ficha da empresa atualizada com sucesso!' })
       } else {
+        const newLead: Lead = {
+          id: Math.random().toString(36).substr(2, 9),
+          companyId,
+          title: newCompany.nomeFantasia || newCompany.razaoSocial || 'Nova Empresa',
+          pipeline: 'Prospection',
+          stage: 'Primeiro contato',
+          value: 0,
+          owner: state.currentUser.name,
+          ownerAvatar: state.currentUser.avatar,
+          updatedBy: state.currentUser.name,
+          updatedAt: new Date().toLocaleString('pt-BR'),
+          createdAt: new Date().toLocaleDateString('pt-BR'),
+          score: 'Warm',
+        }
+
         updateState({
           companies: [...state.companies, newCompany],
           contacts: [...state.contacts, ...finalContacts],
+          leads: [...state.leads, newLead],
         })
-        toast({ title: 'Empresa cadastrada com sucesso!' })
+        logAccess(`Cadastrou Nova Empresa (Lead Prospecção): ${newCompany.nomeFantasia}`)
+        toast({
+          title: 'Empresa e Negócio criados!',
+          description: 'Lead inserido automaticamente no pipeline de Prospecção.',
+        })
         navigate(`/empresa/${companyId}/editar`, { replace: true })
       }
     } catch (err) {
@@ -195,7 +223,7 @@ export default function EmpresaForm() {
   }
 
   const addCluster = () => {
-    if (clusterInput.trim() && !isDiretoria) {
+    if (clusterInput.trim() && !isReadOnly) {
       setFormData((prev) => ({
         ...prev,
         clusters: [...(prev.clusters || []), clusterInput.trim()],
@@ -205,7 +233,7 @@ export default function EmpresaForm() {
   }
 
   const removeCluster = (index: number) => {
-    if (isDiretoria) return
+    if (isReadOnly) return
     setFormData((prev) => ({
       ...prev,
       clusters: prev.clusters?.filter((_, i) => i !== index),
@@ -213,7 +241,7 @@ export default function EmpresaForm() {
   }
 
   const pageTitle = !existingCompany
-    ? 'Nova Empresa'
+    ? 'Nova Empresa (Prospecção)'
     : formData.nomeFantasia || formData.razaoSocial || 'Ficha da Empresa'
 
   const renderLabel = (label: string, field: string) => (
@@ -270,9 +298,9 @@ export default function EmpresaForm() {
             className="h-9 font-medium"
             aria-label="Cancelar edição"
           >
-            Cancelar
+            {isReadOnly ? 'Voltar' : 'Cancelar'}
           </Button>
-          {!isDiretoria && (
+          {!isReadOnly && (
             <Button
               onClick={handleSave}
               aria-label="Salvar Ficha da Empresa 360"
@@ -285,14 +313,14 @@ export default function EmpresaForm() {
       </div>
 
       <div className="flex flex-1 overflow-hidden bg-blue-50/10">
-        <div className="flex-1 overflow-y-auto flex flex-col p-6 lg:p-8 items-center">
+        <div className="flex-1 overflow-y-auto flex flex-col p-4 md:p-6 lg:p-8 items-center">
           <div className="w-full max-w-4xl space-y-6">
             {state.role === 'Coleta' && (
               <div className="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded-lg flex items-start gap-3 shadow-sm">
                 <AlertCircle className="w-5 h-5 shrink-0 mt-0.5 text-blue-600" />
                 <p className="text-sm font-medium">
-                  Acesso Coleta: Você está em um modo simplificado restrito a cadastro e conferência
-                  de dados básicos. Demais painéis não são acessíveis por este perfil.
+                  Acesso Coleta: Você está em um modo simplificado restrito a leitura de cadastro.
+                  Alterações não são permitidas.
                 </p>
               </div>
             )}
@@ -315,7 +343,7 @@ export default function EmpresaForm() {
                   Cadastrais
                 </CardTitle>
               </CardHeader>
-              <CardContent className="p-6">
+              <CardContent className="p-4 md:p-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     {renderLabel('Nome Fantasia', 'nomeFantasia')}
@@ -323,7 +351,7 @@ export default function EmpresaForm() {
                       id="nomeFantasia"
                       value={formData.nomeFantasia || ''}
                       onChange={(e) => setFormData({ ...formData, nomeFantasia: e.target.value })}
-                      disabled={isDiretoria}
+                      disabled={isReadOnly}
                       aria-required={isMandatory('nomeFantasia')}
                       aria-invalid={error.form && !formData.nomeFantasia ? 'true' : 'false'}
                       className={cn(
@@ -338,7 +366,7 @@ export default function EmpresaForm() {
                       id="razaoSocial"
                       value={formData.razaoSocial || ''}
                       onChange={(e) => setFormData({ ...formData, razaoSocial: e.target.value })}
-                      disabled={isDiretoria}
+                      disabled={isReadOnly}
                       aria-required={isMandatory('razaoSocial')}
                       className="bg-white border-slate-200 focus-visible:ring-blue-500/50"
                     />
@@ -358,7 +386,7 @@ export default function EmpresaForm() {
                           }))
                         }
                       }}
-                      disabled={isDiretoria}
+                      disabled={isReadOnly}
                       maxLength={18}
                       aria-required={isMandatory('cnpj')}
                       aria-invalid={!!error.cnpj}
@@ -386,7 +414,7 @@ export default function EmpresaForm() {
                       id="endereco"
                       value={formData.endereco || ''}
                       onChange={(e) => setFormData({ ...formData, endereco: e.target.value })}
-                      disabled={isDiretoria}
+                      disabled={isReadOnly}
                       aria-required={isMandatory('endereco')}
                       className="bg-white border-slate-200 focus-visible:ring-blue-500/50"
                       placeholder="Rua, Cidade, UF"
@@ -405,7 +433,7 @@ export default function EmpresaForm() {
                         id="clusterInput"
                         value={clusterInput}
                         onChange={(e) => setClusterInput(e.target.value)}
-                        disabled={isDiretoria}
+                        disabled={isReadOnly}
                         onKeyDown={(e) => {
                           if (e.key === 'Enter') {
                             e.preventDefault()
@@ -418,7 +446,7 @@ export default function EmpresaForm() {
                       <Button
                         type="button"
                         onClick={addCluster}
-                        disabled={isDiretoria}
+                        disabled={isReadOnly || !clusterInput.trim()}
                         variant="secondary"
                         aria-label="Adicionar novo cluster"
                         className="bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200"
@@ -452,36 +480,51 @@ export default function EmpresaForm() {
                   Estratégico
                 </CardTitle>
               </CardHeader>
-              <CardContent className="p-6">
+              <CardContent className="p-4 md:p-6">
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                   <div className="space-y-2 md:col-span-2">
                     {renderLabel('Pipeline de Destino', 'pipeline')}
-                    <Select
-                      value={formData.pipeline || ''}
-                      onValueChange={(v) => setFormData({ ...formData, pipeline: v })}
-                      disabled={isDiretoria}
-                    >
-                      <SelectTrigger
-                        id="pipeline"
-                        className="bg-white border-slate-200 focus:ring-blue-500/50"
-                        aria-label="Selecione o Pipeline de destino"
+                    {!existingCompany ? (
+                      <div className="bg-slate-50 border border-slate-200 rounded-md p-2 h-10 text-sm text-slate-600 font-medium flex items-center gap-2">
+                        <Badge className="bg-violet-100 text-violet-700 border-violet-200 hover:bg-violet-100">
+                          Prospecção
+                        </Badge>
+                        <span className="text-slate-400">→</span>
+                        <Badge
+                          variant="outline"
+                          className="bg-white border-slate-200 hover:bg-white"
+                        >
+                          Primeiro contato
+                        </Badge>
+                      </div>
+                    ) : (
+                      <Select
+                        value={formData.pipeline || ''}
+                        onValueChange={(v) => setFormData({ ...formData, pipeline: v })}
+                        disabled={isReadOnly}
                       >
-                        <SelectValue placeholder="Selecione..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Pipeline de Prospecção">
-                          Pipeline de Prospecção
-                        </SelectItem>
-                        <SelectItem value="Pipeline de Nutrição">Pipeline de Nutrição</SelectItem>
-                      </SelectContent>
-                    </Select>
+                        <SelectTrigger
+                          id="pipeline"
+                          className="bg-white border-slate-200 focus:ring-blue-500/50"
+                          aria-label="Selecione o Pipeline de destino"
+                        >
+                          <SelectValue placeholder="Selecione..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Pipeline de Prospecção">
+                            Pipeline de Prospecção
+                          </SelectItem>
+                          <SelectItem value="Pipeline de Nutrição">Pipeline de Nutrição</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
                   </div>
                   <div className="space-y-2 md:col-span-2">
                     {renderLabel('Segmento de Atuação', 'segmento')}
                     <Select
                       value={formData.segmento || ''}
                       onValueChange={(v) => setFormData({ ...formData, segmento: v })}
-                      disabled={isDiretoria}
+                      disabled={isReadOnly}
                     >
                       <SelectTrigger
                         id="segmento"
@@ -510,7 +553,7 @@ export default function EmpresaForm() {
                       id="observacoes"
                       value={formData.observacoes || ''}
                       onChange={(e) => setFormData({ ...formData, observacoes: e.target.value })}
-                      disabled={isDiretoria}
+                      disabled={isReadOnly}
                       placeholder="Informações adicionais relevantes sobre a empresa, negociações em andamento..."
                       className="bg-white min-h-[100px] border-slate-200 focus-visible:ring-blue-500/50"
                     />
@@ -521,18 +564,19 @@ export default function EmpresaForm() {
 
             <CompanyContactsForm
               contacts={contacts}
-              setContacts={isDiretoria ? () => {} : setContacts}
+              setContacts={setContacts}
+              isReadOnly={isReadOnly}
             />
             <CompanyCustomFieldsForm
               formData={formData}
-              setFormData={isDiretoria ? () => {} : setFormData}
+              setFormData={isReadOnly ? () => {} : setFormData}
             />
 
             <div className="h-8"></div>
           </div>
         </div>
 
-        <div className="w-[420px] bg-slate-50/80 border-l border-slate-200/80 flex flex-col h-full shrink-0 shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.02)] z-0 relative">
+        <div className="hidden lg:flex w-[420px] bg-slate-50/80 border-l border-slate-200/80 flex-col h-full shrink-0 shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.02)] z-0 relative">
           <CompanyActionHub company={existingCompany} />
         </div>
       </div>

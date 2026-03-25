@@ -1,19 +1,21 @@
 import { useParams, Link } from 'react-router-dom'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, Building2, MapPin, Layers } from 'lucide-react'
-import useCrmStore from '@/stores/useCrmStore'
+import { ArrowLeft, Building2, MapPin, Layers, MessageSquareWarning } from 'lucide-react'
+import useCrmStore, { Interaction } from '@/stores/useCrmStore'
 import { InteractionsTimeline } from '@/components/InteractionsTimeline'
 import { BrainAnalysis } from '@/components/BrainAnalysis'
 import { Badge } from '@/components/ui/badge'
+import { cn } from '@/lib/utils'
+import { useToast } from '@/hooks/use-toast'
 
 export default function Company360() {
   const { id } = useParams()
-  const { state } = useCrmStore()
+  const { state, updateState } = useCrmStore()
+  const { toast } = useToast()
 
   const company = state.companies.find((c) => c.id === id) || state.companies[0]
-  const interactions =
-    state.interactions.filter((i) => i.companyId === company?.id) || state.interactions
+  const interactions = state.interactions.filter((i) => i.companyId === company?.id)
 
   if (!company) {
     return (
@@ -21,6 +23,29 @@ export default function Company360() {
         Empresa não encontrada no banco de dados.
       </div>
     )
+  }
+
+  const simulateObjection = () => {
+    const newInteraction: Interaction = {
+      id: Math.random().toString(36).substring(7),
+      companyId: company.id,
+      type: 'email',
+      content:
+        'Agradeço muito a apresentação enviada, mas no momento nós já temos um parceiro logístico consolidado que nos atende bem em todas as rotas e não pretendemos trocar.',
+      date: new Date().toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }),
+      author: 'Cliente (Inbound)',
+      subject: 'Re: Apresentação Comercial Transzecão',
+    }
+
+    updateState({
+      interactions: [...state.interactions, newInteraction],
+    })
+
+    toast({
+      title: 'Objeção Recebida! (Simulação Inbound)',
+      description: 'O cliente respondeu ao e-mail. A IA está reprocessando os próximos passos...',
+      variant: 'default',
+    })
   }
 
   return (
@@ -52,7 +77,14 @@ export default function Company360() {
             </p>
           </div>
         </div>
-        <div className="relative z-10 w-full sm:w-auto">
+        <div className="relative z-10 flex w-full sm:w-auto gap-3">
+          <Button
+            onClick={simulateObjection}
+            className="w-full sm:w-auto bg-rose-50 border border-rose-200 text-rose-700 hover:bg-rose-100 shadow-sm font-semibold"
+            variant="outline"
+          >
+            <MessageSquareWarning className="w-4 h-4 mr-2" /> Simular Objeção Inbound
+          </Button>
           <Button
             asChild
             className="w-full sm:w-auto bg-white border-indigo-200 text-indigo-700 hover:bg-indigo-50 shadow-sm font-semibold"
@@ -66,7 +98,7 @@ export default function Company360() {
       <div className="grid lg:grid-cols-12 gap-6">
         <div className="lg:col-span-8 space-y-6">
           <BrainAnalysis interactions={interactions} />
-          <InteractionsTimeline />
+          <InteractionsTimeline interactions={interactions} />
         </div>
 
         <div className="lg:col-span-4 space-y-6">
@@ -124,7 +156,7 @@ export default function Company360() {
                     'text-xs py-1',
                     company.pipeline === 'Pipeline de Prospecção' ||
                       company.pipeline === 'Prospection'
-                      ? 'bg-violet-600 hover:bg-violet-700'
+                      ? 'bg-violet-600 hover:bg-violet-700 text-white'
                       : 'bg-amber-500 hover:bg-amber-600 text-amber-950',
                   )}
                 >

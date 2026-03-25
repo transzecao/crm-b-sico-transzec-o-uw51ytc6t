@@ -186,13 +186,14 @@ const mockContacts: Contact[] = [
   },
 ]
 
+// Note: No 'já tenho parceiro' string in the mock initially, to demonstrate the AI trigger later.
 const mockInteractions: Interaction[] = [
   {
     id: 'int1',
     companyId: '1',
     type: 'whatsapp',
     content: 'Mensagem enviada com apresentação inicial para o diretor. Aguardando feedback.',
-    date: '20/03/2026 10:30',
+    date: '19/03/2026 10:30',
     author: 'Bruna Araujo',
     isPrincipal: true,
   },
@@ -200,11 +201,12 @@ const mockInteractions: Interaction[] = [
     id: 'int2',
     companyId: '1',
     type: 'phone',
-    subject: 'Call de Alinhamento Técnico',
-    content: 'Cliente informou que tem parceiro, mas aceitou analisar.',
+    subject: 'Call de Apresentação',
+    content:
+      'Cliente aceitou ouvir sobre a malha e pediu envio do portfólio de serviços no interior de SP.',
     transcription:
-      '...então, a gente já tem parceiro logístico consolidado, mas se vocês quiserem mandar o material por e-mail, a gente dá uma olhada na volumetria que vocês atendem...',
-    date: '19/03/2026 14:15',
+      '...podem mandar a apresentação por e-mail, por favor? A gente dá uma olhada na malha de vocês pro interior...',
+    date: '20/03/2026 14:15',
     author: 'Bruna Araujo',
     duration: '05m 23s',
   },
