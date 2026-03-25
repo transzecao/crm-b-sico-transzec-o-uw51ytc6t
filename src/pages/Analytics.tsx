@@ -127,7 +127,7 @@ export default function Analytics() {
                   axisLine={false}
                 />
                 <Tooltip />
-                <Bar dataKey="days" fill="#6A0EAE" radius={[0, 4, 4, 0]} barSize={20} />
+                <Bar dataKey="days" fill="#800020" radius={[0, 4, 4, 0]} barSize={20} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>

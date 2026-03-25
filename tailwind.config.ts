@@ -32,11 +32,11 @@ export default {
       colors: {
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
-        ring: '#6A0EAE',
+        ring: '#800020',
         background: '#FFFFFF',
         foreground: '#4A4A4A',
         primary: {
-          DEFAULT: '#6A0EAE',
+          DEFAULT: '#800020',
           foreground: '#FFFFFF',
         },
         secondary: {
@@ -53,7 +53,7 @@ export default {
         },
         accent: {
           DEFAULT: '#F4F4F4',
-          foreground: '#6A0EAE',
+          foreground: '#800020',
         },
         popover: {
           DEFAULT: '#FFFFFF',
@@ -66,12 +66,12 @@ export default {
         sidebar: {
           DEFAULT: '#F8F9FA',
           foreground: '#4A4A4A',
-          primary: '#6A0EAE',
+          primary: '#800020',
           'primary-foreground': '#FFFFFF',
           accent: '#E9ECEF',
-          'accent-foreground': '#6A0EAE',
+          'accent-foreground': '#800020',
           border: '#DEE2E6',
-          ring: '#6A0EAE',
+          ring: '#800020',
         },
       },
       borderRadius: {

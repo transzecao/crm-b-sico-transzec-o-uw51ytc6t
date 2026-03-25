@@ -53,9 +53,9 @@ export function QuickLeadModal({
     <Dialog open={open} onOpenChange={(o) => !o && onCancel()}>
       <DialogContent aria-describedby="Adicionar negócio rápido na etapa selecionada">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-violet-950">
-            <Briefcase className="w-5 h-5 text-violet-600" aria-hidden="true" /> Adicionar Negócio
-            em {stage}
+          <DialogTitle className="flex items-center gap-2 text-slate-900">
+            <Briefcase className="w-5 h-5 text-primary" aria-hidden="true" /> Adicionar Negócio em{' '}
+            {stage}
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-4">
@@ -69,7 +69,7 @@ export function QuickLeadModal({
             </div>
           )}
           <div className="space-y-2">
-            <Label htmlFor="lead-title" className="text-violet-900 font-semibold">
+            <Label htmlFor="lead-title" className="text-slate-900 font-semibold">
               Nome do Negócio{' '}
               <span className="text-rose-600" title="Obrigatório" aria-hidden="true">
                 *
@@ -81,11 +81,11 @@ export function QuickLeadModal({
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Ex: Nova Cotação - Empresa XYZ"
               aria-invalid={error && !title.trim() ? 'true' : 'false'}
-              className="focus-visible:ring-violet-500/50"
+              className="focus-visible:ring-primary/50"
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="lead-value" className="text-violet-900 font-semibold">
+            <Label htmlFor="lead-value" className="text-slate-900 font-semibold">
               Valor Estimado (R$){' '}
               <span className="text-rose-600" title="Obrigatório" aria-hidden="true">
                 *
@@ -93,7 +93,7 @@ export function QuickLeadModal({
             </Label>
             <div className="relative">
               <DollarSign
-                className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-violet-400"
+                className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary/60"
                 aria-hidden="true"
               />
               <Input
@@ -111,7 +111,7 @@ export function QuickLeadModal({
                   }
                 }}
                 className={cn(
-                  'pl-9 focus-visible:ring-violet-500/50',
+                  'pl-9 focus-visible:ring-primary/50',
                   error && parseFloat(value) < 0 && 'border-red-500 focus-visible:ring-red-500',
                 )}
                 placeholder="0.00"
@@ -120,19 +120,19 @@ export function QuickLeadModal({
             </div>
           </div>
         </div>
-        <DialogFooter className="border-t border-violet-100 pt-4">
+        <DialogFooter className="border-t border-slate-100 pt-4">
           <Button
             variant="outline"
             onClick={onCancel}
             aria-label="Cancelar criação rápida"
-            className="bg-white text-violet-700 hover:bg-violet-50 border-violet-200"
+            className="bg-white text-slate-700 hover:bg-slate-50 border-slate-200"
           >
             Cancelar
           </Button>
           <Button
             onClick={handleConfirm}
             aria-label="Confirmar e salvar novo negócio"
-            className="bg-violet-600 hover:bg-violet-700 text-white shadow-sm font-semibold"
+            className="bg-primary hover:bg-primary/90 text-white shadow-sm font-semibold"
           >
             Salvar Negócio
           </Button>

@@ -20,7 +20,7 @@ export function AppHeader() {
   }
 
   return (
-    <header className="sticky top-0 z-40 w-full bg-[#6A0EAE] text-white flex items-center h-14 px-4 justify-between shadow-md border-b border-[#4d0980]">
+    <header className="sticky top-0 z-40 w-full bg-[#800020] text-white flex items-center h-14 px-4 justify-between shadow-md border-b border-[#5c0017]">
       <div className="flex items-center gap-4 sm:gap-6">
         <SidebarTrigger className="text-white/80 hover:text-white transition-colors" />
 
@@ -97,13 +97,13 @@ export function AppHeader() {
         <div className="flex items-center gap-1">
           <button className="p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-full transition-colors relative">
             <Bell className="w-5 h-5" />
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#0056B3] rounded-full border-2 border-[#6A0EAE]"></span>
+            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#0056B3] rounded-full border-2 border-[#800020]"></span>
           </button>
         </div>
 
         <div className="flex items-center gap-3 pl-2 sm:pl-4 border-l border-white/20">
           <Avatar className="w-8 h-8 cursor-pointer ring-2 ring-white/20 hover:ring-white/50 transition-all shadow-sm">
-            <AvatarFallback className="bg-white text-[#6A0EAE] text-xs font-bold">
+            <AvatarFallback className="bg-white text-[#800020] text-xs font-bold">
               {state.role.substring(0, 2).toUpperCase()}
             </AvatarFallback>
           </Avatar>
