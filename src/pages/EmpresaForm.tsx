@@ -42,13 +42,12 @@ export default function EmpresaForm() {
   const existingContacts = id ? state.contacts.filter((c) => c.companyId === id) : []
 
   const isMaster = state.role === 'Master' || state.role === 'Supervisor Geral'
-  const isReadOnly = [
-    'Diretoria',
-    'Coleta',
-    'Financeiro',
-    'Supervisor Financeiro',
-    'Supervisor Coleta',
-  ].includes(state.role)
+
+  const isReadOnly =
+    ['Diretoria', 'Financeiro', 'Supervisor Financeiro'].includes(state.role) ||
+    (state.role === 'Coleta' &&
+      existingCompany &&
+      existingCompany.createdBy !== state.currentUser.name)
 
   const [formData, setFormData] = useState<Partial<Company>>({
     cnpj: '',
@@ -109,7 +108,6 @@ export default function EmpresaForm() {
 
   const handleCnpjChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (isReadOnly) return
-    // Prevent non-numeric characters before formatting
     const rawVal = e.target.value.replace(/\D/g, '')
     const formatted = formatCnpj(rawVal)
     setFormData({ ...formData, cnpj: formatted })
@@ -170,10 +168,14 @@ export default function EmpresaForm() {
         ? existingCompany.id
         : Math.random().toString(36).substr(2, 9)
 
-      // Strict logic for new registrations to go to Pipeline de Prospecção
       const finalPipeline = existingCompany ? formData.pipeline : 'Pipeline de Prospecção'
 
-      const newCompany = { ...formData, id: companyId, pipeline: finalPipeline } as Company
+      const newCompany = {
+        ...formData,
+        id: companyId,
+        pipeline: finalPipeline,
+        createdBy: existingCompany ? existingCompany.createdBy : state.currentUser.name,
+      } as Company
 
       const finalContacts = contacts.map((c) => ({
         ...c,
@@ -328,8 +330,8 @@ export default function EmpresaForm() {
               <div className="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded-lg flex items-start gap-3 shadow-sm">
                 <AlertCircle className="w-5 h-5 shrink-0 mt-0.5 text-blue-600" />
                 <p className="text-sm font-medium">
-                  Modo de Leitura: Você possui apenas acesso de visualização ao cadastro de empresas
-                  e contatos comerciais.
+                  Modo de Leitura: Você possui apenas acesso de visualização a este cadastro. Apenas
+                  o responsável (criador) ou Master/Comercial podem editá-lo.
                 </p>
               </div>
             )}
@@ -547,6 +549,7 @@ export default function EmpresaForm() {
                         <SelectItem value="Metalúrgica">Metalúrgica</SelectItem>
                         <SelectItem value="Varejo">Varejo</SelectItem>
                         <SelectItem value="Químico">Químico / Fertilizantes</SelectItem>
+                        <SelectItem value="Materiais Delicados">Materiais Delicados</SelectItem>
                         <SelectItem value="Outros">Outros</SelectItem>
                       </SelectContent>
                     </Select>

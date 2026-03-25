@@ -16,6 +16,7 @@ import Analytics from './pages/Analytics'
 import LoginAdmin from './pages/LoginAdmin'
 import NotFound from './pages/NotFound'
 import IA from './pages/IA'
+import Roteirizacao from './pages/Roteirizacao'
 
 const App = () => (
   <BrowserRouter future={{ v7_startTransition: false, v7_relativeSplatPath: false }}>
@@ -36,6 +37,7 @@ const App = () => (
           <Route path="/analytics" element={<Analytics />} />
           <Route path="/admin/logins" element={<LoginAdmin />} />
           <Route path="/ia" element={<IA />} />
+          <Route path="/roteirizacao" element={<Roteirizacao />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>

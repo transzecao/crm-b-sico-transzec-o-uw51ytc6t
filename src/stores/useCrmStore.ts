@@ -46,6 +46,7 @@ export type Company = {
   clusters?: string[]
   observacoes?: string
   customData?: Record<string, any>
+  createdBy?: string
 }
 
 export type Contact = {
@@ -126,6 +127,7 @@ const mockCompanies: Company[] = [
     origin: 'Comercial',
     segmento: 'Metalúrgica',
     clusters: ['Campinas', 'Grande SP'],
+    createdBy: 'Bruna Araujo',
   },
   {
     id: '2',
@@ -139,6 +141,7 @@ const mockCompanies: Company[] = [
     pipeline: 'Pipeline de Nutrição',
     segmento: 'Autopeças',
     clusters: ['Vale do Paraíba'],
+    createdBy: 'Bruna Araujo',
   },
 ]
 

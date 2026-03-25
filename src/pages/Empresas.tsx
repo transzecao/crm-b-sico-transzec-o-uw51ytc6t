@@ -14,13 +14,8 @@ import { Link } from 'react-router-dom'
 
 export default function Empresas() {
   const { state } = useCrmStore()
-  const canEdit = ![
-    'Diretoria',
-    'Coleta',
-    'Financeiro',
-    'Supervisor Financeiro',
-    'Supervisor Coleta',
-  ].includes(state.role)
+
+  const canCreate = !['Diretoria', 'Financeiro', 'Supervisor Financeiro'].includes(state.role)
 
   return (
     <div className="space-y-6 bg-blue-50/20 min-h-[calc(100vh-6rem)] p-2 md:p-6 rounded-xl border border-blue-100/50">
@@ -36,7 +31,7 @@ export default function Empresas() {
             </p>
           </div>
         </div>
-        {canEdit && (
+        {canCreate && (
           <Button
             asChild
             className="bg-blue-600 hover:bg-blue-700 text-white shadow-md transition-all active:scale-95"

@@ -9,6 +9,7 @@ import {
   BarChart3,
   BrainCircuit,
   KeyRound,
+  Map as MapIcon,
 } from 'lucide-react'
 import {
   Sidebar,
@@ -83,6 +84,12 @@ export function AppSidebar() {
       ],
     },
     {
+      title: 'Roteirização e Coleta',
+      url: '/roteirizacao',
+      icon: MapIcon,
+      roles: ['Master', 'Supervisor Geral', 'Supervisor Coleta', 'Coleta', 'Diretoria'],
+    },
+    {
       title: 'Agente Financeiro IA',
       url: '/financeiro',
       icon: DollarSign,
@@ -144,6 +151,8 @@ export function AppSidebar() {
       return 'data-[active=true]:bg-violet-100/80 data-[active=true]:text-violet-900 hover:bg-violet-50 hover:text-violet-800'
     if (url.startsWith('/pipeline/2'))
       return 'data-[active=true]:bg-amber-100/80 data-[active=true]:text-amber-900 hover:bg-amber-50 hover:text-amber-800'
+    if (url.startsWith('/roteirizacao'))
+      return 'data-[active=true]:bg-sky-100/80 data-[active=true]:text-sky-900 hover:bg-sky-50 hover:text-sky-800'
     if (url.startsWith('/analytics'))
       return 'data-[active=true]:bg-slate-200/80 data-[active=true]:text-slate-900 hover:bg-slate-100 hover:text-slate-800'
     if (url.startsWith('/ia'))
