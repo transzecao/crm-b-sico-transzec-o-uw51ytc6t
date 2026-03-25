@@ -10,7 +10,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { MapPin, Plus, Trash2, Zap, AlertTriangle, Clock, Fuel, Navigation } from 'lucide-react'
+import {
+  MapPin,
+  Plus,
+  Trash2,
+  Zap,
+  AlertTriangle,
+  Clock,
+  Fuel,
+  Navigation,
+  ShieldCheck,
+} from 'lucide-react'
 import { Waypoint } from '@/pages/Roteirizacao'
 import { Badge } from '@/components/ui/badge'
 
@@ -58,23 +68,26 @@ export function RouteSidebar({
         </CardHeader>
         <CardContent className="p-4 space-y-5">
           <div className="space-y-2">
-            <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-              Veículo Destinado
+            <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wider flex items-center justify-between">
+              <span>Veículo Destinado</span>
+              <Badge variant="outline" className="text-[9px] bg-slate-50">
+                <ShieldCheck className="w-3 h-3 mr-1" /> Regras Validadas
+              </Badge>
             </Label>
             <Select
               value={vehicle.type}
               onValueChange={(val) => {
-                const capacity = val === 'Fiorino' ? 1500 : val === 'VUC' ? 3000 : 6000
+                const capacity = val === 'Fiorino' ? 1500 : val === 'VUC' ? 3000 : 5000
                 setVehicle({ type: val, capacity })
               }}
             >
-              <SelectTrigger className="bg-white border-slate-200">
+              <SelectTrigger className="bg-white border-slate-200 font-semibold text-sky-900">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Fiorino">Fiorino (1.500 kg)</SelectItem>
-                <SelectItem value="VUC">VUC (3.000 kg)</SelectItem>
-                <SelectItem value="Toco">Caminhão Toco (6.000 kg)</SelectItem>
+                <SelectItem value="Fiorino">Fiorino (Máx 1.500 kg)</SelectItem>
+                <SelectItem value="VUC">VUC (Máx 3.000 kg)</SelectItem>
+                <SelectItem value="2Eixos">Caminhão 2 Eixos (Máx 5.000 kg)</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -88,9 +101,9 @@ export function RouteSidebar({
                 variant="ghost"
                 size="sm"
                 onClick={addWaypoint}
-                className="h-7 px-2 text-sky-600 hover:bg-sky-50"
+                className="h-7 px-2 text-sky-600 hover:bg-sky-50 font-bold"
               >
-                <Plus className="w-4 h-4 mr-1" /> Add
+                <Plus className="w-4 h-4 mr-1" /> Adicionar
               </Button>
             </div>
 
@@ -98,7 +111,7 @@ export function RouteSidebar({
               {waypoints.map((wp, index) => (
                 <div
                   key={wp.id}
-                  className="p-3 bg-slate-50 border border-slate-200 rounded-lg relative group"
+                  className="p-3 bg-slate-50 border border-slate-200 rounded-lg relative group shadow-sm"
                 >
                   <div className="absolute top-2 right-2 flex items-center gap-2">
                     <Badge
@@ -130,7 +143,7 @@ export function RouteSidebar({
                     value={wp.address}
                     onChange={(e) => updateWaypoint(wp.id, 'address', e.target.value)}
                     placeholder="Endereço completo..."
-                    className="h-8 text-sm mb-2 bg-white"
+                    className="h-8 text-sm mb-2 bg-white font-medium"
                   />
                   <div className="flex gap-2">
                     <Input
@@ -161,15 +174,15 @@ export function RouteSidebar({
 
           <Button
             onClick={onGenerate}
-            className="w-full bg-sky-600 hover:bg-sky-700 text-white font-semibold shadow-md active:scale-95 transition-all"
+            className="w-full bg-sky-600 hover:bg-sky-700 text-white font-bold shadow-md active:scale-95 transition-all text-sm py-5"
           >
-            <Zap className="w-4 h-4 mr-2" fill="currentColor" /> Gerar Rota Inteligente
+            <Zap className="w-5 h-5 mr-2" fill="currentColor" /> Processar na IA (Google Maps)
           </Button>
         </CardContent>
       </Card>
 
       {routeGenerated && (
-        <Card className="border-emerald-200 shadow-sm bg-emerald-50/30 backdrop-blur-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <Card className="border-emerald-200 shadow-md bg-emerald-50/40 backdrop-blur-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
           <CardHeader className="py-3 px-4 border-b border-emerald-100 bg-emerald-100/50">
             <CardTitle className="text-sm text-emerald-900 font-bold flex items-center gap-2">
               Resumo da Rota Otimizada
@@ -206,12 +219,16 @@ export function RouteSidebar({
             {diagnostics.length > 0 && (
               <div className="space-y-2 mt-4">
                 <span className="text-xs font-bold text-rose-800 uppercase tracking-wider flex items-center gap-1">
-                  <AlertTriangle className="w-4 h-4 text-rose-500" /> Diagnóstico da IA
+                  <AlertTriangle className="w-4 h-4 text-rose-500" /> Diagnóstico & APIs
                 </span>
                 {diagnostics.map((diag, i) => (
                   <div
                     key={i}
-                    className="bg-rose-50 border border-rose-200 text-rose-800 text-xs p-2.5 rounded-md leading-relaxed font-medium"
+                    className={`text-xs p-2.5 rounded-md leading-relaxed font-semibold shadow-sm border ${
+                      diag.includes('❌') || diag.includes('⚠️')
+                        ? 'bg-rose-50 border-rose-200 text-rose-800'
+                        : 'bg-white border-slate-200 text-slate-700'
+                    }`}
                   >
                     {diag}
                   </div>

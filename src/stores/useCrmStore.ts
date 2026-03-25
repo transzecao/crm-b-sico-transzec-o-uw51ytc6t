@@ -97,6 +97,14 @@ export type UserLogin = {
   updatedAt: string
 }
 
+export type AiAuditLog = {
+  id: string
+  date: string
+  action: string
+  details: string
+  domainChecked?: string
+}
+
 type CrmState = {
   role: Role
   currentUser: { name: string; avatar: string }
@@ -111,6 +119,7 @@ type CrmState = {
   accessLogs: { date: string; user: string; role: string; module: string }[]
   loginAuditLogs: { date: string; user: string; action: string }[]
   financeAuditLogs: { date: string; user: string; action: string }[]
+  aiAuditLogs: AiAuditLog[]
 }
 
 const mockCompanies: Company[] = [
@@ -260,6 +269,23 @@ const mockLogins: UserLogin[] = [
   },
 ]
 
+const mockAiAuditLogs: AiAuditLog[] = [
+  {
+    id: 'a1',
+    date: new Date().toLocaleString('pt-BR'),
+    action: 'Atualização BI Diária',
+    details: 'Sincronização com tabela de fretes mínimos. Padrões de precificação ajustados.',
+    domainChecked: 'antt.gov.br',
+  },
+  {
+    id: 'a2',
+    date: new Date(Date.now() - 86400000).toLocaleString('pt-BR'),
+    action: 'Aprendizado de Padrões',
+    details:
+      'Setor de Autopeças convertido com sucesso usando "Teste Leve". Base de conhecimento atualizada.',
+  },
+]
+
 let globalState: CrmState = {
   role: 'Master',
   currentUser: {
@@ -294,6 +320,7 @@ let globalState: CrmState = {
       action: 'Inicialização da malha tarifária base (SP).',
     },
   ],
+  aiAuditLogs: mockAiAuditLogs,
 }
 
 const listeners = new Set<(state: CrmState) => void>()
@@ -331,5 +358,16 @@ export default function useCrmStore() {
     updateState({ accessLogs: [newLog, ...globalState.accessLogs].slice(0, 100) })
   }
 
-  return { state, updateState, logAccess }
+  const logAiAction = (action: string, details: string, domainChecked?: string) => {
+    const newLog = {
+      id: Math.random().toString(36).substring(7),
+      date: new Date().toLocaleString('pt-BR'),
+      action,
+      details,
+      domainChecked,
+    }
+    updateState({ aiAuditLogs: [newLog, ...globalState.aiAuditLogs].slice(0, 100) })
+  }
+
+  return { state, updateState, logAccess, logAiAction }
 }

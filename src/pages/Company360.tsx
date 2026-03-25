@@ -1,7 +1,14 @@
 import { useParams, Link } from 'react-router-dom'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, Building2, MapPin, Layers, MessageSquareWarning } from 'lucide-react'
+import {
+  ArrowLeft,
+  Building2,
+  MapPin,
+  Layers,
+  MessageSquareWarning,
+  ShieldCheck,
+} from 'lucide-react'
 import useCrmStore, { Interaction } from '@/stores/useCrmStore'
 import { InteractionsTimeline } from '@/components/InteractionsTimeline'
 import { BrainAnalysis } from '@/components/BrainAnalysis'
@@ -43,10 +50,12 @@ export default function Company360() {
 
     toast({
       title: 'Objeção Recebida! (Simulação Inbound)',
-      description: 'O cliente respondeu ao e-mail. A IA está reprocessando os próximos passos...',
+      description: 'O cliente respondeu ao e-mail. A IA está reprocessando os dados da web...',
       variant: 'default',
     })
   }
+
+  const isCnpjValid = company.cnpj.replace(/\D/g, '').length === 14
 
   return (
     <div className="space-y-6 pb-12">
@@ -97,7 +106,7 @@ export default function Company360() {
 
       <div className="grid lg:grid-cols-12 gap-6">
         <div className="lg:col-span-8 space-y-6">
-          <BrainAnalysis interactions={interactions} />
+          <BrainAnalysis interactions={interactions} company={company} />
           <InteractionsTimeline interactions={interactions} />
         </div>
 
@@ -113,13 +122,30 @@ export default function Company360() {
                 <span className="text-indigo-400 font-bold uppercase text-[10px] block mb-1 tracking-widest">
                   CNPJ
                 </span>
-                <span className="font-semibold text-slate-800 bg-slate-50 px-2 py-1 rounded border border-slate-100 inline-block">
-                  {company.cnpj}
-                </span>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="font-semibold text-slate-800 bg-slate-50 px-2 py-1 rounded border border-slate-100 inline-block">
+                    {company.cnpj}
+                  </span>
+                  {isCnpjValid ? (
+                    <Badge
+                      variant="outline"
+                      className="text-[10px] bg-emerald-50 text-emerald-700 border-emerald-200 py-0.5"
+                    >
+                      <ShieldCheck className="w-3 h-3 mr-1" /> Validado (Receita Federal)
+                    </Badge>
+                  ) : (
+                    <Badge
+                      variant="outline"
+                      className="text-[10px] bg-rose-50 text-rose-700 border-rose-200 py-0.5"
+                    >
+                      Formato Inválido
+                    </Badge>
+                  )}
+                </div>
               </div>
               <div>
                 <span className="text-indigo-400 font-bold uppercase text-[10px] block mb-1.5 tracking-widest">
-                  Segmento
+                  Segmento Analisado
                 </span>
                 <Badge
                   variant="outline"

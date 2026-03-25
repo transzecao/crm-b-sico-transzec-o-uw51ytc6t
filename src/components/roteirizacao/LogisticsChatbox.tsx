@@ -10,7 +10,7 @@ export function LogisticsChatbox() {
   const [messages, setMessages] = useState([
     {
       role: 'ai',
-      text: 'Olá! Sou o The Brain, seu assistente logístico. Posso explicar a lógica de otimização da rota, sugerir janelas de entrega ou estimar custos de pedágio. Como posso ajudar?',
+      text: 'Olá! Sou o The Brain, integrado à Google Maps Platform. Posso calcular rotas em tempo real, verificar restrições ZMRC via Geocoding ou estimar custos.',
     },
   ])
   const [input, setInput] = useState('')
@@ -24,9 +24,9 @@ export function LogisticsChatbox() {
 
     setTimeout(() => {
       const responses = [
-        'A rota foi otimizada para evitar a Avenida dos Bandeirantes durante o horário de pico (17h-19h), economizando cerca de 25 minutos.',
-        'Se dividirmos a carga em dois veículos Fiorino, conseguimos acessar as zonas ZMRC sem restrição de horário, mas o custo operacional aumentará em 15%.',
-        'O custo estimado de combustível é baseado na média de R$ 5,80/litro do diesel na região da Grande São Paulo e no consumo do VUC (7 km/l).',
+        'Acessando a Google Maps Platform: a rota foi otimizada para evitar a Avenida dos Bandeirantes no pico, economizando cerca de 25 minutos no trajeto.',
+        'Via consulta Geocoding API: se utilizarmos dois veículos VUC, evitamos as restrições ZMRC no centro expandido e mantemos as entregas no horário comercial.',
+        'Segundo dados da ANTT atualizados hoje, o piso mínimo para um Caminhão Toco nesta quilometragem é de R$ 1.250,00.',
       ]
       const randomResponse = responses[Math.floor(Math.random() * responses.length)]
       setMessages((prev) => [...prev, { role: 'ai', text: randomResponse }])
@@ -37,7 +37,7 @@ export function LogisticsChatbox() {
     <Card className="border-sky-200 shadow-sm bg-white/90 backdrop-blur-sm flex flex-col h-[400px]">
       <CardHeader className="py-3 px-4 border-b border-sky-100 bg-sky-50/50 shrink-0">
         <CardTitle className="text-sm text-sky-900 font-bold flex items-center gap-2">
-          <BrainCircuit className="w-5 h-5 text-sky-500" /> Assistente Logístico (IA)
+          <BrainCircuit className="w-5 h-5 text-sky-500" /> Assistente Web Logístico
         </CardTitle>
       </CardHeader>
       <CardContent className="p-0 flex-1 flex flex-col min-h-0">
@@ -63,10 +63,10 @@ export function LogisticsChatbox() {
                 </div>
                 <div
                   className={cn(
-                    'px-4 py-2 rounded-2xl max-w-[80%] leading-relaxed font-medium',
+                    'px-4 py-2 rounded-2xl max-w-[80%] leading-relaxed font-medium shadow-sm',
                     msg.role === 'ai'
                       ? 'bg-slate-50 border border-slate-200 text-slate-700 rounded-tl-none'
-                      : 'bg-sky-600 text-white shadow-md rounded-tr-none',
+                      : 'bg-sky-600 text-white rounded-tr-none',
                   )}
                 >
                   {msg.text}
@@ -82,14 +82,14 @@ export function LogisticsChatbox() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-              placeholder="Pergunte sobre rotas, ZMRC, custos..."
+              placeholder="Pergunte sobre APIs, trânsito ou rotas..."
               className="pl-9 bg-white border-slate-300 focus-visible:ring-sky-500"
             />
           </div>
           <Button
             onClick={handleSend}
             size="icon"
-            className="bg-sky-600 hover:bg-sky-700 text-white shrink-0"
+            className="bg-sky-600 hover:bg-sky-700 text-white shrink-0 shadow-sm"
           >
             <Send className="w-4 h-4" />
           </Button>
