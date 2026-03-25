@@ -1,7 +1,10 @@
 import { useState } from 'react'
-import { Phone, Mail, MessageCircle, AlertCircle, Clock, CheckSquare, Save } from 'lucide-react'
+import { Phone, Mail, MessageCircle, Clock, Save, Mic, Star } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
+import { Input } from '@/components/ui/input'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Label } from '@/components/ui/label'
 import { Card, CardContent } from '@/components/ui/card'
 import {
   Accordion,
@@ -17,7 +20,14 @@ import { BrainAnalysis } from './BrainAnalysis'
 export function CompanyActionHub({ company }: { company?: Company }) {
   const { state, updateState } = useCrmStore()
   const { toast } = useToast()
-  const [commText, setCommText] = useState({ email: '', whatsapp: '', phone: '' })
+  const [commText, setCommText] = useState({
+    email: '',
+    emailSubject: '',
+    whatsapp: '',
+    whatsappPrincipal: false,
+    phone: '',
+  })
+  const [isTranscribing, setIsTranscribing] = useState(false)
 
   if (!company) {
     return (
@@ -35,11 +45,21 @@ export function CompanyActionHub({ company }: { company?: Company }) {
     )
   }
 
-  const interactions = state.interactions.filter((i) => i.companyId === company.id).reverse()
+  const isManager = ['Master', 'Supervisor', 'Diretoria'].includes(state.role)
+
+  const interactions = state.interactions
+    .filter((i) => {
+      if (i.companyId !== company.id) return false
+      if (!isManager && state.role === 'Comercial') {
+        return i.author === state.currentUser.name || i.author === 'Cliente'
+      }
+      return true
+    })
+    .reverse()
 
   const logInteraction = (type: 'email' | 'whatsapp' | 'phone') => {
     const text = commText[type]
-    if (!text.trim()) return
+    if (typeof text !== 'string' || !text.trim()) return
 
     const newInteraction: Interaction = {
       id: Math.random().toString(36).substr(2, 9),
@@ -47,12 +67,27 @@ export function CompanyActionHub({ company }: { company?: Company }) {
       type,
       content: text,
       date: new Date().toLocaleString('pt-BR'),
-      author: state.role,
+      author: state.currentUser.name,
+      ...(type === 'email' && { subject: commText.emailSubject || 'Sem Assunto' }),
+      ...(type === 'whatsapp' && { isPrincipal: commText.whatsappPrincipal }),
     }
 
     updateState({ interactions: [...state.interactions, newInteraction] })
-    setCommText((prev) => ({ ...prev, [type]: '' }))
+    setCommText((prev) => ({ ...prev, [type]: '', ...(type === 'email' && { emailSubject: '' }) }))
     toast({ title: 'Interação registrada no histórico!' })
+  }
+
+  const simulateTranscription = () => {
+    setIsTranscribing(true)
+    setTimeout(() => {
+      setCommText((prev) => ({
+        ...prev,
+        phone:
+          'Transcriçao: O cliente demonstrou interesse em avaliar custos de frete. Sugeriu que enviássemos uma proposta teste na próxima sexta-feira.',
+      }))
+      setIsTranscribing(false)
+      toast({ title: 'Áudio transcrito com sucesso! (Precisão > 90%)' })
+    }, 2000)
   }
 
   return (
@@ -60,46 +95,10 @@ export function CompanyActionHub({ company }: { company?: Company }) {
       <div className="flex-1 overflow-y-auto p-4 md:p-5 space-y-5">
         <BrainAnalysis interactions={interactions} />
 
-        <Card className="shadow-sm border-amber-200/60 bg-amber-50/20 overflow-hidden">
-          <CardContent className="p-4 md:p-5">
-            <h3 className="text-[11px] font-bold text-amber-600/80 uppercase tracking-wider mb-4 flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 text-amber-500" /> Lembretes de Funil
-            </h3>
-            <div className="space-y-3">
-              <div className="flex items-start gap-3 bg-red-50/80 border border-red-100 p-3 rounded-lg">
-                <div className="w-7 h-7 rounded-full bg-red-100 flex items-center justify-center shrink-0 mt-0.5">
-                  <AlertCircle className="w-3.5 h-3.5 text-red-600" />
-                </div>
-                <div>
-                  <p className="text-[10px] font-bold text-red-700 uppercase tracking-wider">
-                    Ações Pendentes
-                  </p>
-                  <p className="text-sm font-medium text-red-900 mt-0.5">0 itens atrasados</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3 bg-white/80 border border-slate-100 p-3 rounded-lg shadow-sm">
-                <div className="w-7 h-7 rounded-full bg-violet-100 flex items-center justify-center shrink-0 mt-0.5">
-                  <CheckSquare className="w-3.5 h-3.5 text-violet-600" />
-                </div>
-                <div>
-                  <p className="text-[10px] font-bold text-violet-500 uppercase tracking-wider">
-                    Status da Negociação
-                  </p>
-                  <p className="text-sm font-medium text-violet-900 mt-0.5">
-                    {company.pipeline === 'Pipeline de Nutrição'
-                      ? 'Nutrição Ativa'
-                      : 'Em Prospecção Inicial'}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
         <Card className="shadow-sm border-slate-200/60 bg-white overflow-hidden">
           <CardContent className="p-4 md:p-5">
             <h3 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
-              <MessageCircle className="w-4 h-4 text-slate-400" /> Central de Ações
+              <MessageCircle className="w-4 h-4 text-slate-400" /> Central de Ações Multicanal
             </h3>
 
             <Accordion type="single" collapsible defaultValue="email" className="w-full space-y-2">
@@ -113,6 +112,12 @@ export function CompanyActionHub({ company }: { company?: Company }) {
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="p-4 pt-0 space-y-3">
+                  <Input
+                    placeholder="Assunto do e-mail"
+                    value={commText.emailSubject}
+                    onChange={(e) => setCommText({ ...commText, emailSubject: e.target.value })}
+                    className="bg-slate-50/50 text-sm h-9"
+                  />
                   <Textarea
                     placeholder="Componha o e-mail aqui..."
                     className="min-h-[100px] text-sm resize-none bg-slate-50/50"
@@ -124,7 +129,7 @@ export function CompanyActionHub({ company }: { company?: Company }) {
                     onClick={() => logInteraction('email')}
                     disabled={!commText.email.trim()}
                   >
-                    Enviar e Registrar
+                    Enviar e Registrar E-mail
                   </Button>
                 </AccordionContent>
               </AccordionItem>
@@ -139,8 +144,21 @@ export function CompanyActionHub({ company }: { company?: Company }) {
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="p-4 pt-0 space-y-3">
+                  <div className="flex items-center space-x-2 bg-emerald-50/50 p-2 rounded-md border border-emerald-100">
+                    <Checkbox
+                      id="isPrincipal"
+                      checked={commText.whatsappPrincipal}
+                      onCheckedChange={(c) => setCommText({ ...commText, whatsappPrincipal: !!c })}
+                    />
+                    <Label
+                      htmlFor="isPrincipal"
+                      className="text-sm font-medium text-emerald-800 cursor-pointer"
+                    >
+                      Marcar como Contato Principal
+                    </Label>
+                  </div>
                   <Textarea
-                    placeholder="Mensagem para o WhatsApp..."
+                    placeholder="Mensagem para o WhatsApp (ou cole resposta recebida)..."
                     className="min-h-[100px] text-sm resize-none bg-slate-50/50 border-green-200 focus-visible:ring-green-500"
                     value={commText.whatsapp}
                     onChange={(e) => setCommText({ ...commText, whatsapp: e.target.value })}
@@ -150,8 +168,11 @@ export function CompanyActionHub({ company }: { company?: Company }) {
                     onClick={() => logInteraction('whatsapp')}
                     disabled={!commText.whatsapp.trim()}
                   >
-                    Abrir App e Registrar
+                    Registrar no Histórico
                   </Button>
+                  <p className="text-[10px] text-center text-slate-400 italic mt-1">
+                    Dica: Digite "Já tenho parceiro" para testar o painel The Brain.
+                  </p>
                 </AccordionContent>
               </AccordionItem>
 
@@ -165,14 +186,25 @@ export function CompanyActionHub({ company }: { company?: Company }) {
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="p-4 pt-0 space-y-3">
-                  <Button
-                    variant="outline"
-                    className="w-full text-purple-700 border-purple-200 hover:bg-purple-50 hover:text-purple-800 font-medium"
-                  >
-                    <Phone className="w-4 h-4 mr-2" /> Iniciar Ligação
-                  </Button>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button
+                      variant="outline"
+                      className="w-full text-purple-700 border-purple-200 hover:bg-purple-50 hover:text-purple-800 font-medium text-xs"
+                    >
+                      <Phone className="w-3.5 h-3.5 mr-2" /> Ligar
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="w-full text-slate-700 border-slate-200 hover:bg-slate-50 font-medium text-xs"
+                      onClick={simulateTranscription}
+                      disabled={isTranscribing}
+                    >
+                      <Mic className="w-3.5 h-3.5 mr-2" />{' '}
+                      {isTranscribing ? 'Ouvindo...' : 'Transcrever Áudio'}
+                    </Button>
+                  </div>
                   <Textarea
-                    placeholder="Transcrição ou anotações da ligação..."
+                    placeholder="Transcrição automática ou anotações da ligação..."
                     className="min-h-[100px] text-sm resize-none bg-slate-50/50"
                     value={commText.phone}
                     onChange={(e) => setCommText({ ...commText, phone: e.target.value })}
@@ -182,7 +214,7 @@ export function CompanyActionHub({ company }: { company?: Company }) {
                     onClick={() => logInteraction('phone')}
                     disabled={!commText.phone.trim()}
                   >
-                    Salvar Registro
+                    Salvar Registro de Ligação
                   </Button>
                 </AccordionContent>
               </AccordionItem>
@@ -192,11 +224,11 @@ export function CompanyActionHub({ company }: { company?: Company }) {
 
         <div className="px-1 pt-2 bg-slate-100/50 p-4 rounded-xl border border-slate-200/60">
           <h3 className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-6 flex items-center gap-2">
-            <Clock className="w-4 h-4 text-slate-400" /> Histórico de Interações
+            <Clock className="w-4 h-4 text-slate-400" /> Histórico Multicanal
           </h3>
           {interactions.length === 0 ? (
             <div className="text-center py-10 px-4 text-slate-400 text-sm border border-dashed border-slate-200 rounded-xl bg-white shadow-sm">
-              Nenhuma interação registrada nesta empresa.
+              Nenhuma interação registrada.
             </div>
           ) : (
             <div className="relative border-l-2 border-slate-300 ml-4 pl-6 space-y-6 pb-2">
@@ -217,13 +249,27 @@ export function CompanyActionHub({ company }: { company?: Company }) {
                     {interaction.type === 'phone' && <Phone className="w-3.5 h-3.5" />}
                   </div>
                   <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-                    <div className="flex justify-between mb-2 items-center">
-                      <span className="text-xs font-bold text-slate-700">{interaction.author}</span>
-                      <span className="text-[10px] font-medium text-slate-400">
+                    <div className="flex justify-between mb-2 items-start">
+                      <div className="flex flex-col">
+                        <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                          {interaction.author}
+                          {interaction.isPrincipal && (
+                            <span className="bg-emerald-100 text-emerald-700 text-[9px] px-1.5 py-0.5 rounded-full uppercase tracking-wider font-bold flex items-center gap-1">
+                              <Star className="w-2.5 h-2.5" /> Principal
+                            </span>
+                          )}
+                        </span>
+                        {interaction.subject && (
+                          <span className="text-[11px] font-semibold text-slate-500 mt-0.5">
+                            Assunto: {interaction.subject}
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-[10px] font-medium text-slate-400 shrink-0 mt-0.5">
                         {interaction.date}
                       </span>
                     </div>
-                    <p className="text-sm text-slate-600 whitespace-pre-wrap leading-relaxed">
+                    <p className="text-sm text-slate-600 whitespace-pre-wrap leading-relaxed mt-1">
                       {interaction.content}
                     </p>
                   </div>

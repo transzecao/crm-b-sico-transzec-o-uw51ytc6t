@@ -64,6 +64,8 @@ export type Interaction = {
   content: string
   date: string
   author: string
+  subject?: string
+  isPrincipal?: boolean
 }
 
 export type CustomFieldDef = {
@@ -178,14 +180,16 @@ const mockInteractions: Interaction[] = [
     id: 'int1',
     companyId: '1',
     type: 'whatsapp',
-    content: 'Mensagem enviada com proposta inicial para o diretor comercial. Aguardando feedback.',
+    content: 'Mensagem enviada com apresentação inicial para o diretor. Aguardando feedback.',
     date: '20/03/2026 10:30',
     author: 'Bruna Araujo',
+    isPrincipal: true,
   },
   {
     id: 'int2',
     companyId: '1',
     type: 'email',
+    subject: 'Apresentação Institucional Transzecão',
     content: 'E-mail enviado contendo a apresentação institucional da Transzecão.',
     date: '19/03/2026 14:15',
     author: 'Bruna Araujo',
