@@ -5,18 +5,7 @@ import useCrmStore, { Lead } from '@/stores/useCrmStore'
 import { LossReasonModal } from '@/components/LossReasonModal'
 import { QuickLeadModal } from '@/components/QuickLeadModal'
 import { useToast } from '@/hooks/use-toast'
-import {
-  Pin,
-  ChevronDown,
-  Filter,
-  Settings,
-  Search,
-  LayoutGrid,
-  List,
-  CheckSquare,
-  Calendar as CalendarIcon,
-  Clock,
-} from 'lucide-react'
+import { Pin, ChevronDown, Filter, Settings, LayoutGrid, Clock } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -81,9 +70,7 @@ export default function Pipeline1() {
       }
 
       const lead = state.leads.find((l) => l.id === id)
-      if (!lead) {
-        throw new Error('Negócio não encontrado na base de dados.')
-      }
+      if (!lead) throw new Error('Negócio não encontrado na base de dados.')
 
       if (stage === 'Perda') {
         setPendingMove({ id, stage })
@@ -102,6 +89,14 @@ export default function Pipeline1() {
         return
       }
 
+      // Contact Tracking Automation: Visual feedback that previous attempts are complete
+      if (stage.includes('sem resposta') && stage !== '1º contato sem resposta') {
+        toast({
+          title: 'Acompanhamento Automático',
+          description: `Movido para ${stage}. Tentativas anteriores marcadas como concluídas.`,
+        })
+      }
+
       // Automation Rules
       let finalStage = stage
       let newPipeline = lead.pipeline
@@ -111,7 +106,7 @@ export default function Pipeline1() {
         newPipeline = 'Nutrition'
         toast({
           title: 'Automação Disparada: Nutrição',
-          description: '3º contato sem resposta atingido. Movido para Nutrição (inativo).',
+          description: 'Inatividade máxima atingida. Movido para Nutrição (inativo).',
         })
       }
 
@@ -130,7 +125,7 @@ export default function Pipeline1() {
       })
     } catch (error) {
       try {
-        updateState({ leads: previousState }) // Rollback
+        updateState({ leads: previousState })
       } catch (rollbackError) {
         console.error('Falha de integridade no rollback:', rollbackError)
       }
@@ -158,11 +153,7 @@ export default function Pipeline1() {
         variant: 'destructive',
       })
     } catch (error) {
-      try {
-        updateState({ leads: previousState })
-      } catch (rollbackError) {
-        console.error('Rollback falhou', rollbackError)
-      }
+      updateState({ leads: previousState })
       toast({
         variant: 'destructive',
         title: 'Erro de Sistema',
@@ -282,7 +273,7 @@ export default function Pipeline1() {
             >
               <Clock className="w-3 h-3 mr-1" /> Simular +7 Dias (Testar Regras)
             </Button>
-            {state.role === 'Master' && (
+            {['Master', 'Supervisor'].includes(state.role) && (
               <button
                 onClick={() => setSettingsOpen(true)}
                 aria-label="Configurações do Pipeline"
@@ -334,7 +325,7 @@ export default function Pipeline1() {
       />
 
       <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md border-violet-200 bg-white shadow-xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-violet-900">
               <Settings className="w-5 h-5" /> Regras de Automação
@@ -342,10 +333,13 @@ export default function Pipeline1() {
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label>SLA Máximo na Etapa "Negociação" (Dias)</Label>
+              <Label className="text-violet-900 font-semibold">
+                SLA Máximo na Etapa "Negociação" (Dias)
+              </Label>
               <Input
                 type="number"
                 value={rulesForm.negotiationMaxDays}
+                className="focus-visible:ring-violet-500/50"
                 onChange={(e) =>
                   setRulesForm({ ...rulesForm, negotiationMaxDays: parseInt(e.target.value) || 21 })
                 }
@@ -355,10 +349,13 @@ export default function Pipeline1() {
               </p>
             </div>
             <div className="space-y-2">
-              <Label>SLA "3º contato sem resposta" para Nutrição (Dias)</Label>
+              <Label className="text-violet-900 font-semibold">
+                SLA "3º contato sem resposta" para Nutrição (Dias)
+              </Label>
               <Input
                 type="number"
                 value={rulesForm.inactivityDaysToNutrition}
+                className="focus-visible:ring-violet-500/50"
                 onChange={(e) =>
                   setRulesForm({
                     ...rulesForm,
@@ -369,10 +366,15 @@ export default function Pipeline1() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setSettingsOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setSettingsOpen(false)}
+              className="border-violet-200 text-violet-700"
+            >
               Cancelar
             </Button>
             <Button
+              className="bg-violet-600 hover:bg-violet-700 text-white"
               onClick={() => {
                 updateState({ pipelineRules: rulesForm })
                 setSettingsOpen(false)

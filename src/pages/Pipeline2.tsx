@@ -1,10 +1,17 @@
-import { useMemo, useEffect, useRef, useState } from 'react'
-import { useLocation } from 'react-router-dom'
+import { useMemo } from 'react'
 import { KanbanBoard } from '@/components/KanbanBoard'
 import useCrmStore from '@/stores/useCrmStore'
 import { useToast } from '@/hooks/use-toast'
-import { Sprout, Mail, Filter } from 'lucide-react'
+import { Sprout, Mail, Filter, Reply, DollarSign } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 
 const COLUMNS = [
   'Nutrição – Aquecimento',
@@ -16,7 +23,6 @@ const COLUMNS = [
 export default function Pipeline2() {
   const { state, updateState } = useCrmStore()
   const { toast } = useToast()
-  const location = useLocation()
 
   const nutritionLeads = useMemo(
     () => state.leads.filter((l) => l.pipeline === 'Nutrition'),
@@ -65,7 +71,7 @@ export default function Pipeline2() {
       })
       toast({
         title: `Automação Inbound: Lead reativado!`,
-        description: `Movido para ${stage} na Prospecção com Score Quente.`,
+        description: `O negócio foi movido para a etapa de "${stage}" na Prospecção com Score Quente.`,
       })
     } catch (error) {
       updateState({ leads: prevState })
@@ -82,20 +88,39 @@ export default function Pipeline2() {
       (l) => l.stage === 'Conteúdo do mercado' || l.stage === 'Conteúdo do segmento',
     )
     if (targetLeads.length === 0) {
-      toast({ title: 'Nenhum lead elegível nas colunas de mercado/segmento.' })
+      toast({
+        title: 'Nenhum lead elegível',
+        description: 'Não há leads nas etapas de "Mercado" ou "Segmento".',
+        variant: 'destructive',
+      })
       return
     }
     toast({
       title: 'Distribuição em Lote Executada',
-      description: `E-mails de nutrição agendados para ${targetLeads.length} leads.`,
+      description: `E-mails de conteúdo agendados e disparados para ${targetLeads.length} leads.`,
     })
   }
 
-  const simulateInbound = () => {
-    if (nutritionLeads.length === 0) return
+  const simulateInbound = (type: 'reply' | 'price') => {
+    if (nutritionLeads.length === 0) {
+      toast({ title: 'Adicione um negócio em nutrição para testar.' })
+      return
+    }
     const target = nutritionLeads[0]
-    handleReactivate(target.id, 'Primeiro contato')
-    toast({ title: 'Simulação Inbound', description: 'O cliente respondeu a um e-mail!' })
+
+    if (type === 'reply') {
+      handleReactivate(target.id, 'Primeiro contato')
+      toast({
+        title: 'Simulação: Cliente Respondeu E-mail!',
+        description: `Lead "${target.title}" voltou para Primeiro Contato.`,
+      })
+    } else {
+      handleReactivate(target.id, 'Negociação')
+      toast({
+        title: 'Simulação: Pedido de Preço!',
+        description: `Lead "${target.title}" saltou direto para Negociação.`,
+      })
+    }
   }
 
   return (
@@ -116,25 +141,47 @@ export default function Pipeline2() {
               className="text-amber-700/80 font-medium mt-1 text-sm"
               aria-describedby="Descrição do pipeline de nutrição"
             >
-              Reaquecimento de leads parados. Utilize os botões de reativação caso haja interação
-              Inbound.
+              Reaquecimento inteligente de leads parados. Respostas Inbound reativam o prospect
+              automaticamente.
             </p>
           </div>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              onClick={simulateInbound}
-              className="bg-white border-amber-200 text-amber-700 hover:bg-amber-50"
-            >
-              <Filter className="w-4 h-4 mr-2" /> Simular Inbound
-            </Button>
+          <div className="flex gap-3">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="bg-white border-amber-200 text-amber-700 hover:bg-amber-50"
+                >
+                  <Filter className="w-4 h-4 mr-2" /> Testar Inbound
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>Disparar Gatilho Automático</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => simulateInbound('reply')}
+                  className="cursor-pointer"
+                >
+                  <Reply className="w-4 h-4 mr-2 text-blue-500" />
+                  Resposta Padrão (1º Contato)
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => simulateInbound('price')}
+                  className="cursor-pointer"
+                >
+                  <DollarSign className="w-4 h-4 mr-2 text-emerald-500" />
+                  Pedido de Cotação (Negociação)
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
             {['Master', 'Marketing', 'Supervisor'].includes(state.role) && (
               <Button
                 onClick={handleDistribute}
                 aria-label="Distribuir conteúdo em lote"
                 className="bg-amber-600 hover:bg-amber-700 text-white shadow-sm transition-all"
               >
-                <Mail className="w-4 h-4 mr-2" aria-hidden="true" /> Distribuir (Lote)
+                <Mail className="w-4 h-4 mr-2" aria-hidden="true" /> Distribuir Conteúdo
               </Button>
             )}
           </div>

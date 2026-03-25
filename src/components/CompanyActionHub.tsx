@@ -1,47 +1,49 @@
-import { Link } from 'react-router-dom'
-import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Globe, Phone, Mail, Building } from 'lucide-react'
-import { Company } from '@/stores/useCrmStore'
-import { InteractionsTimeline } from '@/components/InteractionsTimeline'
-import { BrainAnalysis } from '@/components/BrainAnalysis'
-import useCrmStore from '@/stores/useCrmStore'
+import { Phone, Mail, Calendar, FileText } from 'lucide-react'
 
-export function CompanyActionHub({ company }: { company?: Company }) {
-  const { state } = useCrmStore()
-
+export function CompanyActionHub({ company }: { company: any }) {
   if (!company) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center p-8 text-slate-400">
-        <Building className="w-12 h-12 mb-4 opacity-20" />
-        <p className="text-sm font-medium">Salve a empresa para acessar a visão 360º e IA.</p>
+      <div className="p-6 text-slate-500 text-sm font-medium flex items-center justify-center h-full text-center">
+        Salve a ficha da empresa para habilitar o hub de ações rápidas.
       </div>
     )
   }
 
-  const interactions =
-    state.interactions.filter((i) => i.companyId === company.id) || state.interactions
-
   return (
-    <div className="flex-1 overflow-y-auto p-5 space-y-6">
-      <div className="flex gap-2">
-        <Button
-          asChild
-          className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold shadow-md"
-        >
-          <Link to={`/empresa/${company.id}/360`}>Abrir Visão 360º Completa</Link>
-        </Button>
+    <div className="p-6 space-y-6">
+      <div>
+        <h3 className="font-bold text-lg text-slate-800 tracking-tight">Hub de Ações</h3>
+        <p className="text-xs text-slate-500 mt-1 font-medium">Interações rápidas com o lead</p>
       </div>
-
-      <BrainAnalysis interactions={interactions} />
-      <InteractionsTimeline />
-
-      <div className="flex gap-2 pt-4">
-        <Button variant="outline" size="sm" className="flex-1">
-          <Phone className="w-4 h-4 mr-2" /> Ligar
+      <div className="grid grid-cols-2 gap-3">
+        <Button
+          variant="outline"
+          className="flex flex-col h-auto py-5 gap-2 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 hover:border-indigo-200 transition-colors shadow-sm"
+        >
+          <Phone className="w-5 h-5" />
+          <span className="font-semibold text-xs uppercase tracking-wider">Ligar</span>
         </Button>
-        <Button variant="outline" size="sm" className="flex-1">
-          <Mail className="w-4 h-4 mr-2" /> Email
+        <Button
+          variant="outline"
+          className="flex flex-col h-auto py-5 gap-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 hover:border-blue-200 transition-colors shadow-sm"
+        >
+          <Mail className="w-5 h-5" />
+          <span className="font-semibold text-xs uppercase tracking-wider">E-mail</span>
+        </Button>
+        <Button
+          variant="outline"
+          className="flex flex-col h-auto py-5 gap-2 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 hover:border-emerald-200 transition-colors shadow-sm"
+        >
+          <Calendar className="w-5 h-5" />
+          <span className="font-semibold text-xs uppercase tracking-wider">Agendar</span>
+        </Button>
+        <Button
+          variant="outline"
+          className="flex flex-col h-auto py-5 gap-2 text-amber-600 hover:text-amber-700 hover:bg-amber-50 hover:border-amber-200 transition-colors shadow-sm"
+        >
+          <FileText className="w-5 h-5" />
+          <span className="font-semibold text-xs uppercase tracking-wider">Nota</span>
         </Button>
       </div>
     </div>

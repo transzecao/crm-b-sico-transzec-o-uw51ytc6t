@@ -1,6 +1,15 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { ArrowLeft, Save, Building2, Briefcase, MapPin, AlignLeft, Star } from 'lucide-react'
+import {
+  ArrowLeft,
+  Save,
+  Building2,
+  Briefcase,
+  MapPin,
+  AlignLeft,
+  Star,
+  AlertCircle,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -32,6 +41,9 @@ export default function EmpresaForm() {
   const existingCompany = id ? state.companies.find((c) => c.id === id) : undefined
   const existingContacts = id ? state.contacts.filter((c) => c.companyId === id) : []
 
+  const isMaster = state.role === 'Master'
+  const isDiretoria = state.role === 'Diretoria'
+
   const [formData, setFormData] = useState<Partial<Company>>({
     cnpj: '',
     razaoSocial: '',
@@ -50,8 +62,6 @@ export default function EmpresaForm() {
   const [clusterInput, setClusterInput] = useState('')
   const [contacts, setContacts] = useState<Partial<Contact>[]>([])
   const [error, setError] = useState({ cnpj: '', form: '' })
-
-  const isMaster = state.role === 'Master'
 
   useEffect(() => {
     if (existingCompany) {
@@ -91,7 +101,29 @@ export default function EmpresaForm() {
   const isMandatory = (field: string) =>
     state.mandatoryFields.includes(field) || field === 'nomeFantasia'
 
+  const handleCnpjChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatCnpj(e.target.value)
+    setFormData({ ...formData, cnpj: formatted })
+
+    const rawCnpj = formatted.replace(/\D/g, '')
+    // Immediate feedback while typing
+    if (rawCnpj.length > 0 && rawCnpj.length < 14 && formatted.length >= 18) {
+      setError((prev) => ({ ...prev, cnpj: 'CNPJ Incompleto (14 dígitos obrigatórios)' }))
+    } else if (rawCnpj.length === 14) {
+      setError((prev) => ({ ...prev, cnpj: '' }))
+    }
+  }
+
   const handleSave = () => {
+    if (isDiretoria) {
+      toast({
+        title: 'Acesso Negado',
+        description: 'Diretoria possui apenas permissão de visualização.',
+        variant: 'destructive',
+      })
+      return
+    }
+
     let hasError = false
     const newError = { cnpj: '', form: '' }
 
@@ -109,7 +141,7 @@ export default function EmpresaForm() {
 
     const rawCnpj = formData.cnpj?.replace(/\D/g, '') || ''
     if (formData.cnpj && rawCnpj.length !== 14) {
-      newError.cnpj = 'CNPJ inválido. Exatamente 14 números são requeridos sem letras.'
+      newError.cnpj = 'O CNPJ deve conter exatamente 14 dígitos válidos.'
       hasError = true
     }
 
@@ -141,7 +173,7 @@ export default function EmpresaForm() {
           companies: state.companies.map((c) => (c.id === companyId ? newCompany : c)),
           contacts: [...state.contacts.filter((c) => c.companyId !== companyId), ...finalContacts],
         })
-        toast({ title: 'Ficha da empresa atualizada!' })
+        toast({ title: 'Ficha da empresa atualizada com sucesso!' })
       } else {
         updateState({
           companies: [...state.companies, newCompany],
@@ -163,7 +195,7 @@ export default function EmpresaForm() {
   }
 
   const addCluster = () => {
-    if (clusterInput.trim()) {
+    if (clusterInput.trim() && !isDiretoria) {
       setFormData((prev) => ({
         ...prev,
         clusters: [...(prev.clusters || []), clusterInput.trim()],
@@ -173,6 +205,7 @@ export default function EmpresaForm() {
   }
 
   const removeCluster = (index: number) => {
+    if (isDiretoria) return
     setFormData((prev) => ({
       ...prev,
       clusters: prev.clusters?.filter((_, i) => i !== index),
@@ -239,25 +272,38 @@ export default function EmpresaForm() {
           >
             Cancelar
           </Button>
-          <Button
-            onClick={handleSave}
-            aria-label="Salvar Ficha da Empresa 360"
-            className="h-9 bg-blue-600 hover:bg-blue-700 text-white font-medium shadow-sm transition-all active:scale-95"
-          >
-            <Save className="w-4 h-4 mr-2" aria-hidden="true" /> Salvar Ficha 360
-          </Button>
+          {!isDiretoria && (
+            <Button
+              onClick={handleSave}
+              aria-label="Salvar Ficha da Empresa 360"
+              className="h-9 bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-sm transition-all active:scale-95"
+            >
+              <Save className="w-4 h-4 mr-2" aria-hidden="true" /> Salvar Ficha
+            </Button>
+          )}
         </div>
       </div>
 
       <div className="flex flex-1 overflow-hidden bg-blue-50/10">
         <div className="flex-1 overflow-y-auto flex flex-col p-6 lg:p-8 items-center">
           <div className="w-full max-w-4xl space-y-6">
+            {state.role === 'Coleta' && (
+              <div className="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded-lg flex items-start gap-3 shadow-sm">
+                <AlertCircle className="w-5 h-5 shrink-0 mt-0.5 text-blue-600" />
+                <p className="text-sm font-medium">
+                  Acesso Coleta: Você está em um modo simplificado restrito a cadastro e conferência
+                  de dados básicos. Demais painéis não são acessíveis por este perfil.
+                </p>
+              </div>
+            )}
+
             {error.form && (
               <div
-                className="bg-red-50 text-red-600 p-3 rounded-md border border-red-200 text-sm font-medium"
+                className="bg-red-50 text-red-600 p-3 rounded-md border border-red-200 text-sm font-medium flex items-center gap-2"
                 role="alert"
                 aria-live="assertive"
               >
+                <AlertCircle className="w-4 h-4" />
                 {error.form}
               </div>
             )}
@@ -277,6 +323,7 @@ export default function EmpresaForm() {
                       id="nomeFantasia"
                       value={formData.nomeFantasia || ''}
                       onChange={(e) => setFormData({ ...formData, nomeFantasia: e.target.value })}
+                      disabled={isDiretoria}
                       aria-required={isMandatory('nomeFantasia')}
                       aria-invalid={error.form && !formData.nomeFantasia ? 'true' : 'false'}
                       className={cn(
@@ -291,51 +338,41 @@ export default function EmpresaForm() {
                       id="razaoSocial"
                       value={formData.razaoSocial || ''}
                       onChange={(e) => setFormData({ ...formData, razaoSocial: e.target.value })}
+                      disabled={isDiretoria}
                       aria-required={isMandatory('razaoSocial')}
                       className="bg-white border-slate-200 focus-visible:ring-blue-500/50"
                     />
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-2 relative">
                     {renderLabel('CNPJ', 'cnpj')}
                     <Input
                       id="cnpj"
                       value={formData.cnpj || ''}
-                      onChange={(e) => {
-                        const formatted = formatCnpj(e.target.value)
-                        setFormData({ ...formData, cnpj: formatted })
-
-                        const rawCnpj = formatted.replace(/\D/g, '')
-                        if (error.cnpj && rawCnpj.length === 14) {
-                          setError((prev) => ({ ...prev, cnpj: '' }))
-                        }
-                      }}
+                      onChange={handleCnpjChange}
                       onBlur={() => {
-                        if (!formData.cnpj) {
-                          setError((prev) => ({ ...prev, cnpj: '' }))
-                          return
-                        }
-                        const rawCnpj = formData.cnpj.replace(/\D/g, '')
-                        if (rawCnpj.length !== 14) {
+                        const rawCnpj = formData.cnpj?.replace(/\D/g, '') || ''
+                        if (formData.cnpj && rawCnpj.length !== 14) {
                           setError((prev) => ({
                             ...prev,
-                            cnpj: 'CNPJ inválido. Exatamente 14 números são requeridos sem letras.',
+                            cnpj: 'CNPJ Inválido. Exatamente 14 números requeridos.',
                           }))
                         }
                       }}
+                      disabled={isDiretoria}
                       maxLength={18}
                       aria-required={isMandatory('cnpj')}
                       aria-invalid={!!error.cnpj}
                       aria-describedby={error.cnpj ? 'cnpj-error' : undefined}
                       className={cn(
                         'bg-white font-mono border-slate-200 focus-visible:ring-blue-500/50',
-                        error.cnpj && 'border-red-500 focus-visible:ring-red-500',
+                        error.cnpj && 'border-red-500 focus-visible:ring-red-500 text-red-600',
                       )}
                       placeholder="00.000.000/0000-00"
                     />
                     {error.cnpj && (
                       <span
                         id="cnpj-error"
-                        className="text-[11px] text-red-500 font-bold block mt-1"
+                        className="text-[10px] text-red-500 font-bold block mt-1 absolute -bottom-4 left-0"
                         role="alert"
                         aria-live="polite"
                       >
@@ -349,24 +386,26 @@ export default function EmpresaForm() {
                       id="endereco"
                       value={formData.endereco || ''}
                       onChange={(e) => setFormData({ ...formData, endereco: e.target.value })}
+                      disabled={isDiretoria}
                       aria-required={isMandatory('endereco')}
                       className="bg-white border-slate-200 focus-visible:ring-blue-500/50"
                       placeholder="Rua, Cidade, UF"
                     />
                   </div>
-                  <div className="space-y-2 md:col-span-2">
+                  <div className="space-y-2 md:col-span-2 pt-2">
                     <Label
                       htmlFor="clusterInput"
                       className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block flex items-center gap-1.5"
                     >
-                      <MapPin className="w-3.5 h-3.5" aria-hidden="true" /> Clusters / Praças de
-                      Atuação
+                      <MapPin className="w-3.5 h-3.5" aria-hidden="true" /> Clusters Geográficos /
+                      Praças
                     </Label>
                     <div className="flex gap-2">
                       <Input
                         id="clusterInput"
                         value={clusterInput}
                         onChange={(e) => setClusterInput(e.target.value)}
+                        disabled={isDiretoria}
                         onKeyDown={(e) => {
                           if (e.key === 'Enter') {
                             e.preventDefault()
@@ -379,20 +418,21 @@ export default function EmpresaForm() {
                       <Button
                         type="button"
                         onClick={addCluster}
+                        disabled={isDiretoria}
                         variant="secondary"
                         aria-label="Adicionar novo cluster"
-                        className="bg-blue-50 text-blue-700 hover:bg-blue-100"
+                        className="bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200"
                       >
                         Add
                       </Button>
                     </div>
-                    <div className="flex flex-wrap gap-1.5 pt-1" role="list">
+                    <div className="flex flex-wrap gap-1.5 pt-2" role="list">
                       {formData.clusters?.map((cluster, i) => (
                         <Badge
                           key={i}
                           role="listitem"
                           variant="outline"
-                          className="bg-white text-blue-800 border-blue-200 px-2 py-0.5 rounded-md cursor-pointer hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-colors"
+                          className="bg-white text-blue-800 border-blue-200 px-2.5 py-1 rounded-md cursor-pointer hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-colors font-medium shadow-sm"
                           onClick={() => removeCluster(i)}
                           aria-label={`Remover cluster ${cluster}`}
                         >
@@ -419,6 +459,7 @@ export default function EmpresaForm() {
                     <Select
                       value={formData.pipeline || ''}
                       onValueChange={(v) => setFormData({ ...formData, pipeline: v })}
+                      disabled={isDiretoria}
                     >
                       <SelectTrigger
                         id="pipeline"
@@ -440,6 +481,7 @@ export default function EmpresaForm() {
                     <Select
                       value={formData.segmento || ''}
                       onValueChange={(v) => setFormData({ ...formData, segmento: v })}
+                      disabled={isDiretoria}
                     >
                       <SelectTrigger
                         id="segmento"
@@ -468,7 +510,8 @@ export default function EmpresaForm() {
                       id="observacoes"
                       value={formData.observacoes || ''}
                       onChange={(e) => setFormData({ ...formData, observacoes: e.target.value })}
-                      placeholder="Informações adicionais relevantes sobre a empresa..."
+                      disabled={isDiretoria}
+                      placeholder="Informações adicionais relevantes sobre a empresa, negociações em andamento..."
                       className="bg-white min-h-[100px] border-slate-200 focus-visible:ring-blue-500/50"
                     />
                   </div>
@@ -476,8 +519,14 @@ export default function EmpresaForm() {
               </CardContent>
             </Card>
 
-            <CompanyContactsForm contacts={contacts} setContacts={setContacts} />
-            <CompanyCustomFieldsForm formData={formData} setFormData={setFormData} />
+            <CompanyContactsForm
+              contacts={contacts}
+              setContacts={isDiretoria ? () => {} : setContacts}
+            />
+            <CompanyCustomFieldsForm
+              formData={formData}
+              setFormData={isDiretoria ? () => {} : setFormData}
+            />
 
             <div className="h-8"></div>
           </div>

@@ -68,6 +68,7 @@ export type Interaction = {
   subject?: string
   isPrincipal?: boolean
   transcription?: string
+  duration?: string
 }
 
 export type CustomFieldDef = {
@@ -205,6 +206,7 @@ const mockInteractions: Interaction[] = [
       '...então, a gente já tem parceiro logístico consolidado, mas se vocês quiserem mandar o material por e-mail, a gente dá uma olhada na volumetria que vocês atendem...',
     date: '19/03/2026 14:15',
     author: 'Bruna Araujo',
+    duration: '05m 23s',
   },
 ]
 
