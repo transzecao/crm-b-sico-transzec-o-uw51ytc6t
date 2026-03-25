@@ -13,12 +13,19 @@ const COLUMN_COLORS: Record<string, { bg: string; text: string }> = {
   '2º contato sem resposta': { bg: 'bg-violet-400/90', text: 'text-violet-950' },
   '3º contato sem resposta': { bg: 'bg-violet-300/90', text: 'text-violet-950' },
   'Nutrição – Aquecimento': { bg: 'bg-amber-500/90', text: 'text-white' },
-  'Conteúdo de Valor': { bg: 'bg-amber-400/90', text: 'text-amber-950' },
-  Mercado: { bg: 'bg-amber-300/90', text: 'text-amber-950' },
-  Segmento: { bg: 'bg-amber-200/90', text: 'text-amber-950' },
+  'Conteúdo de valor': { bg: 'bg-amber-400/90', text: 'text-amber-950' },
+  'Conteúdo do mercado': { bg: 'bg-amber-300/90', text: 'text-amber-950' },
+  'Conteúdo do segmento': { bg: 'bg-amber-200/90', text: 'text-amber-950' },
   Negociação: { bg: 'bg-blue-500/90', text: 'text-white' },
   Ganho: { bg: 'bg-emerald-600/90', text: 'text-white' },
   Perda: { bg: 'bg-rose-600/90', text: 'text-white' },
+}
+
+const translateScore = (score?: string) => {
+  if (score === 'Hot') return 'Quente'
+  if (score === 'Warm') return 'Morno'
+  if (score === 'Cold') return 'Frio'
+  return score
 }
 
 export function KanbanBoard({
@@ -164,7 +171,7 @@ export function KanbanBoard({
                                     : 'bg-blue-50 text-blue-600 border-blue-200',
                               )}
                             >
-                              {lead.score}
+                              {translateScore(lead.score)}
                             </Badge>
                           )}
                           {company?.segmento && (

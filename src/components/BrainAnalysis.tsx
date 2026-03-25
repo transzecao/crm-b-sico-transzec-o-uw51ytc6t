@@ -58,15 +58,15 @@ export function BrainAnalysis({ interactions }: { interactions: Interaction[] })
         setAnalysis({
           achieved: ['Contato inicial realizado e objeção identificada.'],
           critical: ['Cliente mencionou que já possui parceiro concorrente.'],
-          objections: ['Already has a partner -> suggest test in specific region.'],
+          objections: ['Já possui parceiro -> sugerir teste em região específica.'],
           fit: '90%',
           fitText: 'Estrutura pronta para preenchimento de campos pré-definidos.',
-          nextSteps: ['Propose test in Sumaré with a 48h window.'],
+          nextSteps: ['Propor teste em Sumaré com janela de 48h.'],
           signals: {
             advance: 'Cliente respondeu rapidamente.',
             retreat: 'Objeção direta de fornecedor atual.',
           },
-          copy: '"Hello [Name], I saw that you already have a partner. Can we explore a specific route in Sumaré to reduce costs? Can I send you the details?"',
+          copy: '"Olá [Nome], vi que já possuem um parceiro. Que tal explorarmos uma rota específica em Sumaré para reduzir custos? Posso te enviar os detalhes?"',
         })
       } else {
         setAnalysis(defaultAnalysis)
@@ -113,7 +113,7 @@ export function BrainAnalysis({ interactions }: { interactions: Interaction[] })
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-3">
             <h4 className="text-[11px] font-bold text-indigo-800 uppercase tracking-wider flex items-center gap-1.5">
-              <CheckCircle className="w-3.5 h-3.5 text-emerald-500" /> 1) Achieved Goals
+              <CheckCircle className="w-3.5 h-3.5 text-emerald-500" /> 1) Objetivos alcançados
             </h4>
             <ul className="text-sm text-slate-600 list-disc pl-5 space-y-1 bg-emerald-50/30 p-2.5 rounded-md border border-emerald-100/50">
               {analysis.achieved.map((item, i) => (
@@ -123,7 +123,7 @@ export function BrainAnalysis({ interactions }: { interactions: Interaction[] })
           </div>
           <div className="space-y-3">
             <h4 className="text-[11px] font-bold text-indigo-800 uppercase tracking-wider flex items-center gap-1.5">
-              <AlertTriangle className="w-3.5 h-3.5 text-rose-500" /> 3) Critical Points
+              <AlertTriangle className="w-3.5 h-3.5 text-rose-500" /> 3) Pontos críticos
             </h4>
             <div className="text-sm text-slate-600 bg-rose-50/30 p-2.5 rounded-md border border-rose-100/50 space-y-2">
               {analysis.critical.map((item, i) => (
@@ -135,7 +135,7 @@ export function BrainAnalysis({ interactions }: { interactions: Interaction[] })
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-3">
             <h4 className="text-[11px] font-bold text-indigo-800 uppercase tracking-wider flex items-center gap-1.5">
-              <ShieldAlert className="w-3.5 h-3.5 text-orange-500" /> 4) Unresolved Objections
+              <ShieldAlert className="w-3.5 h-3.5 text-orange-500" /> 4) Objeções não quebradas
             </h4>
             <div className="text-sm text-slate-600 bg-orange-50/30 p-2.5 rounded-md border border-orange-100/50">
               {analysis.objections.map((item, i) => (
@@ -147,7 +147,7 @@ export function BrainAnalysis({ interactions }: { interactions: Interaction[] })
           </div>
           <div className="space-y-3">
             <h4 className="text-[11px] font-bold text-indigo-800 uppercase tracking-wider flex items-center gap-1.5">
-              <Zap className="w-3.5 h-3.5 text-amber-500" /> 5) FIT Evaluation
+              <Zap className="w-3.5 h-3.5 text-amber-500" /> 5) Avaliação de FIT
             </h4>
             <div className="flex items-center gap-3 bg-amber-50/30 p-2.5 rounded-md border border-amber-100/50">
               <div className="text-xl font-black text-amber-600">{analysis.fit}</div>
@@ -158,7 +158,7 @@ export function BrainAnalysis({ interactions }: { interactions: Interaction[] })
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-3">
             <h4 className="text-[11px] font-bold text-indigo-800 uppercase tracking-wider flex items-center gap-1.5">
-              <TrendingUp className="w-3.5 h-3.5 text-blue-500" /> 2) Next Steps
+              <TrendingUp className="w-3.5 h-3.5 text-blue-500" /> 2) Próximos passos
             </h4>
             <ul className="text-sm text-slate-600 list-none space-y-1.5 bg-blue-50/30 p-2.5 rounded-md border border-blue-100/50">
               {analysis.nextSteps.map((item, i) => (
@@ -170,8 +170,7 @@ export function BrainAnalysis({ interactions }: { interactions: Interaction[] })
           </div>
           <div className="space-y-3">
             <h4 className="text-[11px] font-bold text-indigo-800 uppercase tracking-wider flex items-center gap-1.5">
-              <ArrowRightLeft className="w-3.5 h-3.5 text-violet-500" /> 6) Advancement/Retreat
-              Signals
+              <ArrowRightLeft className="w-3.5 h-3.5 text-violet-500" /> 6) Sinais de avanço/recuo
             </h4>
             <div className="text-sm text-slate-600 bg-violet-50/30 p-2.5 rounded-md border border-violet-100/50 space-y-2">
               <p>
@@ -186,7 +185,7 @@ export function BrainAnalysis({ interactions }: { interactions: Interaction[] })
         </div>
         <div className="pt-3 border-t border-indigo-100/60 space-y-3">
           <h4 className="text-xs font-bold text-indigo-800 uppercase tracking-wider flex items-center gap-1.5">
-            <Target className="w-4 h-4 text-indigo-500" /> 7) Next Message Copy Suggestion
+            <Target className="w-4 h-4 text-indigo-500" /> 7) Sugestão de copy
           </h4>
           <div className="bg-white rounded-lg p-3.5 border border-indigo-100 shadow-sm relative group">
             <div

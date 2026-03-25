@@ -18,7 +18,6 @@ import {
 import { Textarea } from '@/components/ui/textarea'
 import { AlertOctagon } from 'lucide-react'
 
-// Updated strictly based on AC: FIT, Price, Deadline, Coverage, SLA/Tracking/Damage/Delays, Other
 const reasons = ['FIT', 'Preço', 'Prazo', 'Cobertura', 'SLA/Rastreamento/Avarias/Atrasos', 'Outro']
 
 export function LossReasonModal({
@@ -32,6 +31,8 @@ export function LossReasonModal({
 }) {
   const [reason, setReason] = useState('')
   const [details, setDetails] = useState('')
+
+  const isConfirmDisabled = !reason || (reason === 'Outro' && !details.trim())
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onCancel()}>
@@ -65,7 +66,8 @@ export function LossReasonModal({
           {reason && (
             <div className="space-y-2 animate-fade-in-up">
               <Label className="text-rose-900 font-semibold">
-                Detalhes (Obrigatório para entender a perda)
+                Detalhes{' '}
+                {reason === 'Outro' ? <span className="text-rose-600">*</span> : '(Opcional)'}
               </Label>
               <Textarea
                 value={details}
@@ -86,7 +88,7 @@ export function LossReasonModal({
           </Button>
           <Button
             variant="destructive"
-            disabled={!reason}
+            disabled={isConfirmDisabled}
             onClick={() => onConfirm(reason, details)}
             className="bg-rose-600 hover:bg-rose-700 text-white shadow-md active:scale-95 transition-all font-semibold"
           >

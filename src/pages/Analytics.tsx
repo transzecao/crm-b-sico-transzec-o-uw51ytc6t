@@ -29,7 +29,7 @@ const analyticsConfig = {
   fit: { label: 'FIT', color: '#94a3b8' },
   coverage: { label: 'Cobertura', color: '#d97706' },
   deadline: { label: 'Prazo', color: '#475569' },
-  sla: { label: 'SLA/Avarias', color: '#64748b' },
+  sla: { label: 'SLA/Rastreamento/Avarias/Atrasos', color: '#64748b' },
   others: { label: 'Outros', color: '#cbd5e1' },
 } satisfies ChartConfig
 
