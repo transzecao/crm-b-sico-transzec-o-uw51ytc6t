@@ -6,18 +6,18 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { cn } from '@/lib/utils'
 
 const COLUMN_COLORS: Record<string, { bg: string; text: string }> = {
-  'Primeiro contato': { bg: 'bg-purple-800', text: 'text-white' },
-  '1º contato sem resposta': { bg: 'bg-purple-600', text: 'text-white' },
-  Qualificação: { bg: 'bg-purple-500', text: 'text-white' },
-  '2º contato sem resposta': { bg: 'bg-purple-400', text: 'text-purple-950' },
-  '3º contato sem resposta': { bg: 'bg-purple-300', text: 'text-purple-950' },
-  'Nutrição – Aquecimento': { bg: 'bg-purple-700', text: 'text-white' },
-  'Conteúdo de Valor': { bg: 'bg-purple-500', text: 'text-white' },
-  Mercado: { bg: 'bg-purple-400', text: 'text-purple-950' },
-  Segmento: { bg: 'bg-purple-300', text: 'text-purple-950' },
-  Negociação: { bg: 'bg-amber-400', text: 'text-black' },
-  Ganho: { bg: 'bg-emerald-600', text: 'text-white' },
-  Perda: { bg: 'bg-rose-600', text: 'text-white' },
+  'Primeiro contato': { bg: 'bg-purple-800/90', text: 'text-white' },
+  '1º contato sem resposta': { bg: 'bg-purple-600/90', text: 'text-white' },
+  Qualificação: { bg: 'bg-purple-500/90', text: 'text-white' },
+  '2º contato sem resposta': { bg: 'bg-purple-400/90', text: 'text-purple-950' },
+  '3º contato sem resposta': { bg: 'bg-purple-300/90', text: 'text-purple-950' },
+  'Nutrição – Aquecimento': { bg: 'bg-purple-700/90', text: 'text-white' },
+  'Conteúdo de Valor': { bg: 'bg-purple-500/90', text: 'text-white' },
+  Mercado: { bg: 'bg-purple-400/90', text: 'text-purple-950' },
+  Segmento: { bg: 'bg-purple-300/90', text: 'text-purple-950' },
+  Negociação: { bg: 'bg-amber-400/90', text: 'text-black' },
+  Ganho: { bg: 'bg-emerald-600/90', text: 'text-white' },
+  Perda: { bg: 'bg-rose-600/90', text: 'text-white' },
 }
 
 export function KanbanBoard({
@@ -56,7 +56,7 @@ export function KanbanBoard({
       {columns.map((stage) => {
         const stageLeads = leads.filter((l) => l.stage === stage)
         const totalValue = stageLeads.reduce((acc, l) => acc + l.value, 0)
-        const colors = COLUMN_COLORS[stage] || { bg: 'bg-muted', text: 'text-foreground' }
+        const colors = COLUMN_COLORS[stage] || { bg: 'bg-slate-200/90', text: 'text-slate-800' }
 
         return (
           <div
@@ -68,7 +68,7 @@ export function KanbanBoard({
             {/* Column Header */}
             <div
               className={cn(
-                'px-3 py-2 text-[11px] font-bold rounded-t-md flex items-center justify-between uppercase tracking-wider shadow-sm border-x border-t border-purple-900/10',
+                'px-3 py-2 text-[11px] font-bold rounded-t-lg flex items-center justify-between uppercase tracking-wider shadow-sm border border-purple-900/10 backdrop-blur-md',
                 colors.bg,
                 colors.text,
               )}
@@ -80,27 +80,27 @@ export function KanbanBoard({
                 </span>
               </div>
               {stage === 'Primeiro contato' && (
-                <div className="w-2.5 h-2.5 rounded-sm bg-green-400"></div>
+                <div className="w-2.5 h-2.5 rounded-sm bg-green-400 border border-green-500/50"></div>
               )}
               {stage === 'Negociação' && (
-                <div className="w-3 h-3 rounded-full bg-black/20 text-[10px] flex items-center justify-center">
+                <div className="w-3 h-3 rounded-full bg-black/20 text-[10px] flex items-center justify-center font-bold">
                   +
                 </div>
               )}
             </div>
 
             {/* Column Body */}
-            <div className="flex-1 flex flex-col gap-3 bg-white/50 backdrop-blur-md px-2.5 py-3 rounded-b-md border-x border-b border-purple-200 shadow-[0_4px_30px_rgba(147,51,234,0.05)] overflow-hidden">
-              <div className="text-center text-[22px] font-light text-purple-950/80 my-1">
+            <div className="flex-1 flex flex-col gap-3 bg-purple-100/40 backdrop-blur-sm px-2.5 py-3 rounded-b-lg border-x border-b border-purple-200/60 shadow-inner overflow-hidden">
+              <div className="text-center text-[22px] font-light text-purple-950/80 my-1 font-mono tracking-tight">
                 R$ {totalValue.toLocaleString('pt-BR')}
               </div>
 
               {stage === 'Primeiro contato' || stage === '1º contato sem resposta' ? (
-                <button className="text-xs font-medium text-purple-700 bg-white hover:bg-purple-50 py-1.5 rounded transition-colors flex items-center justify-center gap-1 shadow-sm border border-purple-200">
+                <button className="text-xs font-semibold text-purple-700 bg-white/80 backdrop-blur-sm hover:bg-white py-1.5 rounded-md transition-colors flex items-center justify-center gap-1 shadow-sm border border-purple-200/60">
                   <Plus className="w-3 h-3" /> Negócio rápido
                 </button>
               ) : (
-                <div className="h-7 flex items-center justify-center text-purple-400 font-bold hover:bg-purple-100/50 hover:text-purple-600 rounded cursor-pointer transition-colors">
+                <div className="h-7 flex items-center justify-center text-purple-400 font-bold hover:bg-purple-200/50 hover:text-purple-600 rounded-md cursor-pointer transition-colors border border-dashed border-transparent hover:border-purple-300">
                   +
                 </div>
               )}
@@ -113,58 +113,58 @@ export function KanbanBoard({
                       key={lead.id}
                       draggable
                       onDragStart={(e) => handleDragStart(e, lead.id)}
-                      className="p-3 bg-white hover:shadow-purple-100/50 hover:shadow-md transition-all duration-200 cursor-grab active:cursor-grabbing border border-purple-100 hover:border-purple-300 rounded-md relative group"
+                      className="p-3 bg-white/90 backdrop-blur-sm hover:bg-white hover:shadow-purple-200/50 hover:shadow-md transition-all duration-200 cursor-grab active:cursor-grabbing border border-purple-100/80 hover:border-purple-300 rounded-lg relative group"
                     >
                       {/* Action Icons */}
-                      <div className="absolute right-2 top-3 flex flex-col gap-2.5 text-purple-300 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="absolute right-2 top-3 flex flex-col gap-2.5 text-purple-300 opacity-0 group-hover:opacity-100 transition-opacity bg-white/80 p-1 rounded backdrop-blur-md border border-purple-50 shadow-sm">
                         <button className="hover:text-purple-600 transition-colors">
-                          <Phone className="w-[18px] h-[18px]" />
+                          <Phone className="w-[16px] h-[16px]" />
                         </button>
                         <button className="hover:text-purple-600 transition-colors">
-                          <Mail className="w-[18px] h-[18px]" />
+                          <Mail className="w-[16px] h-[16px]" />
                         </button>
                         <button className="hover:text-purple-600 transition-colors">
-                          <MessageSquare className="w-[18px] h-[18px]" />
+                          <MessageSquare className="w-[16px] h-[16px]" />
                         </button>
                       </div>
 
                       {/* Mock notification badge */}
                       {(lead.id === '1' || lead.id === '3') && (
-                        <div className="absolute right-2 top-1.5 w-4 h-4 bg-purple-100 text-purple-800 rounded-full text-[10px] flex items-center justify-center font-bold border border-purple-200">
+                        <div className="absolute right-2 top-1.5 w-4 h-4 bg-purple-100 text-purple-800 rounded-full text-[10px] flex items-center justify-center font-bold border border-purple-200 shadow-sm">
                           1
                         </div>
                       )}
 
-                      <div className="pr-8">
-                        <h4 className="font-semibold text-purple-950 text-[13px] leading-snug mb-3 uppercase tracking-wide">
+                      <div className="pr-6">
+                        <h4 className="font-bold text-purple-950 text-[13px] leading-snug mb-3 uppercase tracking-wide">
                           {lead.title}
                         </h4>
 
-                        <div className="space-y-3 text-[11px] leading-none text-slate-700">
+                        <div className="space-y-3 text-[11px] leading-none text-slate-700 bg-purple-50/30 p-2 rounded border border-purple-50">
                           <div>
-                            <span className="text-purple-600/70 block mb-1 font-medium">
+                            <span className="text-purple-600/80 block mb-1 font-semibold uppercase text-[9px] tracking-wider">
                               Pessoa responsável
                             </span>
                             <div className="flex items-center gap-1.5">
-                              <Avatar className="w-5 h-5">
+                              <Avatar className="w-5 h-5 border border-purple-200 shadow-sm">
                                 <AvatarImage src={lead.ownerAvatar} />
-                                <AvatarFallback className="text-[10px] bg-purple-800 text-white">
+                                <AvatarFallback className="text-[10px] bg-purple-700 text-white font-bold">
                                   {lead.owner.charAt(0)}
                                 </AvatarFallback>
                               </Avatar>
-                              <span className="font-semibold text-purple-900">{lead.owner}</span>
+                              <span className="font-semibold text-purple-950">{lead.owner}</span>
                             </div>
                           </div>
 
                           <div>
-                            <span className="text-purple-600/70 block mb-1 font-medium">
+                            <span className="text-purple-600/80 block mb-1 font-semibold uppercase text-[9px] tracking-wider">
                               Etapa alterada por
                             </span>
                             <span className="font-semibold text-purple-900">{lead.updatedBy}</span>
                           </div>
 
                           <div>
-                            <span className="text-purple-600/70 block mb-1 font-medium">
+                            <span className="text-purple-600/80 block mb-1 font-semibold uppercase text-[9px] tracking-wider">
                               Modificado em
                             </span>
                             <span className="font-medium text-purple-950">{lead.updatedAt}</span>
@@ -172,40 +172,24 @@ export function KanbanBoard({
 
                           {company && (
                             <>
-                              <div>
-                                <span className="text-purple-600/70 block mb-1 font-medium">
-                                  CNPJ
+                              <div className="pt-1">
+                                <span className="text-purple-600/80 block mb-1 font-semibold uppercase text-[9px] tracking-wider">
+                                  CNPJ / Empresa
                                 </span>
-                                <span className="font-medium text-purple-950">{company.cnpj}</span>
-                              </div>
-                              <div>
-                                <span className="text-purple-600/70 block mb-1 font-medium">
-                                  Nome da Empresa
+                                <span className="font-medium text-purple-950 block">
+                                  {company.cnpj}
                                 </span>
-                                <span className="font-medium text-purple-950 line-clamp-2 leading-tight">
+                                <span className="font-medium text-purple-800/80 line-clamp-1 leading-tight mt-0.5">
                                   {company.razaoSocial}
                                 </span>
                               </div>
                             </>
                           )}
-
-                          <div>
-                            <span className="text-purple-600/70 block mb-1 font-medium">
-                              Criado em
-                            </span>
-                            <span className="font-medium text-purple-950">{lead.createdAt}</span>
-                          </div>
-
-                          {stage === 'Negociação' && (
-                            <div className="mt-3 inline-flex items-center gap-1 bg-yellow-100/80 text-yellow-800 px-2 py-1 rounded text-[10px] font-bold border border-yellow-200">
-                              <Calendar className="w-3 h-3" /> Prazo: 2-3 semanas
-                            </div>
-                          )}
                         </div>
 
-                        <div className="pt-3 mt-3 border-t border-purple-50">
-                          <button className="text-purple-500 hover:text-purple-800 flex items-center gap-1 text-[11px] font-medium transition-colors">
-                            <Plus className="w-3 h-3" /> Atividade
+                        <div className="pt-3 mt-3 border-t border-purple-100/60">
+                          <button className="text-purple-600 bg-purple-50 hover:bg-purple-100 px-2 py-1 rounded flex items-center gap-1 text-[11px] font-bold transition-colors w-full justify-center border border-purple-100">
+                            <Plus className="w-3 h-3" /> Adicionar Atividade
                           </button>
                         </div>
                       </div>
@@ -214,8 +198,8 @@ export function KanbanBoard({
                 })}
 
                 {stageLeads.length === 0 && (
-                  <div className="h-24 border-2 border-dashed border-purple-200 rounded-md flex items-center justify-center p-4">
-                    <span className="text-xs text-purple-400 font-medium">Vazio</span>
+                  <div className="h-24 border-2 border-dashed border-purple-200/60 rounded-lg flex items-center justify-center p-4 bg-purple-50/30">
+                    <span className="text-xs text-purple-400 font-medium">Nenhum negócio</span>
                   </div>
                 )}
               </div>

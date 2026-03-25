@@ -1,6 +1,7 @@
 import { KanbanBoard } from '@/components/KanbanBoard'
 import useCrmStore from '@/stores/useCrmStore'
 import { useToast } from '@/hooks/use-toast'
+import { Sprout } from 'lucide-react'
 
 const COLUMNS = ['Nutrição – Aquecimento', 'Conteúdo de Valor', 'Mercado', 'Segmento']
 
@@ -16,17 +17,20 @@ export default function Pipeline2() {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-2rem)] relative overflow-hidden bg-purple-50/20 rounded-lg border border-purple-100 shadow-sm">
-      <div className="absolute inset-0 bg-gradient-to-b from-purple-100/60 to-slate-100/90 z-0" />
-
-      <div className="relative z-10 p-6 pb-2 border-b border-purple-200/50 bg-white/40 backdrop-blur-sm">
-        <h1 className="text-3xl font-bold tracking-tight text-purple-950">Pipeline de Nutrição</h1>
-        <p className="text-purple-800/70 mt-1">
-          Reaquecimento de leads parados ou perdidos por timing.
+    <div className="flex flex-col h-[calc(100vh-3.5rem)] relative overflow-hidden bg-purple-50/30 rounded-xl border border-purple-100/50 shadow-sm backdrop-blur-sm">
+      <div className="relative z-10 p-5 pb-3 border-b border-purple-200/60 bg-white/80 backdrop-blur-md shadow-sm">
+        <h1 className="text-2xl font-bold tracking-tight text-purple-950 flex items-center gap-2">
+          <div className="bg-purple-100/80 p-1.5 rounded-lg border border-purple-200/60">
+            <Sprout className="w-5 h-5 text-purple-600" />
+          </div>
+          Pipeline de Nutrição
+        </h1>
+        <p className="text-purple-700/80 font-medium mt-1 text-sm">
+          Reaquecimento de leads parados, sem resposta ou perdidos por timing.
         </p>
       </div>
 
-      <div className="relative z-10 flex-1 p-6 overflow-hidden">
+      <div className="relative z-10 flex-1 p-4 overflow-hidden">
         <KanbanBoard
           columns={COLUMNS}
           leads={nutritionLeads}

@@ -73,33 +73,34 @@ export function ContatoModal({
       updateState({ contacts: state.contacts.map((c) => (c.id === contact.id ? newContact : c)) })
     else updateState({ contacts: [...state.contacts, newContact] })
 
-    toast({ title: 'Contato salvo' })
+    toast({ title: 'Contato salvo com sucesso!' })
     onOpenChange(false)
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle className="text-orange-950">
-            {contact ? 'Editar Contato' : 'Novo Contato'}
+      <DialogContent className="max-w-2xl border-blue-200 shadow-xl bg-white/95 backdrop-blur-md">
+        <DialogHeader className="border-b border-blue-100 pb-4">
+          <DialogTitle className="text-2xl font-bold text-blue-950 flex items-center gap-2">
+            {contact ? 'Editar Ficha do Contato' : 'Cadastrar Novo Contato'}
           </DialogTitle>
         </DialogHeader>
-        <div className="space-y-4 py-4">
-          <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-6 py-4">
+          <div className="grid grid-cols-2 gap-6">
             <div className="space-y-2">
-              <Label className="text-orange-900">Nome</Label>
+              <Label className="text-blue-900 font-semibold">Nome Completo</Label>
               <Input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="focus-visible:ring-orange-500"
+                className="focus-visible:ring-blue-500 border-blue-200 bg-blue-50/30"
+                placeholder="Ex: João da Silva"
               />
             </div>
             <div className="space-y-2">
-              <Label className="text-orange-900">Empresa</Label>
+              <Label className="text-blue-900 font-semibold">Empresa Comercial</Label>
               <Select value={companyId} onValueChange={setCompanyId}>
-                <SelectTrigger className="focus:ring-orange-500">
-                  <SelectValue placeholder="Selecione..." />
+                <SelectTrigger className="focus:ring-blue-500 border-blue-200 bg-blue-50/30">
+                  <SelectValue placeholder="Vincular à empresa..." />
                 </SelectTrigger>
                 <SelectContent>
                   {state.companies.map((c) => (
@@ -112,69 +113,85 @@ export function ContatoModal({
             </div>
           </div>
 
-          <div className="space-y-4 border border-orange-100 rounded-md p-4 bg-orange-50/30">
-            <div className="flex justify-between items-center">
-              <Label className="text-orange-900">Informações de Contato</Label>
+          <div className="space-y-4 border border-blue-100 rounded-xl p-5 bg-blue-50/40 shadow-inner">
+            <div className="flex justify-between items-center pb-2 border-b border-blue-100/50">
+              <Label className="text-blue-950 font-bold text-base">Canais de Comunicação</Label>
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
                 onClick={addMethod}
-                className="text-orange-700 border-orange-200 hover:bg-orange-50 hover:text-orange-800"
+                className="text-blue-700 border-blue-300 bg-white hover:bg-blue-100 hover:text-blue-900 hover:border-blue-400 shadow-sm"
               >
-                <Plus className="w-4 h-4 mr-2" /> Adicionar Meio
+                <Plus className="w-4 h-4 mr-2" /> Adicionar Canal
               </Button>
             </div>
 
-            {sortedMethods.map((m) => (
-              <div key={m.id} className="flex items-center gap-2">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => togglePrincipal(m.id)}
-                  className={cn(
-                    'shrink-0',
-                    m.isPrincipal ? 'text-orange-500' : 'text-slate-300 hover:text-orange-300',
-                  )}
+            <div className="space-y-3 pt-2">
+              {sortedMethods.map((m) => (
+                <div
+                  key={m.id}
+                  className="flex items-center gap-3 bg-white p-2 rounded-lg border border-blue-100 shadow-sm"
                 >
-                  <Star className="w-4 h-4" fill={m.isPrincipal ? 'currentColor' : 'none'} />
-                </Button>
-                <Select value={m.type} onValueChange={(v) => updateMethod(m.id, 'type', v)}>
-                  <SelectTrigger className="w-[130px] focus:ring-orange-500">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="email">E-mail</SelectItem>
-                    <SelectItem value="whatsapp">WhatsApp</SelectItem>
-                    <SelectItem value="phone">Telefone</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Input
-                  className="flex-1 focus-visible:ring-orange-500"
-                  value={m.value}
-                  onChange={(e) => updateMethod(m.id, 'value', e.target.value)}
-                  placeholder={`Digite o ${m.type}...`}
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => removeMethod(m.id)}
-                  className="text-destructive shrink-0 hover:bg-red-50 hover:text-red-600"
-                >
-                  <Trash className="w-4 h-4" />
-                </Button>
-              </div>
-            ))}
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => togglePrincipal(m.id)}
+                    className={cn(
+                      'shrink-0 hover:bg-blue-50',
+                      m.isPrincipal
+                        ? 'text-blue-600 bg-blue-50'
+                        : 'text-slate-300 hover:text-blue-400',
+                    )}
+                    title={m.isPrincipal ? 'Contato Principal' : 'Tornar Principal'}
+                  >
+                    <Star className="w-5 h-5" fill={m.isPrincipal ? 'currentColor' : 'none'} />
+                  </Button>
+                  <Select value={m.type} onValueChange={(v) => updateMethod(m.id, 'type', v)}>
+                    <SelectTrigger className="w-[140px] focus:ring-blue-500 border-blue-200 bg-blue-50/30 font-medium text-blue-900">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="email">E-mail</SelectItem>
+                      <SelectItem value="whatsapp">WhatsApp</SelectItem>
+                      <SelectItem value="phone">Telefone</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Input
+                    className="flex-1 focus-visible:ring-blue-500 border-blue-200 bg-blue-50/30 text-blue-950 placeholder:text-blue-300"
+                    value={m.value}
+                    onChange={(e) => updateMethod(m.id, 'value', e.target.value)}
+                    placeholder={`Digite o ${m.type}...`}
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => removeMethod(m.id)}
+                    className="text-rose-500 shrink-0 hover:bg-rose-50 hover:text-rose-700"
+                    title="Remover Canal"
+                  >
+                    <Trash className="w-4 h-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+        <DialogFooter className="border-t border-blue-100 pt-4">
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            className="border-blue-200 text-blue-800 hover:bg-blue-50"
+          >
             Cancelar
           </Button>
-          <Button className="bg-orange-600 hover:bg-orange-700 text-white" onClick={handleSave}>
-            Salvar
+          <Button
+            className="bg-blue-600 hover:bg-blue-700 text-white shadow-md px-6"
+            onClick={handleSave}
+          >
+            Salvar Contato
           </Button>
         </DialogFooter>
       </DialogContent>

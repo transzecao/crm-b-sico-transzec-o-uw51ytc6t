@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
+import { AlertOctagon } from 'lucide-react'
 
 const reasons = [
   'FIT',
@@ -43,22 +44,27 @@ export function LossReasonModal({
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onCancel()}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Registrar Perda</DialogTitle>
+      <DialogContent className="border-rose-200 shadow-2xl bg-rose-50/95 backdrop-blur-md sm:max-w-md">
+        <DialogHeader className="border-b border-rose-100 pb-4">
+          <DialogTitle className="text-rose-950 flex items-center gap-2 text-xl font-bold">
+            <div className="bg-rose-100 p-1.5 rounded-lg border border-rose-200">
+              <AlertOctagon className="w-5 h-5 text-rose-600" />
+            </div>
+            Registrar Perda de Negócio
+          </DialogTitle>
         </DialogHeader>
-        <div className="space-y-4 py-4">
+        <div className="space-y-5 py-4">
           <div className="space-y-2">
-            <Label>
-              Motivo da Perda <span className="text-destructive">*</span>
+            <Label className="text-rose-900 font-semibold">
+              Motivo Principal <span className="text-rose-600">*</span>
             </Label>
             <Select value={reason} onValueChange={setReason}>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione o motivo..." />
+              <SelectTrigger className="bg-white/80 border-rose-200 focus:ring-rose-500/50">
+                <SelectValue placeholder="Selecione o motivo de perda..." />
               </SelectTrigger>
               <SelectContent>
                 {reasons.map((r) => (
-                  <SelectItem key={r} value={r}>
+                  <SelectItem key={r} value={r} className="focus:bg-rose-100 focus:text-rose-900">
                     {r}
                   </SelectItem>
                 ))}
@@ -67,23 +73,29 @@ export function LossReasonModal({
           </div>
           {reason === 'Outro' && (
             <div className="space-y-2 animate-fade-in-up">
-              <Label>Detalhes adicionais</Label>
+              <Label className="text-rose-900 font-semibold">Detalhes adicionais</Label>
               <Textarea
                 value={details}
                 onChange={(e) => setDetails(e.target.value)}
-                placeholder="Especifique o motivo..."
+                placeholder="Especifique o motivo detalhadamente..."
+                className="bg-white/80 border-rose-200 focus-visible:ring-rose-500/50 min-h-[100px]"
               />
             </div>
           )}
         </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={onCancel}>
+        <DialogFooter className="border-t border-rose-100 pt-4">
+          <Button
+            variant="outline"
+            onClick={onCancel}
+            className="border-rose-200 text-rose-800 hover:bg-rose-100/50 bg-white/50"
+          >
             Cancelar
           </Button>
           <Button
             variant="destructive"
             disabled={!reason}
             onClick={() => onConfirm(reason, details)}
+            className="bg-rose-600 hover:bg-rose-700 text-white shadow-md active:scale-95 transition-all font-semibold"
           >
             Confirmar Perda
           </Button>
