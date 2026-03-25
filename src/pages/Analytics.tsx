@@ -5,7 +5,6 @@ import {
   AlertCircle,
   PieChart as PieChartIcon,
   Clock,
-  Target,
   Filter,
   Table as TableIcon,
   Activity,
@@ -86,7 +85,7 @@ export default function Analytics() {
   const { state } = useCrmStore()
   const [period, setPeriod] = useState('30d')
 
-  const isGlobalView = ['Master', 'Supervisor', 'Diretoria'].includes(state.role)
+  const isGlobalView = ['Master', 'Supervisor Geral', 'Diretoria'].includes(state.role)
 
   return (
     <div className="space-y-6 bg-slate-50/30 min-h-[calc(100vh-6rem)] p-2 md:p-6 rounded-xl border border-slate-200/50">

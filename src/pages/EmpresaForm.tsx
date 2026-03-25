@@ -41,8 +41,14 @@ export default function EmpresaForm() {
   const existingCompany = id ? state.companies.find((c) => c.id === id) : undefined
   const existingContacts = id ? state.contacts.filter((c) => c.companyId === id) : []
 
-  const isMaster = state.role === 'Master' || state.role === 'Supervisor'
-  const isReadOnly = ['Diretoria', 'Coleta'].includes(state.role)
+  const isMaster = state.role === 'Master' || state.role === 'Supervisor Geral'
+  const isReadOnly = [
+    'Diretoria',
+    'Coleta',
+    'Financeiro',
+    'Supervisor Financeiro',
+    'Supervisor Coleta',
+  ].includes(state.role)
 
   const [formData, setFormData] = useState<Partial<Company>>({
     cnpj: '',
@@ -318,12 +324,12 @@ export default function EmpresaForm() {
       <div className="flex flex-1 overflow-hidden bg-blue-50/10">
         <div className="flex-1 overflow-y-auto flex flex-col p-4 md:p-6 lg:p-8 items-center">
           <div className="w-full max-w-4xl space-y-6">
-            {state.role === 'Coleta' && (
+            {isReadOnly && (
               <div className="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded-lg flex items-start gap-3 shadow-sm">
                 <AlertCircle className="w-5 h-5 shrink-0 mt-0.5 text-blue-600" />
                 <p className="text-sm font-medium">
-                  Acesso Coleta: Você está em um modo simplificado restrito a leitura de cadastro.
-                  Alterações não são permitidas.
+                  Modo de Leitura: Você possui apenas acesso de visualização ao cadastro de empresas
+                  e contatos comerciais.
                 </p>
               </div>
             )}

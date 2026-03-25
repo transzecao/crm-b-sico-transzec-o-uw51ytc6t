@@ -2,7 +2,7 @@ import { Outlet, useLocation, Link } from 'react-router-dom'
 import { SidebarProvider } from '@/components/ui/sidebar'
 import { AppSidebar } from './AppSidebar'
 import { AppHeader } from './AppHeader'
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import useCrmStore from '@/stores/useCrmStore'
 import {
   Select,
@@ -43,12 +43,15 @@ export default function Layout() {
                 <Settings className="w-3.5 h-3.5" /> Administrar Logins
               </Link>
               <Select value={state.role} onValueChange={(val: any) => updateState({ role: val })}>
-                <SelectTrigger className="w-[180px] h-8 text-xs bg-slate-50 border-slate-200 focus:ring-indigo-500">
+                <SelectTrigger className="w-[200px] h-8 text-xs bg-slate-50 border-slate-200 focus:ring-indigo-500">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Master">Master (Acesso Total)</SelectItem>
-                  <SelectItem value="Supervisor">Supervisor</SelectItem>
+                  <SelectItem value="Supervisor Geral">Supervisor Geral</SelectItem>
+                  <SelectItem value="Supervisor Comercial">Supervisor Comercial</SelectItem>
+                  <SelectItem value="Supervisor Financeiro">Supervisor Financeiro</SelectItem>
+                  <SelectItem value="Supervisor Coleta">Supervisor Coleta</SelectItem>
                   <SelectItem value="Comercial">Comercial</SelectItem>
                   <SelectItem value="Financeiro">Financeiro</SelectItem>
                   <SelectItem value="Coleta">Coleta</SelectItem>

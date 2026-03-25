@@ -55,39 +55,47 @@ export default function LoginAdmin() {
 
   // Determine user permissions based on role
   const role = state.role
-  const isMaster = role === 'Master'
-  const isSupervisor = role === 'Supervisor'
+  const isMasterOrGen = role === 'Master' || role === 'Supervisor Geral'
+  const isDir = role === 'Diretoria'
 
-  // Map roles to sectors for viewing permissions
-  const userSectorMap: Record<string, string> = {
-    Comercial: 'Comercial',
-    Supervisor: 'Comercial',
-    Financeiro: 'Financeiro',
-    Coleta: 'Coleta',
-    Marketing: 'Comercial',
-    Master: 'Todos',
-    Diretoria: 'Todos',
-  }
-  const mySector = userSectorMap[role] || 'Nenhum'
+  let mySector = 'Nenhum'
+  let canEditMySector = false
+  const canEditAny = isMasterOrGen
+  const canViewAny = isMasterOrGen || isDir
+  const canDeleteAny = isMasterOrGen
 
-  const canEditAny = isMaster || isSupervisor
-  const canDeleteAny = isMaster || isSupervisor
-
-  const canEditLogin = (login: UserLogin) => {
-    if (isMaster) return true
-    if (isSupervisor && login.sector === mySector) return true
-    return false
+  if (role === 'Supervisor Comercial') {
+    mySector = 'Comercial'
+    canEditMySector = true
+  } else if (role === 'Supervisor Financeiro') {
+    mySector = 'Financeiro'
+    canEditMySector = true
+  } else if (role === 'Supervisor Coleta') {
+    mySector = 'Coleta'
+    canEditMySector = true
+  } else if (role === 'Comercial' || role === 'Marketing') {
+    mySector = 'Comercial'
+  } else if (role === 'Financeiro') {
+    mySector = 'Financeiro'
+  } else if (role === 'Coleta') {
+    mySector = 'Coleta'
   }
 
   const visibleLogins = useMemo(() => {
     return state.userLogins.filter((l) => {
-      // 1. Check viewing permission
-      if (mySector !== 'Todos' && l.sector !== mySector) return false
-      // 2. Check selected filter
+      // Check viewing permission
+      if (!canViewAny && l.sector !== mySector) return false
+      // Check selected filter
       if (filterSector !== 'all' && l.sector !== filterSector) return false
       return true
     })
-  }, [state.userLogins, mySector, filterSector])
+  }, [state.userLogins, mySector, filterSector, canViewAny])
+
+  const canEditLogin = (login: UserLogin) => {
+    if (canEditAny) return true
+    if (canEditMySector && login.sector === mySector) return true
+    return false
+  }
 
   const generateLink = (name: string, sector: string) => {
     if (!name || !sector) return ''
@@ -176,15 +184,9 @@ export default function LoginAdmin() {
       }
       updatedLogins.push(newLogin)
 
-      // Email Automation Mock
       toast({
         title: 'Automação de E-mail Disparada',
-        description: `Enviando e-mail para ${newLogin.name} com o link de acesso seguro.`,
-        action: (
-          <div className="p-1 bg-indigo-100 rounded-full">
-            <Mail className="w-4 h-4 text-indigo-600" />
-          </div>
-        ),
+        description: `Link de acesso único enviado para ${newLogin.name}.`,
       })
     }
 
@@ -220,7 +222,6 @@ export default function LoginAdmin() {
     toast({
       title: 'Login Excluído',
       description: `O acesso de ${name} foi removido do sistema.`,
-      variant: 'default',
     })
   }
 
@@ -263,7 +264,7 @@ export default function LoginAdmin() {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          {canEditAny && (
+          {(canEditAny || canEditMySector) && (
             <Button
               onClick={openNewModal}
               className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm"
@@ -274,13 +275,12 @@ export default function LoginAdmin() {
         </div>
       </div>
 
-      {!canEditAny && mySector !== 'Todos' && (
+      {!canEditAny && !canViewAny && mySector !== 'Nenhum' && (
         <div className="bg-amber-50 border border-amber-200 p-4 rounded-xl flex items-start gap-3 shadow-sm">
           <ShieldAlert className="w-5 h-5 text-amber-600 mt-0.5 shrink-0" />
           <p className="text-sm font-medium text-amber-900">
-            Você possui acesso apenas de leitura aos logins do setor <strong>{mySector}</strong>.
-            Para gerenciar acessos ou visualizar outras áreas, contate um Supervisor ou usuário
-            Master.
+            Você possui acesso restrito aos logins do setor <strong>{mySector}</strong>.{' '}
+            {!canEditMySector && 'Apenas permissão de leitura.'}
           </p>
         </div>
       )}
@@ -475,9 +475,15 @@ export default function LoginAdmin() {
                   <SelectValue placeholder="Selecione..." />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Coleta">Coleta</SelectItem>
-                  <SelectItem value="Comercial">Comercial</SelectItem>
-                  <SelectItem value="Financeiro">Financeiro</SelectItem>
+                  {(!canEditMySector || mySector === 'Coleta') && (
+                    <SelectItem value="Coleta">Coleta</SelectItem>
+                  )}
+                  {(!canEditMySector || mySector === 'Comercial') && (
+                    <SelectItem value="Comercial">Comercial</SelectItem>
+                  )}
+                  {(!canEditMySector || mySector === 'Financeiro') && (
+                    <SelectItem value="Financeiro">Financeiro</SelectItem>
+                  )}
                 </SelectContent>
               </Select>
               {formErrors.sector && (
@@ -500,8 +506,9 @@ export default function LoginAdmin() {
                 <p className="text-[10px] text-rose-500 font-bold">{formErrors.accessLink}</p>
               )}
               {!editingLogin && (
-                <p className="text-[10px] text-slate-500">
-                  Auto-gerado. Um e-mail com este link será enviado ao salvar.
+                <p className="text-[10px] text-slate-500 flex items-center gap-1 mt-1">
+                  <Mail className="w-3 h-3" /> Um e-mail será disparado automaticamente com este
+                  link.
                 </p>
               )}
             </div>

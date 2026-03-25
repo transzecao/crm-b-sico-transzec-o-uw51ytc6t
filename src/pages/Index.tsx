@@ -30,6 +30,7 @@ import { Badge } from '@/components/ui/badge'
 import useCrmStore from '@/stores/useCrmStore'
 import { formatCurrency } from '@/utils/formatters'
 import { Link } from 'react-router-dom'
+import { cn } from '@/lib/utils'
 
 export default function Index() {
   const { state } = useCrmStore()

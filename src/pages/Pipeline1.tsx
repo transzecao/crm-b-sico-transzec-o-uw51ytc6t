@@ -273,7 +273,7 @@ export default function Pipeline1() {
             >
               <Clock className="w-3 h-3 mr-1" /> Simular +7 Dias (Testar Regras)
             </Button>
-            {['Master', 'Supervisor'].includes(state.role) && (
+            {['Master', 'Supervisor Geral', 'Supervisor Comercial'].includes(state.role) && (
               <button
                 onClick={() => setSettingsOpen(true)}
                 aria-label="Configurações do Pipeline"

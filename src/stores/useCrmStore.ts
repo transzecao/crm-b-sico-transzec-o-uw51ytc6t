@@ -2,7 +2,10 @@ import { useState, useEffect } from 'react'
 
 export type Role =
   | 'Master'
-  | 'Supervisor'
+  | 'Supervisor Geral'
+  | 'Supervisor Comercial'
+  | 'Supervisor Financeiro'
+  | 'Supervisor Coleta'
   | 'Comercial'
   | 'Financeiro'
   | 'Coleta'
@@ -106,6 +109,7 @@ type CrmState = {
   userLogins: UserLogin[]
   accessLogs: { date: string; user: string; role: string; module: string }[]
   loginAuditLogs: { date: string; user: string; action: string }[]
+  financeAuditLogs: { date: string; user: string; action: string }[]
 }
 
 const mockCompanies: Company[] = [
@@ -278,6 +282,13 @@ let globalState: CrmState = {
       date: new Date().toLocaleString('pt-BR'),
       user: 'Sistema',
       action: 'Geração inicial de links de acesso',
+    },
+  ],
+  financeAuditLogs: [
+    {
+      date: new Date().toLocaleString('pt-BR'),
+      user: 'IA Financeira',
+      action: 'Inicialização da malha tarifária base (SP).',
     },
   ],
 }

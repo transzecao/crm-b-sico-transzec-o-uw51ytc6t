@@ -175,7 +175,9 @@ export default function Pipeline2() {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {['Master', 'Marketing', 'Supervisor'].includes(state.role) && (
+            {['Master', 'Supervisor Geral', 'Supervisor Comercial', 'Marketing'].includes(
+              state.role,
+            ) && (
               <Button
                 onClick={handleDistribute}
                 aria-label="Distribuir conteúdo em lote"
