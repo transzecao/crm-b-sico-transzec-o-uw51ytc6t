@@ -1,4 +1,4 @@
-import { Search, Globe, Bell, Settings, Plus, BarChart3 } from 'lucide-react'
+import { Search, Bell, Plus, BarChart3 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { SidebarTrigger } from '@/components/ui/sidebar'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -20,22 +20,21 @@ export function AppHeader() {
   }
 
   return (
-    <header className="sticky top-0 z-40 w-full bg-slate-900/95 backdrop-blur supports-[backdrop-filter]:bg-slate-900/80 text-white flex items-center h-14 px-4 justify-between shadow-sm border-b border-slate-800">
+    <header className="sticky top-0 z-40 w-full bg-[#6A0EAE] text-white flex items-center h-14 px-4 justify-between shadow-md border-b border-[#4d0980]">
       <div className="flex items-center gap-4 sm:gap-6">
-        <SidebarTrigger className="text-slate-300 hover:bg-slate-800 hover:text-white transition-colors" />
+        <SidebarTrigger className="text-white/80 hover:text-white transition-colors" />
 
         <div className="flex items-center gap-2">
           <Link
             to="/"
-            className="font-bold text-lg tracking-wider flex items-center gap-2 text-white hover:text-slate-200 transition-colors whitespace-nowrap"
+            className="font-bold text-xl tracking-tighter flex items-center gap-1 text-white hover:text-white/80 transition-colors whitespace-nowrap"
           >
-            <div className="bg-indigo-500/20 p-1.5 rounded-md">
-              <Globe className="w-4 h-4 text-indigo-400" />
-            </div>
-            <span className="hidden sm:inline-block">TRANSZECÃO</span>
+            <span className="font-sans font-bold text-white">
+              trans<span className="font-black">Zecão</span>
+            </span>
           </Link>
-          <span className="hidden lg:inline-block text-slate-400 text-sm font-medium ml-2 border-l border-slate-700 pl-4">
-            CRM - Pipeline de Prospecção
+          <span className="hidden lg:inline-block text-white/60 text-sm font-medium ml-2 border-l border-white/20 pl-4">
+            CRM Central
           </span>
         </div>
 
@@ -44,7 +43,7 @@ export function AppHeader() {
             variant="secondary"
             size="sm"
             asChild
-            className="bg-indigo-600 hover:bg-indigo-700 text-white border-none h-8 px-3"
+            className="bg-[#0056B3] hover:bg-[#004494] text-white border-none h-8 px-3"
           >
             <Link to="/empresa/nova">
               <Plus className="w-3.5 h-3.5 mr-1" />
@@ -55,7 +54,7 @@ export function AppHeader() {
             variant="outline"
             size="sm"
             asChild
-            className="text-slate-300 border-slate-700 hover:bg-slate-800 hover:text-white h-8 px-3"
+            className="text-white border-white/30 hover:bg-white/10 hover:text-white h-8 px-3 bg-transparent"
           >
             <Link to="/analytics">
               <BarChart3 className="w-3.5 h-3.5 mr-1" />
@@ -67,16 +66,16 @@ export function AppHeader() {
 
       <div className="flex items-center gap-2 sm:gap-4">
         <div className="hidden md:flex items-center gap-2 mr-2">
-          <span className="text-xs text-slate-400 uppercase font-semibold tracking-wider">
+          <span className="text-[10px] text-white/60 uppercase font-bold tracking-widest">
             Perfil:
           </span>
           <Select value={state.role} onValueChange={handleRoleChange}>
-            <SelectTrigger className="h-8 w-[140px] bg-slate-800 border-slate-700 text-xs text-white focus:ring-indigo-500/50">
+            <SelectTrigger className="h-8 w-[140px] bg-white/10 border-white/20 text-xs text-white focus:ring-white/50">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="Master">Master</SelectItem>
-              <SelectItem value="Supervisor">Supervisor</SelectItem>
+              <SelectItem value="Supervisor Geral">Supervisor Geral</SelectItem>
               <SelectItem value="Comercial">Comercial</SelectItem>
               <SelectItem value="Financeiro">Financeiro</SelectItem>
               <SelectItem value="Coleta">Coleta</SelectItem>
@@ -87,24 +86,24 @@ export function AppHeader() {
         </div>
 
         <div className="relative hidden md:block">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/50" />
           <input
             type="search"
-            placeholder="Pesquisar..."
-            className="bg-slate-800/50 border border-slate-700 text-slate-200 placeholder:text-slate-400 rounded-full pl-9 pr-4 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 w-48 transition-all"
+            placeholder="Buscar..."
+            className="bg-white/10 border border-white/20 text-white placeholder:text-white/50 rounded-full pl-9 pr-4 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-white/50 w-48 transition-all"
           />
         </div>
 
         <div className="flex items-center gap-1">
-          <button className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-full transition-colors relative">
+          <button className="p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-full transition-colors relative">
             <Bell className="w-5 h-5" />
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-500 rounded-full border-2 border-slate-900"></span>
+            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#0056B3] rounded-full border-2 border-[#6A0EAE]"></span>
           </button>
         </div>
 
-        <div className="flex items-center gap-3 pl-2 sm:pl-4 border-l border-slate-700">
-          <Avatar className="w-8 h-8 cursor-pointer ring-2 ring-slate-800 hover:ring-indigo-500/50 transition-all shadow-sm">
-            <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white text-xs font-semibold">
+        <div className="flex items-center gap-3 pl-2 sm:pl-4 border-l border-white/20">
+          <Avatar className="w-8 h-8 cursor-pointer ring-2 ring-white/20 hover:ring-white/50 transition-all shadow-sm">
+            <AvatarFallback className="bg-white text-[#6A0EAE] text-xs font-bold">
               {state.role.substring(0, 2).toUpperCase()}
             </AvatarFallback>
           </Avatar>

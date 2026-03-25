@@ -1,114 +1,170 @@
+import { useState } from 'react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { MapPin, Map, BadgeAlert } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { MapPin, Map, Plus, Trash2 } from 'lucide-react'
 import { useFinanceCalculator } from '@/hooks/useFinanceCalculator'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import { Badge } from '@/components/ui/badge'
 
 export function FinanceGeoTab({ calc }: { calc: ReturnType<typeof useFinanceCalculator> }) {
+  const [clusters, setClusters] = useState([
+    { id: '1', name: 'Campinas e Região', km: 120, active: true },
+    { id: '2', name: 'Vale do Paraíba', km: 150, active: true },
+    { id: '3', name: 'Baixada Santista', km: 80, active: false },
+  ])
+
+  const [newCluster, setNewCluster] = useState({ name: '', km: '' })
+
+  const handleAddCluster = () => {
+    if (newCluster.name && newCluster.km) {
+      setClusters([
+        ...clusters,
+        {
+          id: Math.random().toString(),
+          name: newCluster.name,
+          km: Number(newCluster.km),
+          active: true,
+        },
+      ])
+      setNewCluster({ name: '', km: '' })
+    }
+  }
+
+  const toggleCluster = (id: string) => {
+    setClusters(clusters.map((c) => (c.id === id ? { ...c, active: !c.active } : c)))
+  }
+
+  const removeCluster = (id: string) => {
+    setClusters(clusters.filter((c) => c.id !== id))
+  }
+
   return (
-    <Card className="border-emerald-100 shadow-sm bg-white/90">
-      <CardHeader className="bg-emerald-50/40 border-b border-emerald-100">
-        <CardTitle className="text-lg flex items-center gap-2 text-emerald-900">
-          <MapPin className="w-5 h-5 text-emerald-600" /> Inteligência Geográfica (SP Focus)
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="pt-6 space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-2">
-            <Label className="text-xs font-bold text-slate-600 uppercase tracking-wider">
-              Setorização SP
-            </Label>
-            <Select value={calc.data.spRegion} onValueChange={(v) => calc.update({ spRegion: v })}>
-              <SelectTrigger className="border-emerald-200 focus:ring-emerald-500">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Centro">Centro Expandido</SelectItem>
-                <SelectItem value="Zona Norte">Zona Norte</SelectItem>
-                <SelectItem value="Zona Sul">Zona Sul</SelectItem>
-                <SelectItem value="Zona Leste">Zona Leste</SelectItem>
-                <SelectItem value="Zona Oeste">Zona Oeste</SelectItem>
-                <SelectItem value="ABCD">ABCD Paulista</SelectItem>
-                <SelectItem value="Guarulhos">Guarulhos</SelectItem>
-                <SelectItem value="Osasco">Osasco</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2 flex flex-col justify-center">
-            <Label className="text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
-              Rodízio de Caminhões Ativo? (Adiciona +24h Transit Time)
-            </Label>
-            <div className="flex items-center gap-3">
-              <Switch
-                checked={calc.data.rodizio}
-                onCheckedChange={(v) => calc.update({ rodizio: v })}
+    <div className="space-y-6">
+      <Card className="border-slate-200 shadow-sm bg-white">
+        <CardHeader className="bg-slate-50 border-b border-slate-100">
+          <CardTitle className="text-lg flex items-center gap-2 text-primary font-bold">
+            <MapPin className="w-5 h-5 text-secondary" /> Gestão de Clusters (Regiões)
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-6">
+          <div className="flex gap-4 items-end mb-6 bg-slate-50 p-4 rounded-lg border border-slate-200">
+            <div className="flex-1 space-y-2">
+              <Label className="text-xs font-bold text-slate-500 uppercase">Nome do Cluster</Label>
+              <Input
+                value={newCluster.name}
+                onChange={(e) => setNewCluster({ ...newCluster, name: e.target.value })}
+                placeholder="Ex: Ribeirão Preto"
+                className="bg-white"
               />
-              <span className="text-sm font-medium text-slate-700">
-                {calc.data.rodizio ? 'Sim, restrição de placa aplica.' : 'Não aplicável.'}
-              </span>
             </div>
-          </div>
-          <div className="space-y-2">
-            <Label className="text-xs font-bold text-slate-600 uppercase tracking-wider">
-              Rodovia Principal (Consulta ARTESP)
-            </Label>
-            <Select value={calc.data.route} onValueChange={(v) => calc.update({ route: v })}>
-              <SelectTrigger className="border-emerald-200 focus:ring-emerald-500">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="anhanguera">Sistema Anhanguera</SelectItem>
-                <SelectItem value="bandeirantes">Sistema Bandeirantes</SelectItem>
-                <SelectItem value="imigrantes">Rodovia dos Imigrantes</SelectItem>
-                <SelectItem value="dutra">Via Dutra (SP/RJ)</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <Label className="text-xs font-bold text-slate-600 uppercase tracking-wider">
-              Eixos Cobrados
-            </Label>
-            <Input
-              type="number"
-              value={calc.data.axles}
-              min="2"
-              onChange={(e) => calc.update({ axles: Number(e.target.value) })}
-              className="border-emerald-200 focus-visible:ring-emerald-500"
-            />
-          </div>
-        </div>
-        <div className="bg-slate-50 p-5 rounded-lg border border-slate-200">
-          <div className="flex items-center justify-between mb-2">
-            <Label className="font-bold text-slate-800 flex items-center gap-2 text-base">
-              <Map className="w-5 h-5 text-emerald-600" />
-              Zona Máxima de Restrição de Circulação (ZMRC / ZERC)
-            </Label>
-            <Switch
-              checked={calc.data.zmrc}
-              onCheckedChange={(v) => calc.update({ zmrc: v })}
-              className="data-[state=checked]:bg-rose-500"
-            />
-          </div>
-          <p className="text-sm text-slate-600 mb-4">
-            Ative se o destino ou coleta ocorrer dentro do perímetro restrito de SP.
-          </p>
-          {calc.data.zmrc && (
-            <div className="bg-rose-50 border border-rose-200 text-rose-800 p-3 rounded flex items-start gap-2 text-sm font-medium">
-              <BadgeAlert className="w-5 h-5 shrink-0 text-rose-600" />
-              Restrição Confirmada: Despacho exigirá veículo do tipo VUC (Veículo Urbano de Carga).
-              Taxa Adicional de 20% sobre o Frete Peso Base aplicada.
+            <div className="w-32 space-y-2">
+              <Label className="text-xs font-bold text-slate-500 uppercase">KM Médio</Label>
+              <Input
+                type="number"
+                value={newCluster.km}
+                onChange={(e) => setNewCluster({ ...newCluster, km: e.target.value })}
+                placeholder="Ex: 310"
+                className="bg-white"
+              />
             </div>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+            <Button
+              onClick={handleAddCluster}
+              className="bg-primary hover:bg-primary/90 text-white"
+            >
+              <Plus className="w-4 h-4 mr-2" /> Adicionar
+            </Button>
+          </div>
+
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="font-bold">Região / Cluster</TableHead>
+                <TableHead className="font-bold text-center">KM Médio (Distância)</TableHead>
+                <TableHead className="font-bold text-center">Status</TableHead>
+                <TableHead className="font-bold text-right">Ações</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {clusters.map((cluster) => (
+                <TableRow key={cluster.id}>
+                  <TableCell className="font-semibold text-slate-800">{cluster.name}</TableCell>
+                  <TableCell className="text-center">{cluster.km} km</TableCell>
+                  <TableCell className="text-center">
+                    <div className="flex items-center justify-center gap-2">
+                      <Switch
+                        checked={cluster.active}
+                        onCheckedChange={() => toggleCluster(cluster.id)}
+                        className="data-[state=checked]:bg-emerald-500"
+                      />
+                      {cluster.active ? (
+                        <Badge
+                          variant="outline"
+                          className="bg-emerald-50 text-emerald-700 border-emerald-200"
+                        >
+                          Ativo
+                        </Badge>
+                      ) : (
+                        <Badge
+                          variant="outline"
+                          className="bg-slate-100 text-slate-500 border-slate-200"
+                        >
+                          Inativo
+                        </Badge>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removeCluster(cluster.id)}
+                      className="text-rose-500 hover:bg-rose-50"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      <Card className="border-slate-200 shadow-sm bg-white">
+        <CardHeader className="bg-slate-50 border-b border-slate-100">
+          <CardTitle className="text-lg flex items-center gap-2 text-primary font-bold">
+            <Map className="w-5 h-5 text-secondary" /> Parâmetros Específicos da Rota
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-6 space-y-6">
+          <div className="bg-slate-50 p-5 rounded-lg border border-slate-200">
+            <div className="flex items-center justify-between mb-2">
+              <Label className="font-bold text-slate-800 flex items-center gap-2 text-base">
+                Zona Máxima de Restrição de Circulação (ZMRC)
+              </Label>
+              <Switch
+                checked={calc.data.zmrc}
+                onCheckedChange={(v) => calc.update({ zmrc: v })}
+                className="data-[state=checked]:bg-rose-500"
+              />
+            </div>
+            <p className="text-sm text-slate-600 mb-4">
+              Ative se o destino ou coleta ocorrer dentro do perímetro restrito de SP. Adiciona taxa
+              no cálculo final.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   )
 }

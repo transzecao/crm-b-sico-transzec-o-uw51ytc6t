@@ -1,15 +1,6 @@
 import { useState } from 'react'
-import {
-  Users,
-  TrendingUp,
-  DollarSign,
-  Filter,
-  Search,
-  MoreHorizontal,
-  Activity,
-  Award,
-} from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Users, TrendingUp, Activity, Award, Filter, Search, MoreHorizontal } from 'lucide-react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Table,
   TableBody,
@@ -28,7 +19,6 @@ import {
 } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import useCrmStore from '@/stores/useCrmStore'
-import { formatCurrency } from '@/utils/formatters'
 import { Link } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 
@@ -52,7 +42,6 @@ export default function Index() {
   })
 
   const prospectionCount = visibleLeads.filter((l) => l.pipeline === 'Prospection').length
-  const totalValue = visibleLeads.reduce((acc, curr) => acc + curr.value, 0)
 
   const getScoreColor = (score?: string) => {
     if (score === 'Hot') return 'bg-rose-100 text-rose-700 border-rose-200'
@@ -71,21 +60,18 @@ export default function Index() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight text-indigo-950">Dashboard Comercial</h1>
-        <p className="text-indigo-600/80 font-medium mt-1">
-          Acompanhamento central de prospecção.{' '}
-          {isRestrictedView ? 'Visão do seu funil.' : 'Visão Geral da Companhia.'}
-        </p>
+        <h1 className="text-3xl font-bold tracking-tight text-slate-900">Dashboard Comercial</h1>
+        <p className="text-slate-500 font-medium mt-1">Acompanhamento central de prospecção.</p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
-        <Card className="bg-gradient-to-br from-indigo-500 to-indigo-600 border-none shadow-md text-white overflow-hidden relative">
+        <Card className="bg-primary border-none shadow-md text-white overflow-hidden relative">
           <div className="absolute right-0 top-0 opacity-10 p-4">
             <Activity className="w-24 h-24" />
           </div>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
-            <CardTitle className="text-sm font-bold uppercase tracking-wider text-indigo-100">
-              Leads em Andamento
+            <CardTitle className="text-xs font-bold uppercase tracking-wider text-white/80">
+              Leads Ativos
             </CardTitle>
             <div className="bg-white/20 p-2 rounded-lg backdrop-blur-sm">
               <Users className="h-4 w-4 text-white" />
@@ -93,16 +79,16 @@ export default function Index() {
           </CardHeader>
           <CardContent className="relative z-10">
             <div className="text-4xl font-black">{prospectionCount}</div>
-            <p className="text-xs text-indigo-200 mt-1 font-medium">Ativos no funil de vendas</p>
+            <p className="text-xs text-white/60 mt-1 font-medium">Em funil de prospecção</p>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-blue-500 to-blue-600 border-none shadow-md text-white overflow-hidden relative">
+        <Card className="bg-secondary border-none shadow-md text-white overflow-hidden relative">
           <div className="absolute right-0 top-0 opacity-10 p-4">
             <TrendingUp className="w-24 h-24" />
           </div>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
-            <CardTitle className="text-sm font-bold uppercase tracking-wider text-blue-100">
+            <CardTitle className="text-xs font-bold uppercase tracking-wider text-white/80">
               Taxa de Conversão
             </CardTitle>
             <div className="bg-white/20 p-2 rounded-lg backdrop-blur-sm">
@@ -111,16 +97,16 @@ export default function Index() {
           </CardHeader>
           <CardContent className="relative z-10">
             <div className="text-4xl font-black">22.4%</div>
-            <p className="text-xs text-blue-200 mt-1 font-medium">Média Histórica</p>
+            <p className="text-xs text-white/60 mt-1 font-medium">Média Histórica</p>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-violet-500 to-violet-600 border-none shadow-md text-white overflow-hidden relative">
+        <Card className="bg-slate-800 border-none shadow-md text-white overflow-hidden relative">
           <div className="absolute right-0 top-0 opacity-10 p-4">
             <Award className="w-24 h-24" />
           </div>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
-            <CardTitle className="text-sm font-bold uppercase tracking-wider text-violet-100">
+            <CardTitle className="text-xs font-bold uppercase tracking-wider text-white/80">
               Metas Alcançadas
             </CardTitle>
             <div className="bg-white/20 p-2 rounded-lg backdrop-blur-sm">
@@ -129,36 +115,31 @@ export default function Index() {
           </CardHeader>
           <CardContent className="relative z-10">
             <div className="text-4xl font-black tracking-tight">80%</div>
-            <p className="text-xs text-violet-200 mt-1 font-medium">
-              Volume da carteira: {formatCurrency(totalValue)}
-            </p>
+            <p className="text-xs text-white/60 mt-1 font-medium">8 de 10 clientes fechados</p>
           </CardContent>
         </Card>
       </div>
 
-      <Card className="shadow-sm border-indigo-100 bg-white/90 backdrop-blur-sm">
-        <CardHeader className="pb-4 border-b border-indigo-50 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-indigo-50/30">
+      <Card className="shadow-sm border-slate-200 bg-white">
+        <CardHeader className="pb-4 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-50/50">
           <div>
-            <CardTitle className="text-lg text-indigo-950 font-bold">
-              Tabela de Leads e Oportunidades
+            <CardTitle className="text-lg text-slate-800 font-bold">
+              Leads e Oportunidades
             </CardTitle>
-            <CardDescription className="font-medium">
-              Gerencie os contatos ativos na sua base.
-            </CardDescription>
           </div>
           <div className="flex items-center gap-3">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-indigo-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <Input
                 placeholder="Buscar por nome..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9 w-[220px] bg-white border-indigo-100 focus-visible:ring-indigo-500/50"
+                className="pl-9 w-[220px] bg-white border-slate-200 focus-visible:ring-primary"
               />
             </div>
             <Select value={pipelineFilter} onValueChange={setPipelineFilter}>
-              <SelectTrigger className="w-[160px] bg-white border-indigo-100">
-                <Filter className="w-4 h-4 mr-2 text-indigo-500" />
+              <SelectTrigger className="w-[160px] bg-white border-slate-200">
+                <Filter className="w-4 h-4 mr-2 text-primary" />
                 <SelectValue placeholder="Pipeline" />
               </SelectTrigger>
               <SelectContent>
@@ -171,50 +152,42 @@ export default function Index() {
         </CardHeader>
         <CardContent className="p-0">
           <Table>
-            <TableHeader className="bg-indigo-50/50">
-              <TableRow className="border-indigo-100">
-                <TableHead className="font-bold text-indigo-900">Nome / Empresa</TableHead>
-                <TableHead className="font-bold text-indigo-900">Pipeline</TableHead>
-                <TableHead className="font-bold text-indigo-900">Status (Etapa)</TableHead>
-                <TableHead className="font-bold text-indigo-900">Último Contato</TableHead>
-                <TableHead className="font-bold text-indigo-900">Score</TableHead>
+            <TableHeader className="bg-slate-50">
+              <TableRow>
+                <TableHead className="font-bold text-slate-700">Nome do Lead</TableHead>
+                <TableHead className="font-bold text-slate-700">Pipeline</TableHead>
+                <TableHead className="font-bold text-slate-700">Status</TableHead>
+                <TableHead className="font-bold text-slate-700">Score</TableHead>
                 <TableHead className="w-[80px]"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredLeads.map((lead) => (
-                <TableRow
-                  key={lead.id}
-                  className="hover:bg-indigo-50/30 transition-colors border-indigo-50/50"
-                >
-                  <TableCell className="font-bold text-indigo-950">{lead.title}</TableCell>
+                <TableRow key={lead.id} className="hover:bg-slate-50 transition-colors">
+                  <TableCell className="font-bold text-slate-900">{lead.title}</TableCell>
                   <TableCell>
                     <Badge
-                      variant="outline"
                       className={
                         lead.pipeline === 'Prospection'
-                          ? 'bg-violet-100 text-violet-700 border-violet-200 font-bold'
-                          : 'bg-amber-100 text-amber-700 border-amber-200 font-bold'
+                          ? 'bg-primary text-white font-bold hover:bg-primary'
+                          : 'bg-green-600 text-white font-bold hover:bg-green-600'
                       }
                     >
                       {lead.pipeline === 'Prospection' ? 'Prospecção' : 'Nutrição'}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-slate-600 font-medium">{lead.stage}</TableCell>
-                  <TableCell className="text-slate-500 text-sm font-medium">
-                    {lead.updatedAt}
-                  </TableCell>
                   <TableCell>
-                    <Badge variant="outline" className={cn('font-bold', getScoreColor(lead.score))}>
+                    <Badge
+                      variant="outline"
+                      className={cn('font-bold uppercase text-[10px]', getScoreColor(lead.score))}
+                    >
                       {getScoreLabel(lead.score)}
                     </Badge>
                   </TableCell>
                   <TableCell>
                     <Link to={`/empresa/${lead.companyId}/360`}>
-                      <button
-                        className="p-2 text-indigo-400 hover:text-indigo-700 hover:bg-indigo-100 rounded-md transition-colors"
-                        title="Ver 360º"
-                      >
+                      <button className="p-2 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-md transition-colors">
                         <MoreHorizontal className="w-4 h-4" />
                       </button>
                     </Link>
@@ -223,8 +196,8 @@ export default function Index() {
               ))}
               {filteredLeads.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="h-32 text-center text-slate-500 font-medium">
-                    Nenhum lead encontrado com os filtros atuais.
+                  <TableCell colSpan={5} className="h-32 text-center text-slate-500 font-medium">
+                    Nenhum lead encontrado.
                   </TableCell>
                 </TableRow>
               )}

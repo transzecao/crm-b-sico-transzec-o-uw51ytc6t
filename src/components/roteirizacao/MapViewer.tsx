@@ -1,90 +1,46 @@
-import { Card } from '@/components/ui/card'
-import { Waypoint } from '@/pages/Roteirizacao'
-import { MapPin } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { Card, CardContent } from '@/components/ui/card'
 
-export function MapViewer({
-  waypoints,
-  routeGenerated,
-}: {
-  waypoints: Waypoint[]
-  routeGenerated: boolean
-}) {
-  const getCoordinates = (index: number) => {
-    const positions = [
-      { top: '30%', left: '40%' },
-      { top: '60%', left: '60%' },
-      { top: '45%', left: '75%' },
-      { top: '20%', left: '55%' },
-      { top: '70%', left: '30%' },
-    ]
-    return positions[index % positions.length]
-  }
-
+export function MapViewer({ waypoints, routeGenerated }: any) {
   return (
-    <Card className="border-sky-200 shadow-sm overflow-hidden bg-white/90">
-      <div className="relative w-full h-[400px] bg-slate-100 flex items-center justify-center overflow-hidden">
-        <div
-          className={cn(
-            "absolute inset-0 bg-[url('https://img.usecurling.com/p/1200/800?q=city%20map%20light')] bg-cover bg-center transition-all duration-1000",
-            routeGenerated
-              ? 'mix-blend-normal opacity-80'
-              : 'mix-blend-luminosity opacity-40 grayscale',
-          )}
-        />
-
-        {routeGenerated && (
-          <svg
-            className="absolute inset-0 w-full h-full pointer-events-none drop-shadow-md z-10"
-            style={{ zIndex: 10 }}
-          >
-            <path
-              d="M 40% 30% Q 50% 45% 60% 60% T 75% 45%"
-              fill="none"
-              stroke="hsl(var(--primary))"
-              strokeWidth="4"
-              strokeDasharray="8 8"
-            />
-          </svg>
-        )}
-
-        <div className="absolute inset-0 z-20">
-          {waypoints.map((wp, index) => {
-            const coords = getCoordinates(index)
-            const colorClass =
-              wp.priority === 'Alta'
-                ? 'text-rose-500 fill-rose-500/20'
-                : wp.priority === 'Média'
-                  ? 'text-amber-500 fill-amber-500/20'
-                  : 'text-emerald-500 fill-emerald-500/20'
-
-            return (
-              <div
-                key={wp.id}
-                className={cn(
-                  'absolute flex flex-col items-center -translate-x-1/2 -translate-y-full transition-all duration-500',
-                  routeGenerated ? 'scale-110' : 'scale-100',
-                )}
-                style={coords}
-              >
-                <div className="bg-white px-2 py-1 rounded shadow-md text-[10px] font-bold text-slate-800 mb-1 border border-slate-200 whitespace-nowrap">
-                  {routeGenerated && <span className="text-sky-600 mr-1">{index + 1}.</span>}
-                  {wp.address.split(',')[0] || `Ponto ${index + 1}`}
-                </div>
-                <MapPin className={cn('w-8 h-8 drop-shadow-md', colorClass)} />
-              </div>
-            )
-          })}
+    <Card className="border-slate-200 shadow-sm bg-slate-100 h-[600px] flex items-center justify-center relative overflow-hidden">
+      {!routeGenerated ? (
+        <div className="text-center space-y-2">
+          <div className="bg-white p-4 rounded-full inline-block shadow-sm mb-2 border border-slate-200">
+            <span className="text-4xl">🗺️</span>
+          </div>
+          <h3 className="font-bold text-slate-700">Mapa não inicializado</h3>
+          <p className="text-sm text-slate-500 max-w-xs">
+            Insira os pontos de parada e clique em "Calcular Rota Otimizada" para visualizar o mapa.
+          </p>
         </div>
+      ) : (
+        <div className="absolute inset-0 bg-[url('https://img.usecurling.com/p/800/600?q=map%20route&color=gray')] bg-cover bg-center opacity-80 mix-blend-multiply">
+          {/* Overlay simulation of route */}
+          <div className="absolute inset-0 bg-primary/10"></div>
 
-        {!routeGenerated && (
-          <div className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none">
-            <div className="bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full border border-sky-100 shadow-sm text-sm font-semibold text-sky-800 flex items-center gap-2">
-              <MapPin className="w-4 h-4" /> Preencha os dados e gere a rota
+          <div className="absolute top-4 right-4 bg-white/95 backdrop-blur p-4 rounded-lg shadow-lg border border-slate-200 max-w-xs z-10">
+            <h4 className="font-black text-slate-800 border-b border-slate-100 pb-2 mb-3">
+              Resumo da Rota
+            </h4>
+            <div className="space-y-3">
+              <div className="flex justify-between items-center text-sm">
+                <span className="font-bold text-slate-500">Distância Total:</span>
+                <span className="font-black text-primary">34.5 KM</span>
+              </div>
+              <div className="flex justify-between items-center text-sm">
+                <span className="font-bold text-slate-500">Tempo Estimado:</span>
+                <span className="font-black text-primary">1h 45m</span>
+              </div>
+              <div className="flex justify-between items-center text-sm">
+                <span className="font-bold text-slate-500">Peso Transportado:</span>
+                <span className="font-black text-slate-800">
+                  {waypoints.reduce((acc: number, w: any) => acc + w.weight, 0)} KG
+                </span>
+              </div>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </Card>
   )
 }

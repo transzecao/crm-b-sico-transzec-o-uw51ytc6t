@@ -25,11 +25,7 @@ export default function Company360() {
   const interactions = state.interactions.filter((i) => i.companyId === company?.id)
 
   if (!company) {
-    return (
-      <div className="p-8 text-center font-medium text-slate-500">
-        Empresa não encontrada no banco de dados.
-      </div>
-    )
+    return <div className="p-8 text-center font-medium text-slate-500">Empresa não encontrada.</div>
   }
 
   const simulateObjection = () => {
@@ -50,8 +46,7 @@ export default function Company360() {
 
     toast({
       title: 'Objeção Recebida! (Simulação Inbound)',
-      description: 'O cliente respondeu ao e-mail. A IA está reprocessando os dados da web...',
-      variant: 'default',
+      description: 'O cliente respondeu ao e-mail. A IA está reprocessando os dados...',
     })
   }
 
@@ -59,29 +54,21 @@ export default function Company360() {
 
   return (
     <div className="space-y-6 pb-12">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white/90 backdrop-blur-md p-5 rounded-xl border border-indigo-100 shadow-sm relative overflow-hidden">
-        <div className="absolute top-0 right-0 p-4 opacity-[0.02] pointer-events-none">
-          <Layers className="w-48 h-48" />
-        </div>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-5 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
         <div className="flex items-center gap-4 relative z-10">
-          <Button
-            variant="ghost"
-            size="icon"
-            asChild
-            className="hover:bg-indigo-50 text-indigo-500"
-          >
+          <Button variant="ghost" size="icon" asChild className="hover:bg-slate-100 text-slate-500">
             <Link to="/empresas">
               <ArrowLeft className="w-5 h-5" />
             </Link>
           </Button>
-          <div className="bg-indigo-600 p-2.5 rounded-xl text-white shadow-sm">
+          <div className="bg-primary p-2.5 rounded-xl text-white shadow-sm">
             <Building2 className="w-6 h-6" />
           </div>
           <div>
-            <h1 className="text-2xl font-black text-indigo-950 tracking-tight leading-tight">
+            <h1 className="text-2xl font-black text-slate-900 tracking-tight leading-tight">
               {company.nomeFantasia || company.razaoSocial}
             </h1>
-            <p className="text-sm text-indigo-600/80 font-semibold uppercase tracking-wider mt-0.5">
+            <p className="text-sm text-primary font-bold uppercase tracking-wider mt-0.5">
               Visão 360º da Conta
             </p>
           </div>
@@ -92,14 +79,14 @@ export default function Company360() {
             className="w-full sm:w-auto bg-rose-50 border border-rose-200 text-rose-700 hover:bg-rose-100 shadow-sm font-semibold"
             variant="outline"
           >
-            <MessageSquareWarning className="w-4 h-4 mr-2" /> Simular Objeção Inbound
+            <MessageSquareWarning className="w-4 h-4 mr-2" /> Simular Objeção
           </Button>
           <Button
             asChild
-            className="w-full sm:w-auto bg-white border-indigo-200 text-indigo-700 hover:bg-indigo-50 shadow-sm font-semibold"
+            className="w-full sm:w-auto bg-white border-primary/30 text-primary hover:bg-primary/5 shadow-sm font-bold"
             variant="outline"
           >
-            <Link to={`/empresa/${company.id}/editar`}>Abrir Ficha Cadastral</Link>
+            <Link to={`/empresa/${company.id}/editar`}>Ficha Cadastral</Link>
           </Button>
         </div>
       </div>
@@ -111,19 +98,19 @@ export default function Company360() {
         </div>
 
         <div className="lg:col-span-4 space-y-6">
-          <Card className="border-indigo-100 shadow-sm bg-white/90 backdrop-blur-sm sticky top-20">
-            <CardHeader className="pb-3 border-b border-indigo-50 bg-indigo-50/30">
-              <CardTitle className="text-lg text-indigo-950 font-bold flex items-center gap-2">
-                <Layers className="w-5 h-5 text-indigo-500" /> Resumo da Conta
+          <Card className="border-slate-200 shadow-sm bg-white sticky top-20">
+            <CardHeader className="pb-3 border-b border-slate-100 bg-slate-50">
+              <CardTitle className="text-lg text-slate-900 font-bold flex items-center gap-2">
+                <Layers className="w-5 h-5 text-secondary" /> Resumo da Conta
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-5 space-y-5 text-sm">
               <div>
-                <span className="text-indigo-400 font-bold uppercase text-[10px] block mb-1 tracking-widest">
+                <span className="text-slate-500 font-bold uppercase text-[10px] block mb-1 tracking-widest">
                   CNPJ
                 </span>
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="font-semibold text-slate-800 bg-slate-50 px-2 py-1 rounded border border-slate-100 inline-block">
+                  <span className="font-semibold text-slate-800 bg-slate-100 px-2 py-1 rounded border border-slate-200 inline-block">
                     {company.cnpj}
                   </span>
                   {isCnpjValid ? (
@@ -131,63 +118,63 @@ export default function Company360() {
                       variant="outline"
                       className="text-[10px] bg-emerald-50 text-emerald-700 border-emerald-200 py-0.5"
                     >
-                      <ShieldCheck className="w-3 h-3 mr-1" /> Validado (Receita Federal)
+                      <ShieldCheck className="w-3 h-3 mr-1" /> Validado
                     </Badge>
                   ) : (
                     <Badge
                       variant="outline"
                       className="text-[10px] bg-rose-50 text-rose-700 border-rose-200 py-0.5"
                     >
-                      Formato Inválido
+                      Inválido
                     </Badge>
                   )}
                 </div>
               </div>
               <div>
-                <span className="text-indigo-400 font-bold uppercase text-[10px] block mb-1.5 tracking-widest">
-                  Segmento Analisado
+                <span className="text-slate-500 font-bold uppercase text-[10px] block mb-1.5 tracking-widest">
+                  Segmento
                 </span>
                 <Badge
                   variant="outline"
-                  className="bg-white border-indigo-200 text-indigo-700 font-bold"
+                  className="bg-white border-slate-200 text-slate-700 font-bold"
                 >
                   {company.segmento || 'Não definido'}
                 </Badge>
               </div>
               <div>
-                <span className="text-indigo-400 font-bold uppercase text-[10px] block mb-1.5 tracking-widest">
-                  Clusters de Atuação
+                <span className="text-slate-500 font-bold uppercase text-[10px] block mb-1.5 tracking-widest">
+                  Clusters
                 </span>
                 <div className="flex flex-wrap gap-1.5">
                   {company.clusters?.map((c) => (
                     <Badge
                       key={c}
                       variant="secondary"
-                      className="bg-indigo-50 text-indigo-800 hover:bg-indigo-100 transition-colors font-medium border border-indigo-100/50"
+                      className="bg-primary/10 text-primary hover:bg-primary/20 transition-colors font-semibold"
                     >
                       <MapPin className="w-3 h-3 mr-1" /> {c}
                     </Badge>
                   ))}
                   {(!company.clusters || company.clusters.length === 0) && (
-                    <span className="text-slate-400 italic text-xs">Nenhum cluster mapeado</span>
+                    <span className="text-slate-400 italic text-xs">Nenhum mapeado</span>
                   )}
                 </div>
               </div>
-              <div className="pt-2 border-t border-indigo-50">
-                <span className="text-indigo-400 font-bold uppercase text-[10px] block mb-1.5 tracking-widest">
+              <div className="pt-2 border-t border-slate-100">
+                <span className="text-slate-500 font-bold uppercase text-[10px] block mb-1.5 tracking-widest">
                   Pipeline Atual
                 </span>
                 <Badge
                   className={cn(
-                    'text-xs py-1',
+                    'text-xs py-1 px-3',
                     company.pipeline === 'Pipeline de Prospecção' ||
                       company.pipeline === 'Prospection'
-                      ? 'bg-violet-600 hover:bg-violet-700 text-white'
-                      : 'bg-amber-500 hover:bg-amber-600 text-amber-950',
+                      ? 'bg-primary text-white'
+                      : 'bg-green-600 text-white',
                   )}
                 >
                   {company.pipeline === 'Prospection'
-                    ? 'Pipeline de Prospecção'
+                    ? 'Prospecção'
                     : company.pipeline || 'Sem Pipeline'}
                 </Badge>
               </div>

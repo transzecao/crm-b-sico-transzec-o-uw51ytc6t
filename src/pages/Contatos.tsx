@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import useCrmStore, { Contact } from '@/stores/useCrmStore'
 import { ContatoModal } from '@/components/ContatoModal'
-import { Badge } from '@/components/ui/badge'
 
 export default function Contatos() {
   const { state } = useCrmStore()
@@ -20,30 +19,19 @@ export default function Contatos() {
   ].includes(state.role)
 
   return (
-    <div className="space-y-6 bg-blue-50/20 min-h-[calc(100vh-6rem)] p-2 md:p-6 rounded-xl border border-blue-100/50">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white/80 backdrop-blur-md p-6 rounded-xl border border-blue-100 shadow-sm">
+    <div className="space-y-6">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
         <div className="flex items-center gap-4">
-          <div className="bg-blue-100/60 p-3 rounded-xl border border-blue-200/50 text-blue-600 shadow-sm">
+          <div className="bg-secondary/10 p-3 rounded-xl border border-secondary/20 text-secondary">
             <Users className="w-6 h-6" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold tracking-tight text-blue-950">Contatos</h1>
-            <p className="text-blue-700/80 font-medium mt-1">
-              Gerencie as pessoas vinculadas às contas comerciais.
+            <h1 className="text-3xl font-bold tracking-tight text-slate-900">Contatos</h1>
+            <p className="text-slate-500 font-medium mt-1">
+              Diretório de pessoas vinculadas às contas.
             </p>
           </div>
         </div>
-        {canEdit && (
-          <Button
-            className="bg-blue-600 hover:bg-blue-700 text-white shadow-md transition-all active:scale-95"
-            onClick={() => {
-              setSelectedContact(undefined)
-              setModalOpen(true)
-            }}
-          >
-            <Plus className="w-4 h-4 mr-2" /> Novo Contato
-          </Button>
-        )}
       </div>
 
       <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
@@ -54,57 +42,38 @@ export default function Contatos() {
           return (
             <Card
               key={contact.id}
-              className="relative overflow-hidden group border-blue-100 hover:border-blue-300 hover:shadow-lg transition-all duration-300 bg-white/70 backdrop-blur-sm"
+              className="border-slate-200 bg-white hover:border-primary/50 hover:shadow-md transition-all duration-300"
             >
-              <div className="absolute inset-0 bg-gradient-to-br from-white/50 to-blue-50/40 pointer-events-none" />
-              <CardContent className="p-5 relative z-10">
+              <CardContent className="p-5">
                 <div className="flex justify-between items-start mb-5">
                   <div>
-                    <h3 className="font-bold text-lg text-blue-950 leading-tight">
+                    <h3 className="font-black text-lg text-slate-900 leading-tight">
                       {contact.name}
                     </h3>
-                    <p className="text-sm text-blue-700/80 font-medium mt-0.5">
-                      {company?.razaoSocial || 'Empresa desconhecida'}
+                    <p className="text-sm text-slate-500 font-bold uppercase tracking-wider mt-1">
+                      {company?.nomeFantasia || 'Sem Empresa'}
                     </p>
                   </div>
-                  {canEdit && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="border-blue-200 text-blue-700 hover:bg-blue-50 hover:text-blue-800 hover:border-blue-300 shadow-sm transition-colors opacity-0 group-hover:opacity-100"
-                      onClick={() => {
-                        setSelectedContact(contact)
-                        setModalOpen(true)
-                      }}
-                    >
-                      Editar
-                    </Button>
-                  )}
                 </div>
 
-                <div className="space-y-3 pt-3 border-t border-blue-100/60">
-                  <p className="text-xs font-bold uppercase tracking-wider text-blue-800/60">
+                <div className="space-y-3 pt-3 border-t border-slate-100">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-primary">
                     Contato Principal
                   </p>
                   {principal && (
-                    <div className="flex items-center gap-3 bg-blue-50/80 border border-blue-100 p-2.5 rounded-lg shadow-sm">
-                      <div className="bg-white p-1 rounded-md shadow-sm border border-blue-100">
-                        <Star className="w-4 h-4 text-blue-500" fill="currentColor" />
+                    <div className="flex items-center gap-3 bg-slate-50 border border-slate-200 p-2.5 rounded-lg shadow-inner">
+                      <div className="bg-white p-1 rounded-md shadow-sm border border-slate-100">
+                        <Star className="w-4 h-4 text-amber-400" fill="currentColor" />
                       </div>
                       <div className="flex flex-col flex-1 min-w-0">
-                        <span className="text-[10px] font-bold uppercase text-blue-600/70">
+                        <span className="text-[10px] font-bold uppercase text-slate-400">
                           {principal.type}
                         </span>
-                        <span className="text-sm truncate font-semibold text-blue-950">
+                        <span className="text-sm truncate font-bold text-slate-800">
                           {principal.value}
                         </span>
                       </div>
                     </div>
-                  )}
-                  {contact.methods.length > 1 && (
-                    <p className="text-xs font-medium text-blue-600/70 pt-1 text-center bg-blue-50/30 rounded py-1">
-                      + {contact.methods.length - 1} outros meios cadastrados
-                    </p>
                   )}
                 </div>
               </CardContent>

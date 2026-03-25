@@ -11,21 +11,21 @@ export function CompanyCustomFieldsForm({
   setFormData: any
 }) {
   return (
-    <Card className="shadow-sm border-blue-100/60 bg-white/80 backdrop-blur-sm mt-6">
-      <CardHeader className="bg-blue-50/50 border-b border-blue-100 py-3.5 px-6">
-        <CardTitle className="text-base font-semibold flex items-center gap-2 text-blue-900">
-          <Settings className="w-4 h-4 text-blue-600" /> Dados Adicionais e Qualificação
+    <Card className="shadow-sm border-slate-200 bg-white mt-6">
+      <CardHeader className="bg-slate-50 border-b border-slate-100 py-4 px-6">
+        <CardTitle className="text-base font-bold flex items-center gap-2 text-slate-800">
+          <Settings className="w-4 h-4 text-primary" /> Informações Adicionais
         </CardTitle>
       </CardHeader>
       <CardContent className="p-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
-            <Label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+            <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
               Concorrente Atual
             </Label>
             <Input
               placeholder="Quem atende a operação hoje?"
-              className="bg-white focus-visible:ring-blue-500/50"
+              className="bg-white focus-visible:ring-primary border-slate-200"
               value={formData.customData?.['Concorrente Atual'] || ''}
               onChange={(e) =>
                 setFormData({
@@ -36,13 +36,13 @@ export function CompanyCustomFieldsForm({
             />
           </div>
           <div className="space-y-2">
-            <Label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
-              Volume Estimado Mensal (NFs)
+            <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+              Volume Estimado Mensal
             </Label>
             <Input
               type="number"
               placeholder="Ex: 500"
-              className="bg-white focus-visible:ring-blue-500/50"
+              className="bg-white focus-visible:ring-primary border-slate-200"
               value={formData.customData?.['Volume Mensal'] || ''}
               onChange={(e) =>
                 setFormData({

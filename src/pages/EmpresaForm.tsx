@@ -44,10 +44,8 @@ export default function EmpresaForm() {
   const isMaster = state.role === 'Master' || state.role === 'Supervisor Geral'
 
   const isReadOnly =
-    ['Diretoria', 'Financeiro', 'Supervisor Financeiro'].includes(state.role) ||
-    (state.role === 'Coleta' &&
-      existingCompany &&
-      existingCompany.createdBy !== state.currentUser.name)
+    ['Diretoria', 'Financeiro', 'Supervisor Financeiro', 'Coleta'].includes(state.role) &&
+    state.role !== 'Master'
 
   const [formData, setFormData] = useState<Partial<Company>>({
     cnpj: '',
@@ -95,17 +93,6 @@ export default function EmpresaForm() {
     }
   }, [id])
 
-  const toggleMandatory = (field: string) => {
-    if (!isMaster) return
-    const newMandatory = new Set(state.mandatoryFields)
-    if (newMandatory.has(field)) newMandatory.delete(field)
-    else newMandatory.add(field)
-    updateState({ mandatoryFields: Array.from(newMandatory) })
-  }
-
-  const isMandatory = (field: string) =>
-    state.mandatoryFields.includes(field) || field === 'nomeFantasia'
-
   const handleCnpjChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (isReadOnly) return
     const rawVal = e.target.value.replace(/\D/g, '')
@@ -114,11 +101,9 @@ export default function EmpresaForm() {
 
     const rawCnpj = formatted.replace(/\D/g, '')
     if (rawCnpj.length > 0 && rawCnpj.length < 14) {
-      setError((prev) => ({ ...prev, cnpj: 'CNPJ Incompleto (14 dígitos obrigatórios)' }))
+      setError((prev) => ({ ...prev, cnpj: 'CNPJ Incompleto (14 dígitos)' }))
     } else if (rawCnpj.length === 14) {
       setError((prev) => ({ ...prev, cnpj: '' }))
-    } else if (rawCnpj.length > 14) {
-      setError((prev) => ({ ...prev, cnpj: 'CNPJ Inválido (Excesso de dígitos)' }))
     }
   }
 
@@ -135,13 +120,6 @@ export default function EmpresaForm() {
     let hasError = false
     const newError = { cnpj: '', form: '' }
 
-    state.mandatoryFields.forEach((field) => {
-      if (!(formData as any)[field] || !(formData as any)[field].toString().trim()) {
-        newError.form = 'Preencha todos os campos obrigatórios (*)'
-        hasError = true
-      }
-    })
-
     if (!formData.nomeFantasia?.trim()) {
       newError.form = 'Nome Fantasia é obrigatório.'
       hasError = true
@@ -149,14 +127,14 @@ export default function EmpresaForm() {
 
     const rawCnpj = formData.cnpj?.replace(/\D/g, '') || ''
     if (formData.cnpj && rawCnpj.length !== 14) {
-      newError.cnpj = 'O CNPJ deve conter exatamente 14 dígitos numéricos válidos.'
+      newError.cnpj = 'O CNPJ deve conter exatamente 14 dígitos numéricos.'
       hasError = true
     }
 
     setError(newError)
     if (hasError) {
       toast({
-        title: 'Corrija os erros do formulário.',
+        title: 'Corrija os erros',
         variant: 'destructive',
         description: newError.form || newError.cnpj,
       })
@@ -190,8 +168,8 @@ export default function EmpresaForm() {
           companies: state.companies.map((c) => (c.id === companyId ? newCompany : c)),
           contacts: [...state.contacts.filter((c) => c.companyId !== companyId), ...finalContacts],
         })
-        logAccess(`Editou Empresa/Conta: ${newCompany.nomeFantasia}`)
-        toast({ title: 'Ficha da empresa atualizada com sucesso!' })
+        logAccess(`Editou Empresa: ${newCompany.nomeFantasia}`)
+        toast({ title: 'Empresa atualizada!' })
       } else {
         const newLead: Lead = {
           id: Math.random().toString(36).substr(2, 9),
@@ -213,11 +191,10 @@ export default function EmpresaForm() {
           contacts: [...state.contacts, ...finalContacts],
           leads: [...state.leads, newLead],
         })
-        logAccess(`Cadastrou Nova Empresa (Lead Prospecção): ${newCompany.nomeFantasia}`)
+        logAccess(`Cadastrou Empresa: ${newCompany.nomeFantasia}`)
         toast({
-          title: 'Empresa e Negócio criados!',
-          description:
-            'Lead inserido automaticamente no pipeline de Prospecção (Primeiro Contato).',
+          title: 'Empresa e Lead criados!',
+          description: 'Inserido na etapa de Primeiro Contato.',
         })
         navigate(`/empresa/${companyId}/editar`, { replace: true })
       }
@@ -225,10 +202,7 @@ export default function EmpresaForm() {
       toast({
         variant: 'destructive',
         title: 'Erro de Sistema',
-        description:
-          err instanceof Error
-            ? err.message
-            : 'Não foi possível salvar a ficha da empresa com integridade.',
+        description: 'Não foi possível salvar.',
       })
     }
   }
@@ -251,54 +225,40 @@ export default function EmpresaForm() {
     }))
   }
 
-  const pageTitle = !existingCompany
-    ? 'Nova Empresa (Prospecção)'
-    : formData.nomeFantasia || formData.razaoSocial || 'Ficha da Empresa'
+  const pageTitle = !existingCompany ? 'Novo Cadastro' : formData.nomeFantasia
 
-  const renderLabel = (label: string, field: string) => (
+  const renderLabel = (label: string, field: string, required = false) => (
     <Label
       htmlFor={field}
-      className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1.5"
+      className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5"
     >
       {label}{' '}
-      {isMandatory(field) && (
+      {required && (
         <span className="text-red-500" aria-hidden="true" title="Campo Obrigatório">
           *
         </span>
-      )}
-      {isMaster && field !== 'nomeFantasia' && (
-        <button
-          type="button"
-          onClick={() => toggleMandatory(field)}
-          className="text-slate-300 hover:text-amber-500 ml-1"
-          title="Tornar obrigatório (Master)"
-          aria-label={`Tornar ${label} obrigatório`}
-        >
-          <Star className="w-3 h-3" fill={isMandatory(field) ? 'currentColor' : 'none'} />
-        </button>
       )}
     </Label>
   )
 
   return (
-    <div className="flex flex-col h-[calc(100vh-3.5rem)] -mx-4 -mt-4 bg-slate-50/50 text-slate-800 font-sans">
-      <div className="flex items-center justify-between px-6 py-4 bg-white border-b border-blue-100 shadow-sm z-10 shrink-0">
+    <div className="flex flex-col h-[calc(100vh-3.5rem)] -mx-4 -mt-4 bg-slate-50 text-slate-800">
+      <div className="flex items-center justify-between px-6 py-4 bg-white border-b border-slate-200 shadow-sm z-10 shrink-0">
         <div className="flex items-center gap-4">
           <Button
             variant="ghost"
             size="icon"
             asChild
-            aria-label="Voltar para a lista de empresas"
-            className="mr-2 text-slate-500 hover:text-slate-800"
+            className="mr-2 text-slate-500 hover:text-primary"
           >
             <Link to="/empresas">
-              <ArrowLeft className="w-5 h-5" aria-hidden="true" />
+              <ArrowLeft className="w-5 h-5" />
             </Link>
           </Button>
-          <div className="bg-blue-100/60 p-2 rounded-lg border border-blue-200" aria-hidden="true">
-            <Building2 className="w-5 h-5 text-blue-600" />
+          <div className="bg-primary/10 p-2 rounded-lg border border-primary/20">
+            <Building2 className="w-5 h-5 text-primary" />
           </div>
-          <h1 className="text-xl font-bold flex items-center gap-2 text-blue-950 tracking-tight">
+          <h1 className="text-xl font-bold flex items-center gap-2 text-slate-900 tracking-tight">
             {pageTitle}
           </h1>
         </div>
@@ -307,66 +267,49 @@ export default function EmpresaForm() {
             variant="outline"
             onClick={() => navigate('/empresas')}
             className="h-9 font-medium"
-            aria-label="Cancelar edição"
           >
             {isReadOnly ? 'Voltar' : 'Cancelar'}
           </Button>
           {!isReadOnly && (
             <Button
               onClick={handleSave}
-              aria-label="Salvar Ficha da Empresa 360"
-              className="h-9 bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-sm transition-all active:scale-95"
+              className="h-9 bg-primary hover:bg-primary/90 text-white font-bold shadow-sm"
             >
-              <Save className="w-4 h-4 mr-2" aria-hidden="true" /> Salvar Ficha
+              <Save className="w-4 h-4 mr-2" /> Salvar Cadastro
             </Button>
           )}
         </div>
       </div>
 
-      <div className="flex flex-1 overflow-hidden bg-blue-50/10">
+      <div className="flex flex-1 overflow-hidden">
         <div className="flex-1 overflow-y-auto flex flex-col p-4 md:p-6 lg:p-8 items-center">
           <div className="w-full max-w-4xl space-y-6">
             {isReadOnly && (
-              <div className="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded-lg flex items-start gap-3 shadow-sm">
-                <AlertCircle className="w-5 h-5 shrink-0 mt-0.5 text-blue-600" />
+              <div className="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-lg flex items-start gap-3 shadow-sm">
+                <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
                 <p className="text-sm font-medium">
-                  Modo de Leitura: Você possui apenas acesso de visualização a este cadastro. Apenas
-                  o responsável (criador) ou Master/Comercial podem editá-lo.
+                  Seu perfil possui apenas acesso de visualização a este cadastro.
                 </p>
               </div>
             )}
 
-            {error.form && (
-              <div
-                className="bg-red-50 text-red-600 p-3 rounded-md border border-red-200 text-sm font-medium flex items-center gap-2"
-                role="alert"
-                aria-live="assertive"
-              >
-                <AlertCircle className="w-4 h-4" />
-                {error.form}
-              </div>
-            )}
-
-            <Card className="shadow-sm border-blue-100/60 overflow-hidden bg-white/80 backdrop-blur-sm">
-              <CardHeader className="bg-blue-50/50 border-b border-blue-100 py-3.5 px-6">
-                <CardTitle className="text-base font-semibold flex items-center gap-2 text-blue-900">
-                  <Building2 className="w-4 h-4 text-blue-600" aria-hidden="true" /> Dados
-                  Cadastrais
+            <Card className="shadow-sm border-slate-200 bg-white">
+              <CardHeader className="bg-slate-50/50 border-b border-slate-100 py-4 px-6">
+                <CardTitle className="text-base font-bold flex items-center gap-2 text-slate-800">
+                  <Building2 className="w-4 h-4 text-primary" /> Dados Principais
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-4 md:p-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    {renderLabel('Nome Fantasia', 'nomeFantasia')}
+                    {renderLabel('Nome Fantasia', 'nomeFantasia', true)}
                     <Input
                       id="nomeFantasia"
                       value={formData.nomeFantasia || ''}
                       onChange={(e) => setFormData({ ...formData, nomeFantasia: e.target.value })}
                       disabled={isReadOnly}
-                      aria-required={isMandatory('nomeFantasia')}
-                      aria-invalid={error.form && !formData.nomeFantasia ? 'true' : 'false'}
                       className={cn(
-                        'bg-white border-slate-200 focus-visible:ring-blue-500/50',
+                        'bg-white border-slate-200 focus-visible:ring-primary',
                         error.form && !formData.nomeFantasia && 'border-red-400',
                       )}
                     />
@@ -378,8 +321,7 @@ export default function EmpresaForm() {
                       value={formData.razaoSocial || ''}
                       onChange={(e) => setFormData({ ...formData, razaoSocial: e.target.value })}
                       disabled={isReadOnly}
-                      aria-required={isMandatory('razaoSocial')}
-                      className="bg-white border-slate-200 focus-visible:ring-blue-500/50"
+                      className="bg-white border-slate-200 focus-visible:ring-primary"
                     />
                   </div>
                   <div className="space-y-2 relative">
@@ -388,186 +330,82 @@ export default function EmpresaForm() {
                       id="cnpj"
                       value={formData.cnpj || ''}
                       onChange={handleCnpjChange}
-                      onBlur={() => {
-                        const rawCnpj = formData.cnpj?.replace(/\D/g, '') || ''
-                        if (formData.cnpj && rawCnpj.length !== 14) {
-                          setError((prev) => ({
-                            ...prev,
-                            cnpj: 'CNPJ Inválido. Exatamente 14 números requeridos.',
-                          }))
-                        }
-                      }}
                       disabled={isReadOnly}
                       maxLength={18}
-                      aria-required={isMandatory('cnpj')}
-                      aria-invalid={!!error.cnpj}
-                      aria-describedby={error.cnpj ? 'cnpj-error' : undefined}
                       className={cn(
-                        'bg-white font-mono border-slate-200 focus-visible:ring-blue-500/50',
+                        'bg-white font-mono border-slate-200 focus-visible:ring-primary',
                         error.cnpj && 'border-red-500 focus-visible:ring-red-500 text-red-600',
                       )}
                       placeholder="00.000.000/0000-00"
                     />
                     {error.cnpj && (
-                      <span
-                        id="cnpj-error"
-                        className="text-[10px] text-red-500 font-bold block mt-1 absolute -bottom-4 left-0"
-                        role="alert"
-                        aria-live="polite"
-                      >
+                      <span className="text-[10px] text-red-500 font-bold block mt-1 absolute -bottom-4 left-0">
                         {error.cnpj}
                       </span>
                     )}
                   </div>
                   <div className="space-y-2">
-                    {renderLabel('Endereço Principal', 'endereco')}
-                    <Input
-                      id="endereco"
-                      value={formData.endereco || ''}
-                      onChange={(e) => setFormData({ ...formData, endereco: e.target.value })}
+                    {renderLabel('Segmento', 'segmento')}
+                    <Select
+                      value={formData.segmento || ''}
+                      onValueChange={(v) => setFormData({ ...formData, segmento: v })}
                       disabled={isReadOnly}
-                      aria-required={isMandatory('endereco')}
-                      className="bg-white border-slate-200 focus-visible:ring-blue-500/50"
-                      placeholder="Rua, Cidade, UF"
-                    />
-                  </div>
-                  <div className="space-y-2 md:col-span-2 pt-2">
-                    <Label
-                      htmlFor="clusterInput"
-                      className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block flex items-center gap-1.5"
                     >
-                      <MapPin className="w-3.5 h-3.5" aria-hidden="true" /> Clusters Geográficos /
-                      Praças
+                      <SelectTrigger className="bg-white border-slate-200 focus:ring-primary">
+                        <SelectValue placeholder="Selecione..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Autopeças">Autopeças</SelectItem>
+                        <SelectItem value="Metalúrgico">Metalúrgico</SelectItem>
+                        <SelectItem value="Materiais Delicados">Materiais Delicados</SelectItem>
+                        <SelectItem value="Carga Geral">Carga Geral</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2 md:col-span-2 pt-2 border-t border-slate-100">
+                    <Label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-1.5">
+                      <MapPin className="w-3.5 h-3.5" /> Clusters de Atuação
                     </Label>
                     <div className="flex gap-2">
                       <Input
-                        id="clusterInput"
                         value={clusterInput}
                         onChange={(e) => setClusterInput(e.target.value)}
                         disabled={isReadOnly}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            e.preventDefault()
-                            addCluster()
-                          }
-                        }}
-                        placeholder="Ex: Campinas, Sul de Minas..."
-                        className="bg-white border-slate-200 focus-visible:ring-blue-500/50 max-w-md"
+                        onKeyDown={(e) => e.key === 'Enter' && addCluster()}
+                        placeholder="Adicionar região (ex: Campinas)"
+                        className="bg-white border-slate-200 max-w-sm"
                       />
                       <Button
                         type="button"
                         onClick={addCluster}
                         disabled={isReadOnly || !clusterInput.trim()}
                         variant="secondary"
-                        aria-label="Adicionar novo cluster"
-                        className="bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200"
+                        className="bg-secondary text-white hover:bg-secondary/90"
                       >
-                        Add
+                        +
                       </Button>
                     </div>
-                    <div className="flex flex-wrap gap-1.5 pt-2" role="list">
+                    <div className="flex flex-wrap gap-2 pt-2">
                       {formData.clusters?.map((cluster, i) => (
                         <Badge
                           key={i}
-                          role="listitem"
-                          variant="outline"
-                          className="bg-white text-blue-800 border-blue-200 px-2.5 py-1 rounded-md cursor-pointer hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-colors font-medium shadow-sm"
+                          variant="secondary"
+                          className="bg-slate-100 text-slate-700 hover:bg-red-50 hover:text-red-600 cursor-pointer"
                           onClick={() => removeCluster(i)}
-                          aria-label={`Remover cluster ${cluster}`}
                         >
                           {cluster} &times;
                         </Badge>
                       ))}
                     </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="shadow-sm border-blue-100/60 overflow-hidden bg-white/80 backdrop-blur-sm">
-              <CardHeader className="bg-blue-50/50 border-b border-blue-100 py-3.5 px-6">
-                <CardTitle className="text-base font-semibold flex items-center gap-2 text-blue-900">
-                  <Briefcase className="w-4 h-4 text-blue-600" aria-hidden="true" /> Resumo
-                  Estratégico
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-4 md:p-6">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                   <div className="space-y-2 md:col-span-2">
-                    {renderLabel('Pipeline de Destino', 'pipeline')}
-                    {!existingCompany ? (
-                      <div className="bg-slate-50 border border-slate-200 rounded-md p-2 h-10 text-sm text-slate-600 font-medium flex items-center gap-2">
-                        <Badge className="bg-violet-100 text-violet-700 border-violet-200 hover:bg-violet-100">
-                          Prospecção
-                        </Badge>
-                        <span className="text-slate-400">→</span>
-                        <Badge
-                          variant="outline"
-                          className="bg-white border-slate-200 hover:bg-white"
-                        >
-                          Primeiro contato
-                        </Badge>
-                      </div>
-                    ) : (
-                      <Select
-                        value={formData.pipeline || ''}
-                        onValueChange={(v) => setFormData({ ...formData, pipeline: v })}
-                        disabled={isReadOnly}
-                      >
-                        <SelectTrigger
-                          id="pipeline"
-                          className="bg-white border-slate-200 focus:ring-blue-500/50"
-                          aria-label="Selecione o Pipeline de destino"
-                        >
-                          <SelectValue placeholder="Selecione..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Pipeline de Prospecção">
-                            Pipeline de Prospecção
-                          </SelectItem>
-                          <SelectItem value="Pipeline de Nutrição">Pipeline de Nutrição</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    )}
-                  </div>
-                  <div className="space-y-2 md:col-span-2">
-                    {renderLabel('Segmento de Atuação', 'segmento')}
-                    <Select
-                      value={formData.segmento || ''}
-                      onValueChange={(v) => setFormData({ ...formData, segmento: v })}
-                      disabled={isReadOnly}
-                    >
-                      <SelectTrigger
-                        id="segmento"
-                        className="bg-white border-slate-200 focus:ring-blue-500/50"
-                        aria-label="Selecione o Segmento de atuação da empresa"
-                      >
-                        <SelectValue placeholder="Selecione o segmento..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Autopeças">Autopeças</SelectItem>
-                        <SelectItem value="Metalúrgica">Metalúrgica</SelectItem>
-                        <SelectItem value="Varejo">Varejo</SelectItem>
-                        <SelectItem value="Químico">Químico / Fertilizantes</SelectItem>
-                        <SelectItem value="Materiais Delicados">Materiais Delicados</SelectItem>
-                        <SelectItem value="Outros">Outros</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2 md:col-span-4">
-                    <Label
-                      htmlFor="observacoes"
-                      className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block flex items-center gap-1.5"
-                    >
-                      <AlignLeft className="w-3.5 h-3.5" aria-hidden="true" /> Observações Gerais
-                    </Label>
+                    {renderLabel('Observações', 'observacoes')}
                     <Textarea
                       id="observacoes"
                       value={formData.observacoes || ''}
                       onChange={(e) => setFormData({ ...formData, observacoes: e.target.value })}
                       disabled={isReadOnly}
-                      placeholder="Informações adicionais relevantes sobre a empresa, negociações em andamento..."
-                      className="bg-white min-h-[100px] border-slate-200 focus-visible:ring-blue-500/50"
+                      className="bg-white min-h-[80px]"
                     />
                   </div>
                 </div>
@@ -579,16 +417,12 @@ export default function EmpresaForm() {
               setContacts={setContacts}
               isReadOnly={isReadOnly}
             />
-            <CompanyCustomFieldsForm
-              formData={formData}
-              setFormData={isReadOnly ? () => {} : setFormData}
-            />
 
             <div className="h-8"></div>
           </div>
         </div>
 
-        <div className="hidden lg:flex w-[420px] bg-slate-50/80 border-l border-slate-200/80 flex-col h-full shrink-0 shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.02)] z-0 relative">
+        <div className="hidden lg:flex w-[320px] bg-slate-50 border-l border-slate-200 flex-col h-full shrink-0 shadow-inner z-0 relative">
           <CompanyActionHub company={existingCompany} />
         </div>
       </div>
