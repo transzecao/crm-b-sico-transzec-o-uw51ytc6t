@@ -1,15 +1,13 @@
-/* 404 Page - Displays when a user attempts to access a non-existent route - translate to the language of the user */
+/* 404 Page - Displays when a user attempts to access a non-existent route */
 import { useLocation, Link } from 'react-router-dom'
-import { useEffect, useRef } from 'react'
+import { useEffect } from 'react'
 
 const NotFound = () => {
   const location = useLocation()
-  const logged = useRef(false)
 
   useEffect(() => {
-    if (!logged.current && location.pathname !== '/') {
+    if (location.pathname !== '/') {
       console.error('404 Error: User attempted to access non-existent route:', location.pathname)
-      logged.current = true
     }
   }, [location.pathname])
 

@@ -135,14 +135,14 @@ export default function Financeiro() {
 
   const updateParam = (k: keyof typeof cfg.params, v: string) => {
     const num = parseFloat(v)
-    const val = isNaN(num) ? 0 : Math.max(0, num)
+    const val = isNaN(num) || !isFinite(num) ? 0 : Math.max(0, num)
     setCfg((p) => ({ ...p, params: { ...p.params, [k]: val } }))
   }
 
   const updateSim = (k: keyof typeof cfg.sim, v: string | number | boolean) => {
     let val = v
     if (typeof v === 'number' && k !== 'dist' && k !== 'clusterId') {
-      val = isNaN(v) ? 0 : Math.max(0, v)
+      val = isNaN(v) || !isFinite(v) ? 0 : Math.max(0, v)
     }
     setCfg((p) => ({ ...p, sim: { ...p.sim, [k]: val } }))
   }
@@ -167,7 +167,7 @@ export default function Financeiro() {
   }
 
   const updateSimDim = (k: keyof typeof cfg.sim.dim, v: number) => {
-    const val = isNaN(v) ? 0 : Math.max(0, v)
+    const val = isNaN(v) || !isFinite(v) ? 0 : Math.max(0, v)
     setCfg((p) => {
       const newDim = { ...p.sim.dim, [k]: val }
       const newVol = p.sim.calcVolume
@@ -215,7 +215,8 @@ export default function Financeiro() {
         if (idx > -1 && field) {
           let updatedVal = val
           if (field === 'val') {
-            updatedVal = isNaN(Number(val)) ? 0 : Math.max(0, Number(val))
+            const num = Number(val)
+            updatedVal = isNaN(num) || !isFinite(num) ? 0 : Math.max(0, num)
           }
           items[idx] = { ...items[idx], [field]: updatedVal }
         }
@@ -230,10 +231,19 @@ export default function Financeiro() {
       updateInfo('updated', now)
       setLastSaved(now)
       toast.success('Planilha salva com sucesso', {
-        description: 'Memória de cálculo atualizada e versão registrada.',
+        description: 'Memória de cálculo atualizada e versão registrada de forma segura.',
       })
     } catch (e) {
-      toast.error('Erro ao salvar as configurações financeiras.')
+      toast.error('Erro de Sistema', {
+        description: 'Falha ao salvar as configurações financeiras.',
+      })
+    }
+  }
+
+  // Prevent negative signs or invalid math characters in numeric inputs
+  const preventInvalidNumberChars = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (['-', 'e', 'E', '+'].includes(e.key)) {
+      e.preventDefault()
     }
   }
 
@@ -241,12 +251,15 @@ export default function Financeiro() {
     try {
       const { params, sim, modules, gen, srv } = cfg
 
-      const safeNumber = (val: number) => (isNaN(val) ? 0 : Math.max(0, val))
+      const safeNumber = (val: number) => {
+        const n = Number(val)
+        return isNaN(n) || !isFinite(n) ? 0 : Math.max(0, n)
+      }
 
       const physicalWeight = safeNumber(sim.weight)
       const cubedWeight = safeNumber(sim.volume) * safeNumber(params.cubageFactor)
       const taxableWeight = sim.useCubing ? Math.max(physicalWeight, cubedWeight) : physicalWeight
-      const wTon = taxableWeight / 1000
+      const wTon = taxableWeight > 0 ? taxableWeight / 1000 : 0 // Safe division
 
       let baseFreight = 0
       let cBase = 0
@@ -277,8 +290,8 @@ export default function Financeiro() {
         .map((s) => ({ ...s, total: calcItem(s, modules.srvActive) }))
         .filter((s) => s.total > 0 && modules.srvActive)
 
-      const subGen = genVals.reduce((a, b) => a + b.total, 0)
-      const subSrv = srvVals.reduce((a, b) => a + b.total, 0)
+      const subGen = genVals.reduce((a, b) => a + safeNumber(b.total), 0)
+      const subSrv = srvVals.reduce((a, b) => a + safeNumber(b.total), 0)
 
       const sub1 = (modules.paramsActive ? cBase + freteValor : 0) + subGen + subSrv
       const margin = modules.paramsActive ? sub1 * (safeNumber(params.marginPct) / 100) : 0
@@ -303,7 +316,8 @@ export default function Financeiro() {
         tax,
         total,
       }
-    } catch (e) {
+    } catch (error) {
+      console.error('Calculation Error:', error)
       return {
         physicalWeight: 0,
         cubedWeight: 0,
@@ -325,7 +339,8 @@ export default function Financeiro() {
   }, [cfg])
 
   const fmt = (v: number) =>
-    new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
+    new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(isNaN(v) ? 0 : v)
+
   const inputClass =
     'bg-white/80 border-emerald-200/50 focus-visible:ring-emerald-500/50 transition-colors shadow-sm'
   const editHighlight = 'border-emerald-200/80 bg-emerald-50/50 focus-visible:ring-emerald-500/50'
@@ -364,7 +379,7 @@ export default function Financeiro() {
               className="data-[state=checked]:bg-emerald-600"
               checked={cfg.modules[activeKey]}
               onCheckedChange={(c) => updateModule(activeKey, c)}
-              aria-label={`Ativar módulo ${title}`}
+              aria-label={`Alternar estado do módulo ${title}`}
             />
           </div>
           {showAdd && (
@@ -374,9 +389,9 @@ export default function Financeiro() {
               className="border-emerald-200/80 text-emerald-700 bg-white/50 hover:bg-emerald-100 hover:text-emerald-800 backdrop-blur-sm"
               onClick={() => handleItem(list, 'add')}
               disabled={!cfg.modules[activeKey]}
-              aria-label={`Adicionar item em ${title}`}
+              aria-label={`Adicionar novo item em ${title}`}
             >
-              <Plus className="w-4 h-4 mr-2" /> Novo Item
+              <Plus className="w-4 h-4 mr-2" aria-hidden="true" /> Novo Item
             </Button>
           )}
         </div>
@@ -397,14 +412,14 @@ export default function Financeiro() {
               checked={i.active}
               onCheckedChange={(c) => handleItem(list, 'upd', i.id, 'active', c)}
               disabled={!cfg.modules[activeKey]}
-              aria-label={`Ativar item ${i.name}`}
+              aria-label={`Ativar taxa ou serviço: ${i.name}`}
             />
             <Input
               className={cn('min-w-[200px] flex-1 font-medium bg-white/50', editHighlight)}
               value={i.name}
               onChange={(e) => handleItem(list, 'upd', i.id, 'name', e.target.value)}
               disabled={!cfg.modules[activeKey]}
-              aria-label="Nome do item"
+              aria-label={`Nome do item ${title}`}
             />
             <Select
               value={i.type}
@@ -413,7 +428,7 @@ export default function Financeiro() {
             >
               <SelectTrigger
                 className={cn('w-[180px] bg-white/50', editHighlight)}
-                aria-label="Tipo do valor"
+                aria-label={`Tipo de valor para ${i.name}`}
               >
                 <SelectValue />
               </SelectTrigger>
@@ -434,11 +449,12 @@ export default function Financeiro() {
                 type="number"
                 min="0"
                 step={i.type === 'fixed' ? '1' : '0.01'}
+                onKeyDown={preventInvalidNumberChars}
                 className={cn('w-32 pl-8 bg-white/50', editHighlight)}
                 value={i.val}
-                onChange={(e) => handleItem(list, 'upd', i.id, 'val', Number(e.target.value))}
+                onChange={(e) => handleItem(list, 'upd', i.id, 'val', e.target.value)}
                 disabled={!cfg.modules[activeKey]}
-                aria-label="Valor numérico"
+                aria-label={`Valor numérico para ${i.name}`}
               />
             </div>
             {showAdd && (
@@ -450,7 +466,7 @@ export default function Financeiro() {
                 disabled={!cfg.modules[activeKey]}
                 aria-label={`Remover item ${i.name}`}
               >
-                <Trash2 className="w-4 h-4" />
+                <Trash2 className="w-4 h-4" aria-hidden="true" />
               </Button>
             )}
           </div>
@@ -474,7 +490,7 @@ export default function Financeiro() {
           </h1>
           <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mt-3 text-sm text-slate-600">
             <span className="flex items-center gap-1.5 font-medium text-emerald-800">
-              <History className="w-4 h-4 text-emerald-600" /> Atualizado:{' '}
+              <History className="w-4 h-4 text-emerald-600" aria-hidden="true" /> Atualizado:{' '}
               {new Date(lastSaved).toLocaleString('pt-BR')}
             </span>
             <span className="flex items-center gap-1.5 bg-emerald-50/80 text-emerald-800 px-2 py-1 rounded-md border border-emerald-100/50">
@@ -492,7 +508,7 @@ export default function Financeiro() {
                 className="data-[state=checked]:bg-emerald-600"
                 checked={cfg.modules.syncEnabled}
                 onCheckedChange={(c) => updateModule('syncEnabled', c)}
-                aria-label="Ativar sincronização automática"
+                aria-label="Ativar sincronização automática de tarifas"
               />
               {cfg.modules.syncEnabled && (
                 <RefreshCw
@@ -506,10 +522,10 @@ export default function Financeiro() {
         <Button
           onClick={handleSave}
           size="lg"
-          aria-label="Salvar versão do motor de frete"
+          aria-label="Salvar versão atual do motor de frete"
           className="gap-2 shadow-md bg-emerald-600 hover:bg-emerald-700 text-white transition-all active:scale-95"
         >
-          <Save className="w-5 h-5" /> Salvar Versão
+          <Save className="w-5 h-5" aria-hidden="true" /> Salvar Versão
         </Button>
       </div>
 
@@ -518,7 +534,8 @@ export default function Financeiro() {
           <Card className="shadow-sm border-emerald-100/50 bg-white/70 backdrop-blur-sm">
             <CardHeader className="pb-4 border-b border-emerald-100/50 bg-emerald-50/40">
               <CardTitle className="text-lg flex items-center gap-2 text-emerald-900">
-                <Route className="w-5 h-5 text-emerald-600" /> Variáveis de Simulação (Inputs)
+                <Route className="w-5 h-5 text-emerald-600" aria-hidden="true" /> Variáveis de
+                Simulação (Inputs)
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-6">
@@ -528,7 +545,7 @@ export default function Financeiro() {
                     htmlFor="cluster-select"
                     className="text-xs font-semibold uppercase text-emerald-700 flex items-center gap-1.5"
                   >
-                    <MapPin className="w-3.5 h-3.5" /> Cluster / Destino
+                    <MapPin className="w-3.5 h-3.5" aria-hidden="true" /> Cluster / Destino
                   </Label>
                   <Select value={cfg.sim.clusterId} onValueChange={handleClusterChange}>
                     <SelectTrigger id="cluster-select" className={inputClass}>
@@ -560,10 +577,12 @@ export default function Financeiro() {
                     id="sim-dist"
                     type="number"
                     min="0"
+                    onKeyDown={preventInvalidNumberChars}
                     value={cfg.sim.dist}
-                    onChange={(e) => updateSim('dist', Number(e.target.value))}
+                    onChange={(e) => updateSim('dist', e.target.value)}
                     className={inputClass}
                     disabled={!!cfg.sim.clusterId && cfg.sim.clusterId !== 'none'}
+                    aria-label="Distância em quilômetros"
                   />
                 </div>
 
@@ -578,9 +597,11 @@ export default function Financeiro() {
                     id="sim-val"
                     type="number"
                     min="0"
+                    onKeyDown={preventInvalidNumberChars}
                     value={cfg.sim.value}
-                    onChange={(e) => updateSim('value', Number(e.target.value))}
+                    onChange={(e) => updateSim('value', e.target.value)}
                     className={inputClass}
+                    aria-label="Valor em reais da mercadoria"
                   />
                 </div>
 
@@ -591,6 +612,7 @@ export default function Financeiro() {
                       checked={cfg.sim.useCubing}
                       onCheckedChange={(v) => updateSim('useCubing', v)}
                       className="data-[state=checked]:bg-emerald-600"
+                      aria-label="Ativar uso de cubagem"
                     />
                     <Label
                       htmlFor="use-cubing"
@@ -612,6 +634,7 @@ export default function Financeiro() {
                         className="data-[state=checked]:bg-emerald-600"
                         checked={cfg.sim.calcVolume}
                         onCheckedChange={toggleCalcVolume}
+                        aria-label="Alternar cálculo de volume por dimensões"
                       />
                       <Label
                         htmlFor="calc-vol"
@@ -636,6 +659,7 @@ export default function Financeiro() {
                           type="number"
                           step="0.01"
                           min="0"
+                          onKeyDown={preventInvalidNumberChars}
                           value={cfg.sim.dim.height}
                           onChange={(e) => updateSimDim('height', Number(e.target.value))}
                           className={inputClass}
@@ -653,6 +677,7 @@ export default function Financeiro() {
                           type="number"
                           step="0.01"
                           min="0"
+                          onKeyDown={preventInvalidNumberChars}
                           value={cfg.sim.dim.width}
                           onChange={(e) => updateSimDim('width', Number(e.target.value))}
                           className={inputClass}
@@ -670,6 +695,7 @@ export default function Financeiro() {
                           type="number"
                           step="0.01"
                           min="0"
+                          onKeyDown={preventInvalidNumberChars}
                           value={cfg.sim.dim.thickness}
                           onChange={(e) => updateSimDim('thickness', Number(e.target.value))}
                           className={inputClass}
@@ -678,7 +704,7 @@ export default function Financeiro() {
                       <div className="col-span-3 pt-2">
                         <div className="flex justify-between items-center text-sm px-3 py-2 bg-emerald-100/50 rounded border border-emerald-200/80 text-emerald-800 font-medium">
                           <span className="font-bold">Total M³:</span>
-                          <span className="font-bold">
+                          <span className="font-bold" aria-live="polite">
                             {cfg.sim.volume.toLocaleString('pt-BR', { maximumFractionDigits: 4 })}{' '}
                             m³
                           </span>
@@ -692,8 +718,9 @@ export default function Financeiro() {
                         type="number"
                         step="0.01"
                         min="0"
+                        onKeyDown={preventInvalidNumberChars}
                         value={cfg.sim.volume}
-                        onChange={(e) => updateSim('volume', Number(e.target.value))}
+                        onChange={(e) => updateSim('volume', e.target.value)}
                         className={inputClass}
                       />
                     </div>
@@ -713,8 +740,9 @@ export default function Financeiro() {
                         id="sim-weight"
                         type="number"
                         min="0"
+                        onKeyDown={preventInvalidNumberChars}
                         value={cfg.sim.weight}
-                        onChange={(e) => updateSim('weight', Number(e.target.value))}
+                        onChange={(e) => updateSim('weight', e.target.value)}
                         className={inputClass}
                       />
                     </div>
@@ -774,7 +802,7 @@ export default function Financeiro() {
           >
             <CardHeader className="flex flex-row items-center justify-between pb-4 border-b border-emerald-100/50 bg-emerald-50/40">
               <div className="flex items-center gap-2 text-emerald-900">
-                <Settings2 className="w-5 h-5 text-emerald-600" />
+                <Settings2 className="w-5 h-5 text-emerald-600" aria-hidden="true" />
                 <div>
                   <CardTitle className="text-lg">Matriz de Custos Base</CardTitle>
                   <CardDescription className="text-xs mt-1 text-emerald-700/70">
@@ -807,10 +835,12 @@ export default function Financeiro() {
                     type="number"
                     step="0.01"
                     min="0"
+                    onKeyDown={preventInvalidNumberChars}
                     value={cfg.params[f.k as keyof typeof cfg.params]}
                     onChange={(e) => updateParam(f.k as keyof typeof cfg.params, e.target.value)}
                     className={cn(editHighlight, 'bg-white/50')}
                     disabled={!cfg.modules.paramsActive}
+                    aria-label={f.l}
                   />
                 </div>
               ))}
@@ -820,7 +850,8 @@ export default function Financeiro() {
           <Card className="shadow-sm border-emerald-100/50 bg-white/70 backdrop-blur-md">
             <CardHeader className="pb-4 border-b border-emerald-100/50 bg-emerald-50/40">
               <CardTitle className="text-lg flex items-center gap-2 text-emerald-900">
-                <MapPin className="w-5 h-5 text-emerald-600" /> Clusters de Destino (Gestão)
+                <MapPin className="w-5 h-5 text-emerald-600" aria-hidden="true" /> Clusters de
+                Destino (Gestão)
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -852,7 +883,7 @@ export default function Financeiro() {
           {renderList(
             'gen',
             'Generalidades (Taxas e Pedágio)',
-            <ListTodo className="w-5 h-5 text-emerald-600" />,
+            <ListTodo className="w-5 h-5 text-emerald-600" aria-hidden="true" />,
             'genActive',
             true,
             'bg-emerald-50/50',
@@ -860,7 +891,7 @@ export default function Financeiro() {
           {renderList(
             'srv',
             'Serviços Adicionais',
-            <Blocks className="w-5 h-5 text-emerald-600" />,
+            <Blocks className="w-5 h-5 text-emerald-600" aria-hidden="true" />,
             'srvActive',
             true,
             'bg-emerald-50/30',
@@ -870,7 +901,7 @@ export default function Financeiro() {
         <div className="lg:col-span-4 lg:sticky lg:top-6 space-y-6">
           <Card className="border-emerald-200/80 shadow-xl bg-white/90 backdrop-blur-md overflow-hidden">
             <div className="bg-gradient-to-r from-emerald-800 to-emerald-700 text-white p-4 flex items-center gap-3">
-              <Calculator className="w-6 h-6 text-emerald-200" />
+              <Calculator className="w-6 h-6 text-emerald-200" aria-hidden="true" />
               <div>
                 <h3 className="font-bold text-lg leading-tight text-emerald-50">
                   Simulador de Frete
@@ -880,7 +911,10 @@ export default function Financeiro() {
             </div>
 
             <CardContent className="p-0">
-              <div className="max-h-[calc(100vh-200px)] overflow-y-auto p-5 space-y-4 text-sm font-mono tracking-tight">
+              <div
+                className="max-h-[calc(100vh-200px)] overflow-y-auto p-5 space-y-4 text-sm font-mono tracking-tight"
+                aria-live="polite"
+              >
                 <div>
                   <div className="text-xs font-bold text-emerald-700/60 uppercase mb-2 flex items-center gap-2">
                     <div className="h-px bg-emerald-100 flex-1" />

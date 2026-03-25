@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { KanbanBoard } from '@/components/KanbanBoard'
 import useCrmStore from '@/stores/useCrmStore'
 import { useToast } from '@/hooks/use-toast'
@@ -15,49 +16,47 @@ export default function Pipeline2() {
   const { state, updateState } = useCrmStore()
   const { toast } = useToast()
 
-  const nutritionLeads = state.leads.filter((l) => l.pipeline === 'Nutrition')
+  const nutritionLeads = useMemo(
+    () => state.leads.filter((l) => l.pipeline === 'Nutrition'),
+    [state.leads],
+  )
 
   const handleMove = (id: string, stage: string) => {
-    if (!COLUMNS.includes(stage)) {
+    try {
+      if (!COLUMNS.includes(stage)) {
+        throw new Error(`Etapa de nutrição inválida: ${stage}`)
+      }
+      updateState({ leads: state.leads.map((l) => (l.id === id ? { ...l, stage } : l)) })
+      toast({ title: `Movido para ${stage}` })
+    } catch (error) {
       toast({
         variant: 'destructive',
         title: 'Erro de Validação',
-        description: 'Etapa de nutrição inválida.',
-      })
-      return
-    }
-    try {
-      updateState({ leads: state.leads.map((l) => (l.id === id ? { ...l, stage } : l)) })
-      toast({ title: `Movido para ${stage}` })
-    } catch (e) {
-      toast({
-        variant: 'destructive',
-        title: 'Erro',
-        description: 'Não foi possível mover o negócio.',
+        description: error instanceof Error ? error.message : 'Não foi possível mover o negócio.',
       })
     }
   }
 
   const handleReactivate = (id: string, stage: 'Negociação' | 'Qualificação') => {
-    if (!['Negociação', 'Qualificação'].includes(stage)) {
-      toast({ variant: 'destructive', title: 'Erro', description: 'Etapa de prospecção inválida.' })
-      return
-    }
     try {
+      if (!['Negociação', 'Qualificação'].includes(stage)) {
+        throw new Error(`Etapa de prospecção inválida: ${stage}`)
+      }
       updateState({
         leads: state.leads.map((l) =>
           l.id === id ? { ...l, pipeline: 'Prospection', stage, score: 'Hot' } : l,
         ),
       })
       toast({
-        title: `Lead reativado para ${stage} em Prospecção!`,
-        description: 'Score atualizado para Quente.',
+        title: `Automação: Lead reativado para ${stage}!`,
+        description: 'Atividade Inbound detectada. Score atualizado para Quente na Prospecção.',
       })
-    } catch (e) {
+    } catch (error) {
       toast({
         variant: 'destructive',
-        title: 'Erro',
-        description: 'Não foi possível reativar o negócio.',
+        title: 'Erro do Sistema',
+        description:
+          error instanceof Error ? error.message : 'Não foi possível reativar o negócio.',
       })
     }
   }
@@ -98,7 +97,7 @@ export default function Pipeline2() {
               aria-label="Distribuir conteúdo em lote"
               className="bg-amber-600 hover:bg-amber-700 text-white shadow-sm transition-all"
             >
-              <Mail className="w-4 h-4 mr-2" /> Distribuir Conteúdo (Lote)
+              <Mail className="w-4 h-4 mr-2" aria-hidden="true" /> Distribuir Conteúdo (Lote)
             </Button>
           )}
         </div>

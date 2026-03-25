@@ -109,7 +109,7 @@ export default function EmpresaForm() {
 
     const rawCnpj = formData.cnpj?.replace(/\D/g, '') || ''
     if (formData.cnpj && rawCnpj.length !== 14) {
-      newError.cnpj = 'CNPJ deve conter exatamente 14 dígitos numéricos.'
+      newError.cnpj = 'CNPJ inválido. Exatamente 14 números são requeridos.'
       hasError = true
     }
 
@@ -150,11 +150,11 @@ export default function EmpresaForm() {
         toast({ title: 'Empresa cadastrada com sucesso!' })
         navigate(`/empresa/${companyId}/editar`, { replace: true })
       }
-    } catch (e) {
+    } catch (error) {
       toast({
         variant: 'destructive',
         title: 'Erro de Sistema',
-        description: 'Não foi possível salvar a ficha da empresa.',
+        description: 'Não foi possível salvar a ficha da empresa com integridade.',
       })
     }
   }
@@ -187,7 +187,7 @@ export default function EmpresaForm() {
     >
       {label}{' '}
       {isMandatory(field) && (
-        <span className="text-red-500" aria-hidden="true">
+        <span className="text-red-500" aria-hidden="true" title="Campo Obrigatório">
           *
         </span>
       )}
@@ -213,11 +213,11 @@ export default function EmpresaForm() {
             variant="ghost"
             size="icon"
             asChild
-            aria-label="Voltar para empresas"
+            aria-label="Voltar para a lista de empresas"
             className="mr-2 text-slate-500 hover:text-slate-800"
           >
             <Link to="/empresas">
-              <ArrowLeft className="w-5 h-5" />
+              <ArrowLeft className="w-5 h-5" aria-hidden="true" />
             </Link>
           </Button>
           <div className="bg-blue-100/60 p-2 rounded-lg border border-blue-200" aria-hidden="true">
@@ -238,10 +238,10 @@ export default function EmpresaForm() {
           </Button>
           <Button
             onClick={handleSave}
-            aria-label="Salvar Ficha 360"
+            aria-label="Salvar Ficha da Empresa 360"
             className="h-9 bg-blue-600 hover:bg-blue-700 text-white font-medium shadow-sm transition-all active:scale-95"
           >
-            <Save className="w-4 h-4 mr-2" /> Salvar Ficha 360
+            <Save className="w-4 h-4 mr-2" aria-hidden="true" /> Salvar Ficha 360
           </Button>
         </div>
       </div>
@@ -253,6 +253,7 @@ export default function EmpresaForm() {
               <div
                 className="bg-red-50 text-red-600 p-3 rounded-md border border-red-200 text-sm font-medium"
                 role="alert"
+                aria-live="assertive"
               >
                 {error.form}
               </div>
@@ -273,6 +274,8 @@ export default function EmpresaForm() {
                       id="nomeFantasia"
                       value={formData.nomeFantasia || ''}
                       onChange={(e) => setFormData({ ...formData, nomeFantasia: e.target.value })}
+                      aria-required={isMandatory('nomeFantasia')}
+                      aria-invalid={error.form && !formData.nomeFantasia ? 'true' : 'false'}
                       className={cn(
                         'bg-white border-slate-200 focus-visible:ring-blue-500/50',
                         error.form && !formData.nomeFantasia && 'border-red-400',
@@ -285,6 +288,7 @@ export default function EmpresaForm() {
                       id="razaoSocial"
                       value={formData.razaoSocial || ''}
                       onChange={(e) => setFormData({ ...formData, razaoSocial: e.target.value })}
+                      aria-required={isMandatory('razaoSocial')}
                       className="bg-white border-slate-200 focus-visible:ring-blue-500/50"
                     />
                   </div>
@@ -297,6 +301,9 @@ export default function EmpresaForm() {
                         setFormData({ ...formData, cnpj: formatCnpj(e.target.value) })
                       }
                       maxLength={18}
+                      aria-required={isMandatory('cnpj')}
+                      aria-invalid={!!error.cnpj}
+                      aria-describedby={error.cnpj ? 'cnpj-error' : undefined}
                       className={cn(
                         'bg-white font-mono border-slate-200 focus-visible:ring-blue-500/50',
                         error.cnpj && 'border-red-500',
@@ -304,7 +311,11 @@ export default function EmpresaForm() {
                       placeholder="00.000.000/0000-00"
                     />
                     {error.cnpj && (
-                      <span className="text-[10px] text-red-500 font-medium" role="alert">
+                      <span
+                        id="cnpj-error"
+                        className="text-[10px] text-red-500 font-medium"
+                        role="alert"
+                      >
                         {error.cnpj}
                       </span>
                     )}
@@ -315,6 +326,7 @@ export default function EmpresaForm() {
                       id="endereco"
                       value={formData.endereco || ''}
                       onChange={(e) => setFormData({ ...formData, endereco: e.target.value })}
+                      aria-required={isMandatory('endereco')}
                       className="bg-white border-slate-200 focus-visible:ring-blue-500/50"
                       placeholder="Rua, Cidade, UF"
                     />
@@ -324,7 +336,8 @@ export default function EmpresaForm() {
                       htmlFor="clusterInput"
                       className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block flex items-center gap-1.5"
                     >
-                      <MapPin className="w-3.5 h-3.5" /> Clusters / Praças de Atuação
+                      <MapPin className="w-3.5 h-3.5" aria-hidden="true" /> Clusters / Praças de
+                      Atuação
                     </Label>
                     <div className="flex gap-2">
                       <Input
@@ -344,18 +357,19 @@ export default function EmpresaForm() {
                         type="button"
                         onClick={addCluster}
                         variant="secondary"
-                        aria-label="Adicionar cluster"
+                        aria-label="Adicionar novo cluster"
                         className="bg-blue-50 text-blue-700 hover:bg-blue-100"
                       >
                         Add
                       </Button>
                     </div>
-                    <div className="flex flex-wrap gap-1.5 pt-1">
+                    <div className="flex flex-wrap gap-1.5 pt-1" role="list">
                       {formData.clusters?.map((cluster, i) => (
                         <Badge
                           key={i}
+                          role="listitem"
                           variant="outline"
-                          className="bg-white text-blue-800 border-blue-200 px-2 py-0.5 rounded-md cursor-pointer hover:bg-red-50 hover:text-red-600 hover:border-red-200"
+                          className="bg-white text-blue-800 border-blue-200 px-2 py-0.5 rounded-md cursor-pointer hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-colors"
                           onClick={() => removeCluster(i)}
                           aria-label={`Remover cluster ${cluster}`}
                         >
@@ -386,7 +400,7 @@ export default function EmpresaForm() {
                       <SelectTrigger
                         id="pipeline"
                         className="bg-white border-slate-200 focus:ring-blue-500/50"
-                        aria-label="Selecione o Pipeline"
+                        aria-label="Selecione o Pipeline de destino"
                       >
                         <SelectValue placeholder="Selecione..." />
                       </SelectTrigger>
@@ -407,7 +421,7 @@ export default function EmpresaForm() {
                       <SelectTrigger
                         id="segmento"
                         className="bg-white border-slate-200 focus:ring-blue-500/50"
-                        aria-label="Selecione o Segmento"
+                        aria-label="Selecione o Segmento de atuação da empresa"
                       >
                         <SelectValue placeholder="Selecione o segmento..." />
                       </SelectTrigger>
@@ -425,7 +439,7 @@ export default function EmpresaForm() {
                       htmlFor="observacoes"
                       className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block flex items-center gap-1.5"
                     >
-                      <AlignLeft className="w-3.5 h-3.5" /> Observações Gerais
+                      <AlignLeft className="w-3.5 h-3.5" aria-hidden="true" /> Observações Gerais
                     </Label>
                     <Textarea
                       id="observacoes"

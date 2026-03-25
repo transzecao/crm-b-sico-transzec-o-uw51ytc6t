@@ -1,5 +1,5 @@
 export const formatCnpj = (value: string) => {
-  const digits = value.replace(/\D/g, '')
+  const digits = value.replace(/\D/g, '').slice(0, 14) // Enforce exactly 14 digits max and no letters
   let formatted = digits
   if (digits.length > 2) formatted = `${digits.slice(0, 2)}.${digits.slice(2)}`
   if (digits.length > 5) formatted = `${formatted.slice(0, 6)}.${digits.slice(5)}`
@@ -9,5 +9,8 @@ export const formatCnpj = (value: string) => {
 }
 
 export const formatCurrency = (value: number) => {
-  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value)
+  if (isNaN(value)) return 'R$ 0,00'
+  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
+    Math.max(0, value),
+  )
 }

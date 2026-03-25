@@ -85,8 +85,11 @@ export function KanbanBoard({
               )}
             >
               <div className="flex items-center gap-2">
-                <span>{stage}</span>
-                <span className="rounded px-1.5 py-0.5 text-[10px] leading-none bg-black/20 font-medium">
+                <span id={`stage-title-${stage}`}>{stage}</span>
+                <span
+                  className="rounded px-1.5 py-0.5 text-[10px] leading-none bg-black/20 font-medium"
+                  aria-label={`${stageLeads.length} negócios nesta etapa`}
+                >
                   {stageLeads.length}
                 </span>
               </div>
@@ -110,14 +113,14 @@ export function KanbanBoard({
             <div className="flex-1 flex flex-col gap-3 bg-white/40 backdrop-blur-sm px-2.5 py-3 rounded-b-lg border-x border-b border-violet-200/60 shadow-inner overflow-hidden">
               <div
                 className="text-center text-[22px] font-light text-violet-950/80 my-1 font-mono tracking-tight"
-                aria-label={`Valor total em ${stage}`}
+                aria-label={`Valor total em ${stage}: R$ ${totalValue.toLocaleString('pt-BR')}`}
               >
                 R$ {totalValue.toLocaleString('pt-BR')}
               </div>
 
               {stage === 'Primeiro contato' || stage === '1º contato sem resposta' ? (
                 <button
-                  aria-label={`Adicionar negócio rápido em ${stage}`}
+                  aria-label={`Adicionar negócio rápido na etapa ${stage}`}
                   className="text-xs font-semibold text-violet-700 bg-white/80 backdrop-blur-sm hover:bg-white py-1.5 rounded-md transition-colors flex items-center justify-center gap-1 shadow-sm border border-violet-200/60"
                 >
                   <Plus className="w-3 h-3" aria-hidden="true" /> Negócio rápido
@@ -129,11 +132,15 @@ export function KanbanBoard({
                   tabIndex={0}
                   className="h-7 flex items-center justify-center text-violet-400 font-bold hover:bg-violet-200/50 hover:text-violet-600 rounded-md cursor-pointer transition-colors border border-dashed border-transparent hover:border-violet-300"
                 >
-                  +
+                  <span aria-hidden="true">+</span>
                 </div>
               )}
 
-              <div className="flex flex-col gap-3 overflow-y-auto pb-4 scrollbar-hide">
+              <div
+                className="flex flex-col gap-3 overflow-y-auto pb-4 scrollbar-hide"
+                role="list"
+                aria-labelledby={`stage-title-${stage}`}
+              >
                 {stageLeads.map((lead) => {
                   const company = companies?.find((c) => c.id === lead.companyId)
                   return (
@@ -155,28 +162,28 @@ export function KanbanBoard({
                           title="Muito tempo nesta etapa (Aviso)"
                           aria-label="Aviso: Estagnado na etapa"
                         >
-                          <Clock className="w-3 h-3" />
+                          <Clock className="w-3 h-3" aria-hidden="true" />
                         </div>
                       )}
 
                       <div className="absolute right-2 top-3 flex flex-col gap-2.5 text-violet-300 opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 p-1 rounded backdrop-blur-md border border-violet-50 shadow-sm z-10">
                         <button
-                          aria-label="Ligar para o lead"
+                          aria-label={`Ligar para o lead ${lead.title}`}
                           className="hover:text-violet-600 transition-colors"
                         >
-                          <Phone className="w-[16px] h-[16px]" />
+                          <Phone className="w-[16px] h-[16px]" aria-hidden="true" />
                         </button>
                         <button
-                          aria-label="Enviar email para o lead"
+                          aria-label={`Enviar email para o lead ${lead.title}`}
                           className="hover:text-violet-600 transition-colors"
                         >
-                          <Mail className="w-[16px] h-[16px]" />
+                          <Mail className="w-[16px] h-[16px]" aria-hidden="true" />
                         </button>
                         <button
-                          aria-label="Enviar mensagem no chat"
+                          aria-label={`Enviar mensagem no chat para ${lead.title}`}
                           className="hover:text-violet-600 transition-colors"
                         >
-                          <MessageSquare className="w-[16px] h-[16px]" />
+                          <MessageSquare className="w-[16px] h-[16px]" aria-hidden="true" />
                         </button>
                       </div>
 
@@ -191,6 +198,7 @@ export function KanbanBoard({
                           {lead.score && (
                             <Badge
                               variant="outline"
+                              aria-label={`Score: ${translateScore(lead.score)}`}
                               className={cn(
                                 'text-[9px] uppercase font-bold py-0 h-4 border',
                                 lead.score === 'Hot'
@@ -206,6 +214,7 @@ export function KanbanBoard({
                           {company?.segmento && (
                             <Badge
                               variant="outline"
+                              aria-label={`Segmento: ${company.segmento}`}
                               className="text-[9px] uppercase font-bold py-0 h-4 border bg-slate-50 text-slate-500 border-slate-200"
                             >
                               {company.segmento}
@@ -250,27 +259,27 @@ export function KanbanBoard({
                           <div className="pt-3 mt-3 border-t border-violet-100/60 grid grid-cols-2 gap-1.5">
                             <button
                               onClick={() => onReactivate(lead.id, 'Qualificação')}
-                              aria-label="Reativar para Qualificação"
+                              aria-label={`Reativar ${lead.title} para Qualificação`}
                               className="text-blue-600 bg-blue-50 hover:bg-blue-100 py-1.5 rounded flex items-center justify-center gap-1 text-[10px] font-bold transition-colors border border-blue-100 shadow-sm"
                             >
-                              <RefreshCw className="w-3 h-3" /> Qualif.
+                              <RefreshCw className="w-3 h-3" aria-hidden="true" /> Qualif.
                             </button>
                             <button
                               onClick={() => onReactivate(lead.id, 'Negociação')}
-                              aria-label="Reativar para Negociação"
+                              aria-label={`Reativar ${lead.title} para Negociação`}
                               className="text-emerald-600 bg-emerald-50 hover:bg-emerald-100 py-1.5 rounded flex items-center justify-center gap-1 text-[10px] font-bold transition-colors border border-emerald-100 shadow-sm"
                               title="Inbound - Pedido de Preço"
                             >
-                              <RefreshCw className="w-3 h-3" /> Negoc.
+                              <RefreshCw className="w-3 h-3" aria-hidden="true" /> Negoc.
                             </button>
                           </div>
                         ) : (
                           <div className="pt-3 mt-3 border-t border-violet-100/60">
                             <button
-                              aria-label="Adicionar atividade ao lead"
+                              aria-label={`Adicionar atividade ao lead ${lead.title}`}
                               className="text-violet-600 bg-violet-50 hover:bg-violet-100 px-2 py-1 rounded flex items-center gap-1 text-[11px] font-bold transition-colors w-full justify-center border border-violet-100 shadow-sm"
                             >
-                              <Plus className="w-3 h-3" /> Adicionar Atividade
+                              <Plus className="w-3 h-3" aria-hidden="true" /> Adicionar Atividade
                             </button>
                           </div>
                         )}
@@ -280,7 +289,10 @@ export function KanbanBoard({
                 })}
 
                 {stageLeads.length === 0 && (
-                  <div className="h-24 border-2 border-dashed border-violet-200/60 rounded-lg flex items-center justify-center p-4 bg-violet-50/30">
+                  <div
+                    className="h-24 border-2 border-dashed border-violet-200/60 rounded-lg flex items-center justify-center p-4 bg-violet-50/30"
+                    aria-hidden="true"
+                  >
                     <span className="text-xs text-violet-400 font-medium">Nenhum negócio</span>
                   </div>
                 )}

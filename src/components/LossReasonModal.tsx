@@ -51,7 +51,10 @@ export function LossReasonModal({
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onCancel()}>
-      <DialogContent className="border-rose-200 shadow-2xl bg-rose-50/95 backdrop-blur-md sm:max-w-md">
+      <DialogContent
+        className="border-rose-200 shadow-2xl bg-rose-50/95 backdrop-blur-md sm:max-w-md"
+        aria-describedby="Registro de motivo de perda do lead"
+      >
         <DialogHeader className="border-b border-rose-100 pb-4">
           <DialogTitle className="text-rose-950 flex items-center gap-2 text-xl font-bold">
             <div className="bg-rose-100 p-1.5 rounded-lg border border-rose-200" aria-hidden="true">
@@ -64,7 +67,7 @@ export function LossReasonModal({
           <div className="space-y-2">
             <Label htmlFor="loss-reason" className="text-rose-900 font-semibold">
               Motivo Principal{' '}
-              <span className="text-rose-600" aria-hidden="true">
+              <span className="text-rose-600" aria-hidden="true" title="Obrigatório">
                 *
               </span>
             </Label>
@@ -72,6 +75,7 @@ export function LossReasonModal({
               <SelectTrigger
                 id="loss-reason"
                 aria-label="Selecione o motivo da perda"
+                aria-required="true"
                 className="bg-white/80 border-rose-200 focus:ring-rose-500/50"
               >
                 <SelectValue placeholder="Selecione o motivo de perda..." />
@@ -90,7 +94,7 @@ export function LossReasonModal({
               <Label htmlFor="loss-details" className="text-rose-900 font-semibold">
                 Detalhes{' '}
                 {reason === 'Outro' ? (
-                  <span className="text-rose-600" aria-hidden="true">
+                  <span className="text-rose-600" aria-hidden="true" title="Obrigatório">
                     *
                   </span>
                 ) : (
@@ -103,6 +107,7 @@ export function LossReasonModal({
                 onChange={(e) => setDetails(e.target.value)}
                 placeholder="Especifique o contexto da perda..."
                 aria-label="Detalhes adicionais da perda"
+                aria-required={reason === 'Outro' ? 'true' : 'false'}
                 className="bg-white/80 border-rose-200 focus-visible:ring-rose-500/50 min-h-[100px]"
               />
             </div>

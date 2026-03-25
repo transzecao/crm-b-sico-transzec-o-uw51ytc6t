@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { KanbanBoard } from '@/components/KanbanBoard'
 import useCrmStore from '@/stores/useCrmStore'
 import { LossReasonModal } from '@/components/LossReasonModal'
@@ -35,19 +35,17 @@ export default function Pipeline1() {
   const [lossModalOpen, setLossModalOpen] = useState(false)
   const [pendingMove, setPendingMove] = useState<{ id: string; stage: string } | null>(null)
 
-  const prospectionLeads = state.leads.filter((l) => l.pipeline === 'Prospection')
+  const prospectionLeads = useMemo(
+    () => state.leads.filter((l) => l.pipeline === 'Prospection'),
+    [state.leads],
+  )
 
   const handleMove = (id: string, stage: string) => {
-    if (!VALID_STAGES.includes(stage)) {
-      toast({
-        variant: 'destructive',
-        title: 'Erro de Validação',
-        description: 'Etapa de destino inválida.',
-      })
-      return
-    }
-
     try {
+      if (!VALID_STAGES.includes(stage)) {
+        throw new Error(`Etapa de destino inválida: ${stage}`)
+      }
+
       if (stage === 'Perda') {
         setPendingMove({ id, stage })
         setLossModalOpen(true)
@@ -65,14 +63,15 @@ export default function Pipeline1() {
         return
       }
 
+      // Automation Rule: Move to Loss (Perda) on 3rd unanswered contact
       if (stage === '3º contato sem resposta') {
         toast({
-          title: 'Atenção Automática',
-          description: 'Lead será movido para Nutrição em 1 dia útil (Regra de 3º sem resposta).',
+          title: 'Automação Disparada',
+          description: 'Lead atingiu 3 contatos sem resposta. Movendo para Perda automaticamente.',
+          variant: 'destructive',
         })
-        updateState({
-          leads: state.leads.map((l) => (l.id === id ? { ...l, stage, score: 'Cold' } : l)),
-        })
+        setPendingMove({ id, stage: 'Perda' })
+        setLossModalOpen(true)
         return
       }
 
@@ -80,8 +79,8 @@ export default function Pipeline1() {
     } catch (error) {
       toast({
         variant: 'destructive',
-        title: 'Erro do Sistema',
-        description: 'Falha ao processar movimento do lead.',
+        title: 'Erro de Validação',
+        description: error instanceof Error ? error.message : 'Falha ao processar movimento.',
       })
     }
   }
@@ -94,12 +93,16 @@ export default function Pipeline1() {
           l.id === pendingMove.id ? { ...l, stage: 'Perda', score: 'Cold' } : l,
         ),
       })
-      toast({ title: 'Perda registrada', description: `Motivo: ${reason}`, variant: 'destructive' })
-    } catch (e) {
+      toast({
+        title: 'Perda registrada',
+        description: `Motivo: ${reason}`,
+        variant: 'destructive',
+      })
+    } catch (error) {
       toast({
         variant: 'destructive',
-        title: 'Erro',
-        description: 'Não foi possível registrar a perda.',
+        title: 'Erro de Sistema',
+        description: 'Não foi possível registrar a perda de forma segura.',
       })
     } finally {
       setLossModalOpen(false)
