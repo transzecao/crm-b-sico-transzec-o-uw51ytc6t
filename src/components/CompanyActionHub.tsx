@@ -12,6 +12,7 @@ import {
 import useCrmStore, { Interaction, Company } from '@/stores/useCrmStore'
 import { useToast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
+import { BrainAnalysis } from './BrainAnalysis'
 
 export function CompanyActionHub({ company }: { company?: Company }) {
   const { state, updateState } = useCrmStore()
@@ -57,14 +58,15 @@ export function CompanyActionHub({ company }: { company?: Company }) {
   return (
     <div className="flex flex-col h-full overflow-hidden">
       <div className="flex-1 overflow-y-auto p-4 md:p-5 space-y-5">
-        {/* Lembretes de Funil */}
-        <Card className="shadow-sm border-slate-200/60 bg-white overflow-hidden">
+        <BrainAnalysis interactions={interactions} />
+
+        <Card className="shadow-sm border-amber-200/60 bg-amber-50/20 overflow-hidden">
           <CardContent className="p-4 md:p-5">
-            <h3 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 text-slate-400" /> Lembretes de Funil
+            <h3 className="text-[11px] font-bold text-amber-600/80 uppercase tracking-wider mb-4 flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 text-amber-500" /> Lembretes de Funil
             </h3>
             <div className="space-y-3">
-              <div className="flex items-start gap-3 bg-red-50/50 border border-red-100 p-3 rounded-lg">
+              <div className="flex items-start gap-3 bg-red-50/80 border border-red-100 p-3 rounded-lg">
                 <div className="w-7 h-7 rounded-full bg-red-100 flex items-center justify-center shrink-0 mt-0.5">
                   <AlertCircle className="w-3.5 h-3.5 text-red-600" />
                 </div>
@@ -75,31 +77,18 @@ export function CompanyActionHub({ company }: { company?: Company }) {
                   <p className="text-sm font-medium text-red-900 mt-0.5">0 itens atrasados</p>
                 </div>
               </div>
-              <div className="flex items-start gap-3 bg-slate-50 border border-slate-100 p-3 rounded-lg">
-                <div className="w-7 h-7 rounded-full bg-blue-100 flex items-center justify-center shrink-0 mt-0.5">
-                  <CheckSquare className="w-3.5 h-3.5 text-blue-600" />
+              <div className="flex items-start gap-3 bg-white/80 border border-slate-100 p-3 rounded-lg shadow-sm">
+                <div className="w-7 h-7 rounded-full bg-violet-100 flex items-center justify-center shrink-0 mt-0.5">
+                  <CheckSquare className="w-3.5 h-3.5 text-violet-600" />
                 </div>
                 <div>
-                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                  <p className="text-[10px] font-bold text-violet-500 uppercase tracking-wider">
                     Status da Negociação
                   </p>
-                  <p className="text-sm font-medium text-slate-700 mt-0.5">
+                  <p className="text-sm font-medium text-violet-900 mt-0.5">
                     {company.pipeline === 'Pipeline de Nutrição'
                       ? 'Nutrição Ativa'
                       : 'Em Prospecção Inicial'}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3 bg-amber-50/50 border border-amber-100 p-3 rounded-lg">
-                <div className="w-7 h-7 rounded-full bg-amber-100 flex items-center justify-center shrink-0 mt-0.5">
-                  <Clock className="w-3.5 h-3.5 text-amber-600" />
-                </div>
-                <div>
-                  <p className="text-[10px] font-bold text-amber-700 uppercase tracking-wider">
-                    Próxima Ação Planejada
-                  </p>
-                  <p className="text-sm font-medium text-amber-900 mt-0.5">
-                    Follow-up sugerido (Sem data)
                   </p>
                 </div>
               </div>
@@ -107,7 +96,6 @@ export function CompanyActionHub({ company }: { company?: Company }) {
           </CardContent>
         </Card>
 
-        {/* Central de Ações */}
         <Card className="shadow-sm border-slate-200/60 bg-white overflow-hidden">
           <CardContent className="p-4 md:p-5">
             <h3 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
@@ -202,9 +190,8 @@ export function CompanyActionHub({ company }: { company?: Company }) {
           </CardContent>
         </Card>
 
-        {/* Histórico */}
-        <div className="px-1 pt-2">
-          <h3 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-6 flex items-center gap-2">
+        <div className="px-1 pt-2 bg-slate-100/50 p-4 rounded-xl border border-slate-200/60">
+          <h3 className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-6 flex items-center gap-2">
             <Clock className="w-4 h-4 text-slate-400" /> Histórico de Interações
           </h3>
           {interactions.length === 0 ? (
@@ -212,24 +199,24 @@ export function CompanyActionHub({ company }: { company?: Company }) {
               Nenhuma interação registrada nesta empresa.
             </div>
           ) : (
-            <div className="relative border-l-2 border-slate-200/80 ml-4 pl-6 space-y-6 pb-6">
+            <div className="relative border-l-2 border-slate-300 ml-4 pl-6 space-y-6 pb-2">
               {interactions.map((interaction) => (
                 <div key={interaction.id} className="relative">
                   <div
                     className={cn(
                       'absolute -left-[39px] top-1 w-7 h-7 rounded-full flex items-center justify-center border-2 border-slate-50 shadow-sm z-10',
                       interaction.type === 'email'
-                        ? 'bg-blue-50 text-blue-600'
+                        ? 'bg-blue-50 text-blue-600 border-blue-100'
                         : interaction.type === 'whatsapp'
-                          ? 'bg-green-50 text-green-600'
-                          : 'bg-purple-50 text-purple-600',
+                          ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
+                          : 'bg-purple-50 text-purple-600 border-purple-100',
                     )}
                   >
                     {interaction.type === 'email' && <Mail className="w-3.5 h-3.5" />}
                     {interaction.type === 'whatsapp' && <MessageCircle className="w-3.5 h-3.5" />}
                     {interaction.type === 'phone' && <Phone className="w-3.5 h-3.5" />}
                   </div>
-                  <div className="bg-white p-4 rounded-xl border border-slate-200/60 shadow-sm hover:shadow-md transition-shadow">
+                  <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
                     <div className="flex justify-between mb-2 items-center">
                       <span className="text-xs font-bold text-slate-700">{interaction.author}</span>
                       <span className="text-[10px] font-medium text-slate-400">

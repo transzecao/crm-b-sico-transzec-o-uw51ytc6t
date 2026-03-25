@@ -33,14 +33,14 @@ export default function Index() {
   const totalValue = state.leads.reduce((acc, curr) => acc + curr.value, 0)
 
   const chartConfig = {
-    pipeline: { label: 'Pipeline', color: '#9333ea' },
-    commercial: { label: 'Prospecção', color: '#2563eb' },
-    nutrition: { label: 'Nutrição', color: '#a855f7' },
-    financeRev: { label: 'Receita', color: '#059669' },
-    financeExp: { label: 'Despesas', color: '#e11d48' },
-    operation: { label: 'Operação', color: '#475569' },
-    marketing: { label: 'Marketing', color: '#d97706' },
-    history: { label: 'Histórico', color: '#94a3b8' },
+    pipeline: { label: 'Pipeline', color: '#8b5cf6' }, // Violet
+    commercial: { label: 'Prospecção', color: '#2563eb' }, // Blue
+    nutrition: { label: 'Nutrição', color: '#f59e0b' }, // Amber
+    financeRev: { label: 'Receita', color: '#10b981' }, // Emerald
+    financeExp: { label: 'Despesas', color: '#ef4444' }, // Red/Alert
+    operation: { label: 'Operação', color: '#64748b' }, // Blue-Grey
+    marketing: { label: 'Marketing', color: '#f59e0b' }, // Amber
+    history: { label: 'Histórico', color: '#94a3b8' }, // Neutral
   } satisfies ChartConfig
 
   const barData = [
@@ -74,8 +74,10 @@ export default function Index() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Dashboard Executivo</h1>
-        <p className="text-muted-foreground">Visão geral unificada das áreas do CRM.</p>
+        <h1 className="text-3xl font-bold tracking-tight text-slate-800">Dashboard Executivo</h1>
+        <p className="text-muted-foreground">
+          Visão geral unificada por áreas de negócio da Transzecão.
+        </p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -89,43 +91,43 @@ export default function Index() {
             <p className="text-xs text-blue-700/80">+20.1% em relação ao mês anterior</p>
           </CardContent>
         </Card>
-        <Card className="bg-purple-50/30 border-purple-100/50 shadow-sm backdrop-blur-sm">
+        <Card className="bg-amber-50/30 border-amber-100/50 shadow-sm backdrop-blur-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-semibold text-purple-900">Leads Nutrição</CardTitle>
-            <TrendingUp className="h-4 w-4 text-purple-600" />
+            <CardTitle className="text-sm font-semibold text-amber-900">Leads Nutrição</CardTitle>
+            <TrendingUp className="h-4 w-4 text-amber-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-purple-950">{nutritionCount}</div>
-            <p className="text-xs text-purple-700/80">+5 novos essa semana</p>
+            <div className="text-2xl font-bold text-amber-950">{nutritionCount}</div>
+            <p className="text-xs text-amber-700/80">+5 novos essa semana</p>
+          </CardContent>
+        </Card>
+        <Card className="bg-violet-50/30 border-violet-100/50 shadow-sm backdrop-blur-sm">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-semibold text-violet-900">Em Negociação</CardTitle>
+            <DollarSign className="h-4 w-4 text-violet-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-violet-950">{formatCurrency(totalValue)}</div>
+            <p className="text-xs text-violet-700/80">Baseado no pipeline ativo</p>
           </CardContent>
         </Card>
         <Card className="bg-emerald-50/30 border-emerald-100/50 shadow-sm backdrop-blur-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-semibold text-emerald-900">Em Negociação</CardTitle>
-            <DollarSign className="h-4 w-4 text-emerald-600" />
+            <CardTitle className="text-sm font-semibold text-emerald-900">T. Conversão</CardTitle>
+            <CheckCircle2 className="h-4 w-4 text-emerald-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-emerald-950">{formatCurrency(totalValue)}</div>
-            <p className="text-xs text-emerald-700/80">Baseado no pipeline ativo</p>
-          </CardContent>
-        </Card>
-        <Card className="bg-amber-50/30 border-amber-100/50 shadow-sm backdrop-blur-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-semibold text-amber-900">T. Conversão</CardTitle>
-            <CheckCircle2 className="h-4 w-4 text-amber-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-amber-950">24.3%</div>
-            <p className="text-xs text-amber-700/80">+2.4% acima da meta (Marketing)</p>
+            <div className="text-2xl font-bold text-emerald-950">24.3%</div>
+            <p className="text-xs text-emerald-700/80">+2.4% acima da meta</p>
           </CardContent>
         </Card>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
-        <Card className="col-span-4 shadow-sm bg-white/70 backdrop-blur-sm">
+        <Card className="col-span-4 shadow-sm bg-white/80 backdrop-blur-sm border-slate-200">
           <CardHeader>
-            <CardTitle className="text-lg">Funil de Vendas</CardTitle>
-            <CardDescription>Evolução dos negócios no pipeline</CardDescription>
+            <CardTitle className="text-lg text-slate-800">Funil de Vendas (Comercial)</CardTitle>
+            <CardDescription>Evolução dos negócios no pipeline (Prospecção)</CardDescription>
           </CardHeader>
           <CardContent>
             <ChartContainer config={chartConfig} className="h-[280px]">
@@ -152,10 +154,10 @@ export default function Index() {
           </CardContent>
         </Card>
 
-        <Card className="col-span-3 shadow-sm bg-white/70 backdrop-blur-sm">
+        <Card className="col-span-3 shadow-sm bg-white/80 backdrop-blur-sm border-slate-200">
           <CardHeader>
-            <CardTitle className="text-lg">Distribuição de Leads</CardTitle>
-            <CardDescription>Prospecção vs Nutrição</CardDescription>
+            <CardTitle className="text-lg text-slate-800">Distribuição de Leads</CardTitle>
+            <CardDescription>Comercial vs Marketing (Nutrição)</CardDescription>
           </CardHeader>
           <CardContent className="flex justify-center pb-8">
             <ChartContainer config={chartConfig} className="h-[280px] w-full">
@@ -179,10 +181,10 @@ export default function Index() {
           </CardContent>
         </Card>
 
-        <Card className="col-span-4 shadow-sm bg-white/70 backdrop-blur-sm">
+        <Card className="col-span-4 shadow-sm bg-white/80 backdrop-blur-sm border-slate-200">
           <CardHeader>
-            <CardTitle className="text-lg">Performance Financeira</CardTitle>
-            <CardDescription>Evolução de receitas e despesas</CardDescription>
+            <CardTitle className="text-lg text-emerald-900">Performance Financeira</CardTitle>
+            <CardDescription>Evolução de receitas de frete e despesas operacionais</CardDescription>
           </CardHeader>
           <CardContent>
             <ChartContainer config={chartConfig} className="h-[280px]">
@@ -239,10 +241,10 @@ export default function Index() {
           </CardContent>
         </Card>
 
-        <Card className="col-span-3 shadow-sm bg-white/70 backdrop-blur-sm">
+        <Card className="col-span-3 shadow-sm bg-white/80 backdrop-blur-sm border-slate-200">
           <CardHeader>
-            <CardTitle className="text-lg">Métricas Operacionais</CardTitle>
-            <CardDescription>Acompanhamento de volume semanal</CardDescription>
+            <CardTitle className="text-lg text-slate-800">Métricas Operacionais</CardTitle>
+            <CardDescription>Acompanhamento de volume semanal (Coleta)</CardDescription>
           </CardHeader>
           <CardContent>
             <ChartContainer config={chartConfig} className="h-[280px]">
@@ -271,22 +273,6 @@ export default function Index() {
                     dataKey="operation"
                     name="operation"
                     stroke="var(--color-operation)"
-                    strokeWidth={3}
-                    dot={{ r: 4 }}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="marketing"
-                    name="marketing"
-                    stroke="var(--color-marketing)"
-                    strokeWidth={3}
-                    dot={{ r: 4 }}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="history"
-                    name="history"
-                    stroke="var(--color-history)"
                     strokeWidth={3}
                     dot={{ r: 4 }}
                   />

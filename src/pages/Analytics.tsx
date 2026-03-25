@@ -24,8 +24,8 @@ const analyticsConfig = {
   sellerB: { label: 'Vendedor B', color: '#60a5fa' },
   sellerC: { label: 'Vendedor C', color: '#93c5fd' },
   price: { label: 'Preço', color: '#e11d48' },
-  timing: { label: 'Timing', color: '#94a3b8' },
-  competition: { label: 'Concorrência', color: '#d97706' },
+  timing: { label: 'FIT', color: '#94a3b8' },
+  competition: { label: 'Cobertura', color: '#d97706' },
   sla: { label: 'SLA/Prazo', color: '#475569' },
   others: { label: 'Outros', color: '#cbd5e1' },
 } satisfies ChartConfig
@@ -48,17 +48,17 @@ const lossReasonsData = [
 
 export default function Analytics() {
   return (
-    <div className="space-y-6 bg-blue-50/20 min-h-[calc(100vh-6rem)] p-2 md:p-6 rounded-xl border border-blue-100/50">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white/80 backdrop-blur-md p-6 rounded-xl border border-blue-100 shadow-sm">
+    <div className="space-y-6 bg-slate-50/20 min-h-[calc(100vh-6rem)] p-2 md:p-6 rounded-xl border border-slate-100/50">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white/80 backdrop-blur-md p-6 rounded-xl border border-slate-200 shadow-sm">
         <div className="flex items-center gap-4">
-          <div className="bg-blue-100/60 p-3 rounded-xl border border-blue-200/50 text-blue-600 shadow-sm">
+          <div className="bg-slate-100/60 p-3 rounded-xl border border-slate-200/50 text-slate-600 shadow-sm">
             <PieChartIcon className="w-6 h-6" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold tracking-tight text-blue-950">
+            <h1 className="text-3xl font-bold tracking-tight text-slate-900">
               Inteligência de Dados
             </h1>
-            <p className="text-blue-700/80 font-medium mt-1">
+            <p className="text-slate-600 font-medium mt-1">
               Métricas de performance comercial e análise de perdas em tempo real.
             </p>
           </div>
@@ -66,7 +66,7 @@ export default function Analytics() {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <Card className="col-span-1 lg:col-span-2 flex flex-col bg-white/70 border-blue-100 shadow-sm relative overflow-hidden backdrop-blur-sm">
+        <Card className="col-span-1 lg:col-span-2 flex flex-col bg-white/80 border-slate-200 shadow-sm relative overflow-hidden backdrop-blur-sm">
           <div className="absolute top-5 left-5 flex items-center gap-2 text-blue-900 bg-blue-50/80 px-3 py-1.5 rounded-md border border-blue-100 backdrop-blur-md shadow-sm z-10">
             <TrendingUp className="w-5 h-5 text-blue-600" />
             <span className="font-bold text-sm tracking-wide">Performance por Vendedor</span>
@@ -74,7 +74,7 @@ export default function Analytics() {
           <CardHeader className="pt-20 pb-0 px-6">
             <CardTitle className="sr-only">Performance por Vendedor</CardTitle>
             <CardDescription className="text-blue-700/70">
-              Volume de propostas convertidas por mês segmentado por representante.
+              Volume de propostas convertidas por mês segmentado por representante comercial.
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-6 pb-6 px-6 flex-1 min-h-[350px]">
@@ -126,14 +126,14 @@ export default function Analytics() {
           </CardContent>
         </Card>
 
-        <Card className="flex flex-col bg-white/70 border-blue-100 shadow-sm relative overflow-hidden backdrop-blur-sm">
+        <Card className="flex flex-col bg-white/80 border-slate-200 shadow-sm relative overflow-hidden backdrop-blur-sm">
           <div className="absolute top-5 left-5 flex items-center gap-2 text-rose-900 bg-rose-50/80 px-3 py-1.5 rounded-md border border-rose-100 backdrop-blur-md shadow-sm z-10">
             <AlertCircle className="w-5 h-5 text-rose-500" />
             <span className="font-bold text-sm tracking-wide">Motivos de Perda</span>
           </div>
           <CardHeader className="pt-20 pb-0 px-6 text-center">
             <CardTitle className="sr-only">Motivos de Perda</CardTitle>
-            <CardDescription className="text-blue-700/70">
+            <CardDescription className="text-slate-500">
               Distribuição histórica dos principais motivos de perda de negócios.
             </CardDescription>
           </CardHeader>

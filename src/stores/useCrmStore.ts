@@ -22,6 +22,7 @@ export type Lead = {
   updatedAt: string
   createdAt: string
   lastInteraction?: string
+  score?: 'Hot' | 'Warm' | 'Cold'
 }
 
 export type Company = {
@@ -36,6 +37,8 @@ export type Company = {
   sitePesquisado?: string
   pipeline?: string
   origin?: string
+  segmento?: string
+  clusters?: string[]
   customData?: Record<string, any>
 }
 
@@ -89,6 +92,8 @@ const mockCompanies: Company[] = [
     siteProspectado: 'https://www.indpaulista.com.br',
     pipeline: 'Pipeline de Prospecção',
     origin: 'Comercial',
+    segmento: 'Metalúrgica',
+    clusters: ['Campinas', 'Grande SP'],
   },
   {
     id: '2',
@@ -100,6 +105,8 @@ const mockCompanies: Company[] = [
     descricaoNegocio: 'Distribuição de autopeças em grande escala.',
     sitePesquisado: 'https://br.linkedin.com/company/skautomotive',
     pipeline: 'Pipeline de Nutrição',
+    segmento: 'Autopeças',
+    clusters: ['Vale do Paraíba'],
   },
 ]
 
@@ -110,12 +117,27 @@ const mockLeads: Lead[] = [
     title: 'INDUSTRIAL PAULISTA DE METALURGIA LTDA',
     pipeline: 'Prospection',
     stage: 'Primeiro contato',
-    value: 0,
+    value: 12500,
     owner: 'Bruna Araujo',
     ownerAvatar: 'https://img.usecurling.com/ppl/thumbnail?gender=female&seed=1',
     updatedBy: 'Bruna Araujo',
     updatedAt: '23/02/2026 17:29:24',
     createdAt: '23 de fevereiro de 2026',
+    score: 'Hot',
+  },
+  {
+    id: '2',
+    companyId: '2',
+    title: 'Sk Automotive Distribuidora',
+    pipeline: 'Nutrition',
+    stage: 'Nutrição – Aquecimento',
+    value: 45000,
+    owner: 'Carlos Silva',
+    ownerAvatar: 'https://img.usecurling.com/ppl/thumbnail?gender=male&seed=2',
+    updatedBy: 'Automação',
+    updatedAt: '20/03/2026 09:15:00',
+    createdAt: '15 de janeiro de 2026',
+    score: 'Warm',
   },
 ]
 
@@ -154,9 +176,8 @@ const mockInteractions: Interaction[] = [
 const mockCustomFieldDefs: CustomFieldDef[] = [
   {
     id: 'cf1',
-    name: 'Segmento de Mercado',
-    type: 'select',
-    options: ['Varejo', 'Indústria', 'Serviços', 'Agro', 'Outro'],
+    name: 'Concorrente Atual',
+    type: 'text',
   },
 ]
 
