@@ -41,13 +41,12 @@ export default function Layout() {
                 <Settings className="w-3.5 h-3.5" /> Acessos
               </Link>
               <Select value={state.role} onValueChange={(val: any) => updateState({ role: val })}>
-                <SelectTrigger className="w-[180px] h-8 text-xs bg-slate-50 border-slate-200 font-semibold focus:ring-primary">
+                <SelectTrigger className="w-[140px] h-8 text-xs bg-slate-50 border-slate-200 font-semibold focus:ring-primary">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Master">Master</SelectItem>
-                  <SelectItem value="Supervisor Geral">Supervisor Geral</SelectItem>
-                  <SelectItem value="Supervisor Comercial">Supervisor Comercial</SelectItem>
+                  <SelectItem value="Supervisor">Supervisor</SelectItem>
                   <SelectItem value="Comercial">Comercial</SelectItem>
                   <SelectItem value="Financeiro">Financeiro</SelectItem>
                   <SelectItem value="Coleta">Coleta</SelectItem>
@@ -64,11 +63,11 @@ export default function Layout() {
             </div>
 
             <footer className="mt-12 py-6 border-t border-slate-200 flex flex-col items-center justify-center text-slate-500">
-              <div className="font-bold text-2xl tracking-tighter flex items-center gap-1 mb-1 opacity-50 grayscale">
-                <span className="font-sans font-bold text-slate-800">
-                  trans<span className="text-primary font-black">Zecão</span>
-                </span>
-              </div>
+              <img
+                src="https://storage.googleapis.com/skip-public-assets/public/7d501963-a24b-45d1-9072-0521cd179a05/1e6d4432-6a68-45af-bad2-e427cf6c9860/image.png"
+                alt="Transzecão"
+                className="h-10 grayscale opacity-50 mb-2 object-contain mix-blend-multiply"
+              />
               <p className="text-xs font-medium uppercase tracking-wider">
                 Transporte de Cargas &copy; {new Date().getFullYear()}
               </p>

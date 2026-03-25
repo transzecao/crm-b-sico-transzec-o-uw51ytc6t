@@ -70,10 +70,13 @@ export default function Pipeline1() {
         return
       }
 
-      let finalStage = stage
-      let newPipeline = 'Prospection' as const
+      if (stage === '1º contato sem resposta') {
+        toast({
+          title: 'Tentativa Registrada',
+          description: 'O histórico de tentativas foi atualizado.',
+        })
+      }
 
-      // Automation: Marking 3rd contact no response
       if (stage === '3º contato sem resposta') {
         toast({
           title: 'Automação Ativada',
@@ -84,7 +87,7 @@ export default function Pipeline1() {
       updateState({
         leads: state.leads.map((l) =>
           l.id === id
-            ? { ...l, stage: finalStage, pipeline: newPipeline, isStalled: false, stalledDays: 0 }
+            ? { ...l, stage, pipeline: 'Prospection', isStalled: false, stalledDays: 0 }
             : l,
         ),
       })
@@ -116,8 +119,8 @@ export default function Pipeline1() {
     })
     updateState({ leads: updatedLeads })
     toast({
-      title: 'Automação Inatividade',
-      description: 'Leads sem interação transferidos para Nutrição.',
+      title: 'Automação de Inatividade',
+      description: 'Leads sem interação por 1 dia foram transferidos para Nutrição.',
     })
   }
 

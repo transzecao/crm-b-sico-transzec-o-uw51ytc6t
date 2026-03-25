@@ -16,7 +16,7 @@ export function FinancePricingTab({ calc }: { calc: ReturnType<typeof useFinance
       <CardContent className="pt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-4 border-r border-slate-100 pr-4">
           <h4 className="font-bold text-slate-700 uppercase tracking-wider text-xs">
-            Dados da Carga
+            Dados da Carga (Cálculo do Peso Tarifável)
           </h4>
           <div className="space-y-3">
             <div>
@@ -60,7 +60,7 @@ export function FinancePricingTab({ calc }: { calc: ReturnType<typeof useFinance
 
         <div className="space-y-4">
           <h4 className="font-bold text-slate-700 uppercase tracking-wider text-xs">
-            Itens do Frete
+            Itens do Frete (Taxas Aditivas)
           </h4>
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -74,7 +74,7 @@ export function FinancePricingTab({ calc }: { calc: ReturnType<typeof useFinance
               />
             </div>
             <div>
-              <Label className="text-xs font-semibold text-slate-500">Frete Valor (%)</Label>
+              <Label className="text-xs font-semibold text-slate-500">Frete Valor (Taxa)</Label>
               <Input
                 type="number"
                 step="0.1"
@@ -84,7 +84,7 @@ export function FinancePricingTab({ calc }: { calc: ReturnType<typeof useFinance
               />
             </div>
             <div>
-              <Label className="text-xs font-semibold text-slate-500">GRIS (%)</Label>
+              <Label className="text-xs font-semibold text-slate-500">GRIS (Taxa)</Label>
               <Input
                 type="number"
                 step="0.1"

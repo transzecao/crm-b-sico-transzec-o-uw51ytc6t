@@ -1,15 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import {
-  ArrowLeft,
-  Save,
-  Building2,
-  Briefcase,
-  MapPin,
-  AlignLeft,
-  Star,
-  AlertCircle,
-} from 'lucide-react'
+import { ArrowLeft, Save, Building2, MapPin, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -29,7 +20,6 @@ import { cn } from '@/lib/utils'
 
 import { CompanyActionHub } from '@/components/CompanyActionHub'
 import { CompanyContactsForm } from '@/components/CompanyContactsForm'
-import { CompanyCustomFieldsForm } from '@/components/CompanyCustomFieldsForm'
 import { Badge } from '@/components/ui/badge'
 
 export default function EmpresaForm() {
@@ -41,11 +31,8 @@ export default function EmpresaForm() {
   const existingCompany = id ? state.companies.find((c) => c.id === id) : undefined
   const existingContacts = id ? state.contacts.filter((c) => c.companyId === id) : []
 
-  const isMaster = state.role === 'Master' || state.role === 'Supervisor Geral'
-
   const isReadOnly =
-    ['Diretoria', 'Financeiro', 'Supervisor Financeiro', 'Coleta'].includes(state.role) &&
-    state.role !== 'Master'
+    ['Diretoria', 'Financeiro', 'Coleta'].includes(state.role) && state.role !== 'Master'
 
   const [formData, setFormData] = useState<Partial<Company>>({
     cnpj: '',
@@ -54,11 +41,8 @@ export default function EmpresaForm() {
     descricaoNegocio: '',
     observacoes: '',
     pipeline: undefined,
-    origin: undefined,
     segmento: undefined,
     clusters: [],
-    siteProspectado: '',
-    sitePesquisado: '',
     customData: {},
   })
 
@@ -127,7 +111,7 @@ export default function EmpresaForm() {
 
     const rawCnpj = formData.cnpj?.replace(/\D/g, '') || ''
     if (formData.cnpj && rawCnpj.length !== 14) {
-      newError.cnpj = 'O CNPJ deve conter exatamente 14 dígitos numéricos.'
+      newError.cnpj = 'O CNPJ deve conter exatamente 14 dígitos numéricos para salvar.'
       hasError = true
     }
 
@@ -325,7 +309,7 @@ export default function EmpresaForm() {
                     />
                   </div>
                   <div className="space-y-2 relative">
-                    {renderLabel('CNPJ', 'cnpj')}
+                    {renderLabel('CNPJ', 'cnpj', true)}
                     <Input
                       id="cnpj"
                       value={formData.cnpj || ''}
@@ -382,7 +366,7 @@ export default function EmpresaForm() {
                         variant="secondary"
                         className="bg-secondary text-white hover:bg-secondary/90"
                       >
-                        +
+                        + Adicionar
                       </Button>
                     </div>
                     <div className="flex flex-wrap gap-2 pt-2">

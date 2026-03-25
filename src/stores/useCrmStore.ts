@@ -2,10 +2,7 @@ import { useState, useEffect } from 'react'
 
 export type Role =
   | 'Master'
-  | 'Supervisor Geral'
-  | 'Supervisor Comercial'
-  | 'Supervisor Financeiro'
-  | 'Supervisor Coleta'
+  | 'Supervisor'
   | 'Comercial'
   | 'Financeiro'
   | 'Coleta'

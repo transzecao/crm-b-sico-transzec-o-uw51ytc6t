@@ -63,7 +63,7 @@ export default function LoginAdmin() {
                 <TableHeader className="bg-slate-50/50">
                   <TableRow>
                     <TableHead className="font-bold text-slate-700">Nome</TableHead>
-                    <TableHead className="font-bold text-slate-700">Setor</TableHead>
+                    <TableHead className="font-bold text-slate-700">Perfil/Role</TableHead>
                     <TableHead className="font-bold text-slate-700">Status</TableHead>
                     <TableHead className="font-bold text-slate-700">Ações</TableHead>
                   </TableRow>
@@ -98,6 +98,13 @@ export default function LoginAdmin() {
                       </TableCell>
                     </TableRow>
                   ))}
+                  {state.userLogins.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-center py-8 text-slate-500">
+                        Nenhum usuário cadastrado.
+                      </TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
             </CardContent>
@@ -122,10 +129,13 @@ export default function LoginAdmin() {
                       {new Date(log.date).toLocaleString('pt-BR')}
                     </span>
                     <span className="font-black text-slate-800">{log.user}</span>
-                    <span className="text-slate-600 font-medium"> acessou a tela de </span>
+                    <span className="text-slate-600 font-medium"> ({log.role}) acessou </span>
                     <span className="font-bold text-primary">{log.module}</span>
                   </div>
                 ))}
+                {state.accessLogs.length === 0 && (
+                  <p className="text-sm text-slate-500 text-center py-4">Nenhum log registrado.</p>
+                )}
               </div>
             </CardContent>
           </Card>

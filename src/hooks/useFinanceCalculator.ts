@@ -8,7 +8,7 @@ export function useFinanceCalculator() {
     distance: 150,
     nfValue: 5000,
 
-    // Formula Inputs
+    // Formula Inputs (Rates per kg or fixed)
     weightFreight: 1.5,
     valueFreightPercent: 0.5,
     grisPercent: 0.3,
@@ -43,17 +43,17 @@ export function useFinanceCalculator() {
 
   const update = (updates: Partial<typeof data>) => setData((prev) => ({ ...prev, ...updates }))
 
-  // Calculate Taxable Weight
+  // Calculate Taxable Weight: Max(Real Weight, Cubed Weight)
   const cubedWeight = data.useCubing ? data.volume * data.cubageFactor : 0
   const taxableWeight = Math.max(data.weight, cubedWeight)
 
-  // Freight Items
+  // Freight Items (As specified in the AC: Additive factors per unit)
   const weightFreightTotal = data.weightFreight
-  const valueFreightTotal = data.valueFreightPercent / 100
-  const grisTotal = data.grisPercent / 100
+  const valueFreightTotal = data.valueFreightPercent // treated as rate per unit based on AC
+  const grisTotal = data.grisPercent // treated as rate per unit based on AC
   const dispatchFeeTotal = data.dispatchFee
 
-  // Final Value Formula: (Weight Freight + Value Freight + GRIS + Dispatch Fee) * Taxable Weight
+  // Final Value Formula from AC: (Frete Peso + Frete Valor + GRIS + Taxa de Despacho) * Taxable Weight
   const finalValue =
     (weightFreightTotal + valueFreightTotal + grisTotal + dispatchFeeTotal) * taxableWeight
 

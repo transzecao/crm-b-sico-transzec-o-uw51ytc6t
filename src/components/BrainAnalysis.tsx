@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { BrainCircuit, CheckCircle2, Target, MessageCircle, Copy } from 'lucide-react'
+import { BrainCircuit, CheckCircle2, Target, MessageCircle, Copy, HelpCircle } from 'lucide-react'
 import { Interaction, Company } from '@/stores/useCrmStore'
 import { useToast } from '@/hooks/use-toast'
 
@@ -18,19 +18,19 @@ export function BrainAnalysis({
   const [analysis, setAnalysis] = useState<any>(null)
 
   useEffect(() => {
-    // Mocking an AI diagnostic generation based on the acceptance criteria
     const segment = company?.segmento || 'Mercado Geral'
 
     setAnalysis({
       objectives: ['1º contato estabelecido', 'Mapeada dor logística no interior'],
       nextSteps: ['Agendar visita presencial', 'Apresentar tabela de Teste Leve'],
       objection: '"Já tenho parceiro logístico consolidado."',
-      strategy: `Recomendar teste leve com 1 carga fracionada na rota de ${segment}. O risco de troca é mínimo e valida nosso SLA.`,
+      strategy: `Recomendar teste leve com 1 carga fracionada na rota de São Paulo–Campinas. O risco de troca é mínimo e valida nosso SLA.`,
+      diagnosticQuestions: ['Qual a média de entregas semanais?', 'Qual o custo médio por carga?'],
       fitScore: 82,
       copies: {
-        whatsapp: `Olá! Entendo que a ${company?.nomeFantasia || 'sua empresa'} já possui parceria. Topariam um "teste leve" sem compromisso com apenas 1 carga para validar nosso prazo?`,
-        email: `Vimos que atuam em ${segment}. Nosso índice de sucesso nessa área é de 98% no prazo. Que tal um teste leve na próxima demanda?`,
-        call: `(Roteiro)\n1. Reconheça a parceria atual.\n2. Questione se o parceiro atual atende 100% das urgências.\n3. Ofereça o "Teste Leve" em uma rota crítica.`,
+        whatsapp: `Olá! Entendo que a ${company?.nomeFantasia || 'sua empresa'} já possui parceria consolidada. Topariam um "teste leve" sem compromisso com apenas 1 carga na rota São Paulo-Campinas para validar nosso prazo e SLA?`,
+        email: `Vimos que atuam em ${segment} e sabemos que já possuem um parceiro logístico. Nosso índice de sucesso com materiais do seu setor é de 98% no prazo. Que tal um "teste leve" com apenas 1 demanda crítica na rota de Campinas? O risco é zero.`,
+        call: `(Roteiro)\n1. Reconheça e valorize a parceria atual.\n2. Faça as perguntas diagnósticas sugeridas pelo Brain.\n3. Ofereça o "Teste Leve" com 5 volumes na rota de Campinas sem compromisso futuro.`,
       },
     })
   }, [interactions, company])
@@ -99,16 +99,26 @@ export function BrainAnalysis({
 
         <div className="bg-red-50 border-l-[4px] border-red-500 p-4 rounded-r-lg">
           <span className="font-bold text-red-800 text-xs uppercase tracking-wider block mb-1">
-            Tratamento de Objeção: {analysis.objection}
+            Objeção Mapeada: {analysis.objection}
           </span>
           <p className="text-red-900 font-semibold text-sm leading-relaxed mt-2">
-            Estratégia: {analysis.strategy}
+            <strong>Estratégia:</strong> {analysis.strategy}
           </p>
+          <div className="mt-3 pt-3 border-t border-red-200">
+            <span className="font-bold text-red-800 text-xs uppercase tracking-wider flex items-center gap-1 mb-2">
+              <HelpCircle className="w-3.5 h-3.5" /> Perguntas Diagnósticas
+            </span>
+            <ul className="list-disc list-inside pl-5 text-sm text-red-900 space-y-1">
+              {analysis.diagnosticQuestions.map((q: string, idx: number) => (
+                <li key={idx}>{q}</li>
+              ))}
+            </ul>
+          </div>
         </div>
 
         <div>
           <h4 className="text-xs font-bold text-primary uppercase mb-3 flex items-center gap-1.5">
-            <MessageCircle className="w-4 h-4" /> Gerador de Copy
+            <MessageCircle className="w-4 h-4" /> Gerador de Copy de Objeção
           </h4>
           <Tabs defaultValue="whatsapp" className="w-full">
             <TabsList className="grid w-full grid-cols-3 bg-slate-100">

@@ -8,6 +8,8 @@ import {
   Layers,
   MessageSquareWarning,
   ShieldCheck,
+  DollarSign,
+  Reply,
 } from 'lucide-react'
 import useCrmStore, { Interaction } from '@/stores/useCrmStore'
 import { InteractionsTimeline } from '@/components/InteractionsTimeline'
@@ -46,15 +48,41 @@ export default function Company360() {
 
     toast({
       title: 'Objeção Recebida! (Simulação Inbound)',
-      description: 'O cliente respondeu ao e-mail. A IA está reprocessando os dados...',
+      description: 'O cliente respondeu ao e-mail. A IA The Brain está reprocessando os dados...',
     })
+  }
+
+  const simulateInbound = (price: boolean) => {
+    const lead = state.leads.find((l) => l.companyId === company.id)
+    if (lead) {
+      updateState({
+        leads: state.leads.map((l) =>
+          l.id === lead.id
+            ? {
+                ...l,
+                pipeline: 'Prospection',
+                stage: price ? 'Negociação' : 'Primeiro contato',
+              }
+            : l,
+        ),
+      })
+      toast({
+        title: 'Inbound Recebido',
+        description: `Lead reativado e movido para ${price ? 'Negociação' : 'Primeiro contato'} na Prospecção.`,
+      })
+    } else {
+      toast({
+        title: 'Nenhum Lead Ativo',
+        description: 'Crie um lead para esta empresa primeiro.',
+      })
+    }
   }
 
   const isCnpjValid = company.cnpj.replace(/\D/g, '').length === 14
 
   return (
     <div className="space-y-6 pb-12">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-5 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 bg-white p-5 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
         <div className="flex items-center gap-4 relative z-10">
           <Button variant="ghost" size="icon" asChild className="hover:bg-slate-100 text-slate-500">
             <Link to="/empresas">
@@ -73,20 +101,38 @@ export default function Company360() {
             </p>
           </div>
         </div>
-        <div className="relative z-10 flex w-full sm:w-auto gap-3">
+        <div className="relative z-10 flex flex-wrap gap-2">
           <Button
             onClick={simulateObjection}
-            className="w-full sm:w-auto bg-rose-50 border border-rose-200 text-rose-700 hover:bg-rose-100 shadow-sm font-semibold"
+            className="bg-rose-50 border border-rose-200 text-rose-700 hover:bg-rose-100 shadow-sm font-semibold"
             variant="outline"
+            size="sm"
           >
-            <MessageSquareWarning className="w-4 h-4 mr-2" /> Simular Objeção
+            <MessageSquareWarning className="w-4 h-4 mr-1.5" /> Objeção "Parceiro"
+          </Button>
+          <Button
+            onClick={() => simulateInbound(false)}
+            className="bg-emerald-50 border border-emerald-200 text-emerald-700 hover:bg-emerald-100 shadow-sm font-semibold"
+            variant="outline"
+            size="sm"
+          >
+            <Reply className="w-4 h-4 mr-1.5" /> Inbound Comum
+          </Button>
+          <Button
+            onClick={() => simulateInbound(true)}
+            className="bg-secondary/10 border border-secondary/30 text-secondary hover:bg-secondary/20 shadow-sm font-semibold"
+            variant="outline"
+            size="sm"
+          >
+            <DollarSign className="w-4 h-4 mr-1.5" /> Inbound Preço
           </Button>
           <Button
             asChild
-            className="w-full sm:w-auto bg-white border-primary/30 text-primary hover:bg-primary/5 shadow-sm font-bold"
+            className="bg-white border-primary/30 text-primary hover:bg-primary/5 shadow-sm font-bold"
             variant="outline"
+            size="sm"
           >
-            <Link to={`/empresa/${company.id}/editar`}>Ficha Cadastral</Link>
+            <Link to={`/empresa/${company.id}/editar`}>Ficha</Link>
           </Button>
         </div>
       </div>
