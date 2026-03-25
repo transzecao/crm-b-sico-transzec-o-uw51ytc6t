@@ -123,6 +123,7 @@ export default function Financeiro() {
 
   const updateInfo = (k: keyof typeof cfg.info, v: string) =>
     setCfg((p) => ({ ...p, info: { ...p.info, [k]: v } }))
+
   const updateModule = (k: keyof typeof cfg.modules, v: boolean) => {
     setCfg((p) => ({ ...p, modules: { ...p.modules, [k]: v } }))
     if (k === 'syncEnabled' && v) {
@@ -131,10 +132,20 @@ export default function Financeiro() {
       })
     }
   }
-  const updateParam = (k: keyof typeof cfg.params, v: string) =>
-    setCfg((p) => ({ ...p, params: { ...p.params, [k]: Number(v) } }))
-  const updateSim = (k: keyof typeof cfg.sim, v: string | number | boolean) =>
-    setCfg((p) => ({ ...p, sim: { ...p.sim, [k]: v } }))
+
+  const updateParam = (k: keyof typeof cfg.params, v: string) => {
+    const num = parseFloat(v)
+    const val = isNaN(num) ? 0 : Math.max(0, num)
+    setCfg((p) => ({ ...p, params: { ...p.params, [k]: val } }))
+  }
+
+  const updateSim = (k: keyof typeof cfg.sim, v: string | number | boolean) => {
+    let val = v
+    if (typeof v === 'number' && k !== 'dist' && k !== 'clusterId') {
+      val = isNaN(v) ? 0 : Math.max(0, v)
+    }
+    setCfg((p) => ({ ...p, sim: { ...p.sim, [k]: val } }))
+  }
 
   const handleClusterChange = (id: string) => {
     const cluster = cfg.clusters.find((c) => c.id === id)
@@ -156,8 +167,9 @@ export default function Financeiro() {
   }
 
   const updateSimDim = (k: keyof typeof cfg.sim.dim, v: number) => {
+    const val = isNaN(v) ? 0 : Math.max(0, v)
     setCfg((p) => {
-      const newDim = { ...p.sim.dim, [k]: v }
+      const newDim = { ...p.sim.dim, [k]: val }
       const newVol = p.sim.calcVolume
         ? Number((newDim.height * newDim.width * newDim.thickness).toFixed(4))
         : p.sim.volume
@@ -200,79 +212,115 @@ export default function Financeiro() {
       else if (action === 'del') return { ...p, [list]: items.filter((i) => i.id !== id) }
       else if (action === 'upd') {
         const idx = items.findIndex((i) => i.id === id)
-        if (idx > -1 && field) items[idx] = { ...items[idx], [field]: val }
+        if (idx > -1 && field) {
+          let updatedVal = val
+          if (field === 'val') {
+            updatedVal = isNaN(Number(val)) ? 0 : Math.max(0, Number(val))
+          }
+          items[idx] = { ...items[idx], [field]: updatedVal }
+        }
       }
       return { ...p, [list]: items }
     })
   }
 
   const handleSave = () => {
-    const now = new Date().toISOString()
-    updateInfo('updated', now)
-    setLastSaved(now)
-    toast.success('Planilha salva com sucesso', {
-      description: 'Memória de cálculo atualizada e versão registrada.',
-    })
+    try {
+      const now = new Date().toISOString()
+      updateInfo('updated', now)
+      setLastSaved(now)
+      toast.success('Planilha salva com sucesso', {
+        description: 'Memória de cálculo atualizada e versão registrada.',
+      })
+    } catch (e) {
+      toast.error('Erro ao salvar as configurações financeiras.')
+    }
   }
 
   const mem = useMemo(() => {
-    const { params, sim, modules, gen, srv } = cfg
+    try {
+      const { params, sim, modules, gen, srv } = cfg
 
-    const physicalWeight = sim.weight
-    const cubedWeight = sim.volume * params.cubageFactor
-    const taxableWeight = sim.useCubing ? Math.max(physicalWeight, cubedWeight) : physicalWeight
-    const wTon = taxableWeight / 1000
+      const safeNumber = (val: number) => (isNaN(val) ? 0 : Math.max(0, val))
 
-    let baseFreight = 0
-    let cBase = 0
-    let freteValor = 0
+      const physicalWeight = safeNumber(sim.weight)
+      const cubedWeight = safeNumber(sim.volume) * safeNumber(params.cubageFactor)
+      const taxableWeight = sim.useCubing ? Math.max(physicalWeight, cubedWeight) : physicalWeight
+      const wTon = taxableWeight / 1000
 
-    if (modules.paramsActive) {
-      baseFreight = params.baseTariff + sim.dist * params.valKm + wTon * params.valTon
-      cBase = baseFreight * params.correcao
-      freteValor = sim.value * (params.freteValorPct / 100)
-    }
+      let baseFreight = 0
+      let cBase = 0
+      let freteValor = 0
 
-    const calcItem = (i: CfgItem, activeMod: boolean) => {
-      if (!i.active || !activeMod) return 0
-      if (i.type === 'fixed') return i.val
-      if (i.type === 'pct') return sim.value * (i.val / 100)
-      if (i.type === 'pct_frete') return cBase > 0 ? cBase * (i.val / 100) : 0
-      return 0
-    }
+      if (modules.paramsActive) {
+        baseFreight =
+          safeNumber(params.baseTariff) +
+          safeNumber(sim.dist) * safeNumber(params.valKm) +
+          wTon * safeNumber(params.valTon)
+        cBase = baseFreight * safeNumber(params.correcao)
+        freteValor = safeNumber(sim.value) * (safeNumber(params.freteValorPct) / 100)
+      }
 
-    const genVals = gen
-      .map((g) => ({ ...g, total: calcItem(g, modules.genActive) }))
-      .filter((g) => g.total > 0 && modules.genActive)
-    const srvVals = srv
-      .map((s) => ({ ...s, total: calcItem(s, modules.srvActive) }))
-      .filter((s) => s.total > 0 && modules.srvActive)
+      const calcItem = (i: CfgItem, activeMod: boolean) => {
+        if (!i.active || !activeMod) return 0
+        const v = safeNumber(i.val)
+        if (i.type === 'fixed') return v
+        if (i.type === 'pct') return safeNumber(sim.value) * (v / 100)
+        if (i.type === 'pct_frete') return cBase > 0 ? cBase * (v / 100) : 0
+        return 0
+      }
 
-    const subGen = genVals.reduce((a, b) => a + b.total, 0)
-    const subSrv = srvVals.reduce((a, b) => a + b.total, 0)
+      const genVals = gen
+        .map((g) => ({ ...g, total: calcItem(g, modules.genActive) }))
+        .filter((g) => g.total > 0 && modules.genActive)
+      const srvVals = srv
+        .map((s) => ({ ...s, total: calcItem(s, modules.srvActive) }))
+        .filter((s) => s.total > 0 && modules.srvActive)
 
-    const sub1 = (modules.paramsActive ? cBase + freteValor : 0) + subGen + subSrv
-    const margin = modules.paramsActive ? sub1 * (params.marginPct / 100) : 0
-    const sub2 = sub1 + margin
-    const tax = modules.paramsActive ? sub2 * (params.taxPct / 100) : 0
-    const total = sub2 + tax
+      const subGen = genVals.reduce((a, b) => a + b.total, 0)
+      const subSrv = srvVals.reduce((a, b) => a + b.total, 0)
 
-    return {
-      physicalWeight,
-      cubedWeight,
-      taxableWeight,
-      baseFreight,
-      cBase,
-      freteValor,
-      genVals,
-      srvVals,
-      subGen,
-      subSrv,
-      sub1,
-      margin,
-      sub2,
-      tax,
-      total,
+      const sub1 = (modules.paramsActive ? cBase + freteValor : 0) + subGen + subSrv
+      const margin = modules.paramsActive ? sub1 * (safeNumber(params.marginPct) / 100) : 0
+      const sub2 = sub1 + margin
+      const tax = modules.paramsActive ? sub2 * (safeNumber(params.taxPct) / 100) : 0
+      const total = sub2 + tax
+
+      return {
+        physicalWeight,
+        cubedWeight,
+        taxableWeight,
+        baseFreight,
+        cBase,
+        freteValor,
+        genVals,
+        srvVals,
+        subGen,
+        subSrv,
+        sub1,
+        margin,
+        sub2,
+        tax,
+        total,
+      }
+    } catch (e) {
+      return {
+        physicalWeight: 0,
+        cubedWeight: 0,
+        taxableWeight: 0,
+        baseFreight: 0,
+        cBase: 0,
+        freteValor: 0,
+        genVals: [],
+        srvVals: [],
+        subGen: 0,
+        subSrv: 0,
+        sub1: 0,
+        margin: 0,
+        sub2: 0,
+        tax: 0,
+        total: 0,
+      }
     }
   }, [cfg])
 
@@ -308,11 +356,15 @@ export default function Financeiro() {
         </div>
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
-            <Label className="text-sm font-medium text-emerald-800">Módulo</Label>
+            <Label htmlFor={`switch-${list}`} className="text-sm font-medium text-emerald-800">
+              Módulo
+            </Label>
             <Switch
+              id={`switch-${list}`}
               className="data-[state=checked]:bg-emerald-600"
               checked={cfg.modules[activeKey]}
               onCheckedChange={(c) => updateModule(activeKey, c)}
+              aria-label={`Ativar módulo ${title}`}
             />
           </div>
           {showAdd && (
@@ -322,6 +374,7 @@ export default function Financeiro() {
               className="border-emerald-200/80 text-emerald-700 bg-white/50 hover:bg-emerald-100 hover:text-emerald-800 backdrop-blur-sm"
               onClick={() => handleItem(list, 'add')}
               disabled={!cfg.modules[activeKey]}
+              aria-label={`Adicionar item em ${title}`}
             >
               <Plus className="w-4 h-4 mr-2" /> Novo Item
             </Button>
@@ -344,19 +397,24 @@ export default function Financeiro() {
               checked={i.active}
               onCheckedChange={(c) => handleItem(list, 'upd', i.id, 'active', c)}
               disabled={!cfg.modules[activeKey]}
+              aria-label={`Ativar item ${i.name}`}
             />
             <Input
               className={cn('min-w-[200px] flex-1 font-medium bg-white/50', editHighlight)}
               value={i.name}
               onChange={(e) => handleItem(list, 'upd', i.id, 'name', e.target.value)}
               disabled={!cfg.modules[activeKey]}
+              aria-label="Nome do item"
             />
             <Select
               value={i.type}
               onValueChange={(v) => handleItem(list, 'upd', i.id, 'type', v)}
               disabled={!cfg.modules[activeKey]}
             >
-              <SelectTrigger className={cn('w-[180px] bg-white/50', editHighlight)}>
+              <SelectTrigger
+                className={cn('w-[180px] bg-white/50', editHighlight)}
+                aria-label="Tipo do valor"
+              >
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -366,16 +424,21 @@ export default function Financeiro() {
               </SelectContent>
             </Select>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
+              <span
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm"
+                aria-hidden="true"
+              >
                 {i.type === 'fixed' ? 'R$' : '%'}
               </span>
               <Input
                 type="number"
+                min="0"
                 step={i.type === 'fixed' ? '1' : '0.01'}
                 className={cn('w-32 pl-8 bg-white/50', editHighlight)}
                 value={i.val}
                 onChange={(e) => handleItem(list, 'upd', i.id, 'val', Number(e.target.value))}
                 disabled={!cfg.modules[activeKey]}
+                aria-label="Valor numérico"
               />
             </div>
             {showAdd && (
@@ -385,6 +448,7 @@ export default function Financeiro() {
                 className="text-rose-500 hover:bg-rose-50/80 hover:text-rose-600"
                 onClick={() => handleItem(list, 'del', i.id)}
                 disabled={!cfg.modules[activeKey]}
+                aria-label={`Remover item ${i.name}`}
               >
                 <Trash2 className="w-4 h-4" />
               </Button>
@@ -400,7 +464,10 @@ export default function Financeiro() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white/80 backdrop-blur-md p-6 rounded-xl border border-emerald-100 shadow-sm">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-emerald-950 flex items-center gap-3">
-            <div className="bg-emerald-100/60 p-2 rounded-lg border border-emerald-200/50">
+            <div
+              className="bg-emerald-100/60 p-2 rounded-lg border border-emerald-200/50"
+              aria-hidden="true"
+            >
               <Truck className="w-6 h-6 text-emerald-600" />
             </div>
             Motor de Cálculo de Frete
@@ -414,14 +481,24 @@ export default function Financeiro() {
               <strong className="text-emerald-700">Empresa:</strong> {cfg.info.company}
             </span>
             <div className="flex items-center gap-2 border-l border-emerald-200 pl-6">
-              <Label className="text-xs font-semibold text-emerald-800 uppercase">Auto Sync</Label>
+              <Label
+                htmlFor="sync-switch"
+                className="text-xs font-semibold text-emerald-800 uppercase"
+              >
+                Auto Sync
+              </Label>
               <Switch
+                id="sync-switch"
                 className="data-[state=checked]:bg-emerald-600"
                 checked={cfg.modules.syncEnabled}
                 onCheckedChange={(c) => updateModule('syncEnabled', c)}
+                aria-label="Ativar sincronização automática"
               />
               {cfg.modules.syncEnabled && (
-                <RefreshCw className="w-3.5 h-3.5 text-emerald-600 animate-spin" />
+                <RefreshCw
+                  className="w-3.5 h-3.5 text-emerald-600 animate-spin"
+                  aria-hidden="true"
+                />
               )}
             </div>
           </div>
@@ -429,6 +506,7 @@ export default function Financeiro() {
         <Button
           onClick={handleSave}
           size="lg"
+          aria-label="Salvar versão do motor de frete"
           className="gap-2 shadow-md bg-emerald-600 hover:bg-emerald-700 text-white transition-all active:scale-95"
         >
           <Save className="w-5 h-5" /> Salvar Versão
@@ -446,11 +524,14 @@ export default function Financeiro() {
             <CardContent className="pt-6">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-x-6 gap-y-5">
                 <div className="space-y-2 md:col-span-2">
-                  <Label className="text-xs font-semibold uppercase text-emerald-700 flex items-center gap-1.5">
+                  <Label
+                    htmlFor="cluster-select"
+                    className="text-xs font-semibold uppercase text-emerald-700 flex items-center gap-1.5"
+                  >
                     <MapPin className="w-3.5 h-3.5" /> Cluster / Destino
                   </Label>
                   <Select value={cfg.sim.clusterId} onValueChange={handleClusterChange}>
-                    <SelectTrigger className={inputClass}>
+                    <SelectTrigger id="cluster-select" className={inputClass}>
                       <SelectValue placeholder="Selecione um Cluster (Opcional)" />
                     </SelectTrigger>
                     <SelectContent>
@@ -469,11 +550,16 @@ export default function Financeiro() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-xs font-semibold uppercase text-emerald-700">
+                  <Label
+                    htmlFor="sim-dist"
+                    className="text-xs font-semibold uppercase text-emerald-700"
+                  >
                     Distância (KM)
                   </Label>
                   <Input
+                    id="sim-dist"
                     type="number"
+                    min="0"
                     value={cfg.sim.dist}
                     onChange={(e) => updateSim('dist', Number(e.target.value))}
                     className={inputClass}
@@ -482,11 +568,16 @@ export default function Financeiro() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-xs font-semibold uppercase text-emerald-700">
+                  <Label
+                    htmlFor="sim-val"
+                    className="text-xs font-semibold uppercase text-emerald-700"
+                  >
                     Valor Mercadoria (R$)
                   </Label>
                   <Input
+                    id="sim-val"
                     type="number"
+                    min="0"
                     value={cfg.sim.value}
                     onChange={(e) => updateSim('value', Number(e.target.value))}
                     className={inputClass}
@@ -509,7 +600,10 @@ export default function Financeiro() {
                     </Label>
                   </div>
                   <div className="flex items-center justify-between mb-4">
-                    <Label className="text-xs font-semibold uppercase text-emerald-800">
+                    <Label
+                      htmlFor="sim-vol"
+                      className="text-xs font-semibold uppercase text-emerald-800"
+                    >
                       Volume (m³)
                     </Label>
                     <div className="flex items-center gap-2 bg-white/80 px-2 py-1 rounded shadow-sm border border-emerald-100 mt-6 mr-36">
@@ -531,36 +625,51 @@ export default function Financeiro() {
                   {cfg.sim.calcVolume ? (
                     <div className="grid grid-cols-3 gap-3">
                       <div className="space-y-1">
-                        <Label className="text-[10px] font-semibold text-emerald-600">
+                        <Label
+                          htmlFor="dim-h"
+                          className="text-[10px] font-semibold text-emerald-600"
+                        >
                           Altura (m)
                         </Label>
                         <Input
+                          id="dim-h"
                           type="number"
                           step="0.01"
+                          min="0"
                           value={cfg.sim.dim.height}
                           onChange={(e) => updateSimDim('height', Number(e.target.value))}
                           className={inputClass}
                         />
                       </div>
                       <div className="space-y-1">
-                        <Label className="text-[10px] font-semibold text-emerald-600">
+                        <Label
+                          htmlFor="dim-w"
+                          className="text-[10px] font-semibold text-emerald-600"
+                        >
                           Largura (m)
                         </Label>
                         <Input
+                          id="dim-w"
                           type="number"
                           step="0.01"
+                          min="0"
                           value={cfg.sim.dim.width}
                           onChange={(e) => updateSimDim('width', Number(e.target.value))}
                           className={inputClass}
                         />
                       </div>
                       <div className="space-y-1">
-                        <Label className="text-[10px] font-semibold text-emerald-600">
+                        <Label
+                          htmlFor="dim-t"
+                          className="text-[10px] font-semibold text-emerald-600"
+                        >
                           Comprim. (m)
                         </Label>
                         <Input
+                          id="dim-t"
                           type="number"
                           step="0.01"
+                          min="0"
                           value={cfg.sim.dim.thickness}
                           onChange={(e) => updateSimDim('thickness', Number(e.target.value))}
                           className={inputClass}
@@ -579,8 +688,10 @@ export default function Financeiro() {
                   ) : (
                     <div className="space-y-2 w-1/2 mt-10">
                       <Input
+                        id="sim-vol"
                         type="number"
                         step="0.01"
+                        min="0"
                         value={cfg.sim.volume}
                         onChange={(e) => updateSim('volume', Number(e.target.value))}
                         className={inputClass}
@@ -592,41 +703,58 @@ export default function Financeiro() {
                 <div className="space-y-2 md:col-span-2">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-full">
                     <div className="space-y-2">
-                      <Label className="text-xs font-semibold uppercase text-emerald-700">
+                      <Label
+                        htmlFor="sim-weight"
+                        className="text-xs font-semibold uppercase text-emerald-700"
+                      >
                         Peso Bruto (KG)
                       </Label>
                       <Input
+                        id="sim-weight"
                         type="number"
+                        min="0"
                         value={cfg.sim.weight}
                         onChange={(e) => updateSim('weight', Number(e.target.value))}
                         className={inputClass}
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-xs font-semibold uppercase text-emerald-700">
+                      <Label
+                        htmlFor="sim-cargo"
+                        className="text-xs font-semibold uppercase text-emerald-700"
+                      >
                         Tipo de Carga
                       </Label>
                       <Input
+                        id="sim-cargo"
                         value={cfg.sim.cargoType}
                         onChange={(e) => updateSim('cargoType', e.target.value)}
                         className={inputClass}
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-xs font-semibold uppercase text-emerald-700">
+                      <Label
+                        htmlFor="sim-freq"
+                        className="text-xs font-semibold uppercase text-emerald-700"
+                      >
                         Frequência
                       </Label>
                       <Input
+                        id="sim-freq"
                         value={cfg.sim.frequency}
                         onChange={(e) => updateSim('frequency', e.target.value)}
                         className={inputClass}
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-xs font-semibold uppercase text-emerald-700">
+                      <Label
+                        htmlFor="sim-sla"
+                        className="text-xs font-semibold uppercase text-emerald-700"
+                      >
                         SLA / Prazo
                       </Label>
                       <Input
+                        id="sim-sla"
                         value={cfg.sim.sla}
                         onChange={(e) => updateSim('sla', e.target.value)}
                         className={inputClass}
@@ -668,14 +796,17 @@ export default function Financeiro() {
               ].map((f) => (
                 <div key={f.k} className="space-y-2">
                   <Label
+                    htmlFor={`param-${f.k}`}
                     className="text-[11px] font-semibold uppercase text-emerald-700 block truncate"
                     title={f.l}
                   >
                     {f.l}
                   </Label>
                   <Input
+                    id={`param-${f.k}`}
                     type="number"
                     step="0.01"
+                    min="0"
                     value={cfg.params[f.k as keyof typeof cfg.params]}
                     onChange={(e) => updateParam(f.k as keyof typeof cfg.params, e.target.value)}
                     className={cn(editHighlight, 'bg-white/50')}
@@ -710,6 +841,7 @@ export default function Financeiro() {
                   <Switch
                     checked={c.active}
                     onCheckedChange={(v) => toggleClusterActive(c.id, v)}
+                    aria-label={`Ativar cluster ${c.name}`}
                     className="data-[state=checked]:bg-emerald-600"
                   />
                 </div>

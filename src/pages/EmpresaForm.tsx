@@ -1,15 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import {
-  ArrowLeft,
-  Save,
-  Building2,
-  Link as LinkIcon,
-  Briefcase,
-  MapPin,
-  AlignLeft,
-  Star,
-} from 'lucide-react'
+import { ArrowLeft, Save, Building2, Briefcase, MapPin, AlignLeft, Star } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -117,8 +108,8 @@ export default function EmpresaForm() {
     }
 
     const rawCnpj = formData.cnpj?.replace(/\D/g, '') || ''
-    if (rawCnpj && rawCnpj.length !== 14) {
-      newError.cnpj = 'CNPJ deve conter 14 dígitos.'
+    if (formData.cnpj && rawCnpj.length !== 14) {
+      newError.cnpj = 'CNPJ deve conter exatamente 14 dígitos numéricos.'
       hasError = true
     }
 
@@ -132,29 +123,39 @@ export default function EmpresaForm() {
       return
     }
 
-    const companyId = existingCompany ? existingCompany.id : Math.random().toString(36).substr(2, 9)
-    const newCompany = { ...formData, id: companyId } as Company
-    const finalContacts = contacts.map((c) => ({
-      ...c,
-      id: c.id || Math.random().toString(36).substr(2, 9),
-      companyId,
-      name: c.name || 'Sem Nome',
-      methods: c.methods || [],
-    })) as Contact[]
+    try {
+      const companyId = existingCompany
+        ? existingCompany.id
+        : Math.random().toString(36).substr(2, 9)
+      const newCompany = { ...formData, id: companyId } as Company
+      const finalContacts = contacts.map((c) => ({
+        ...c,
+        id: c.id || Math.random().toString(36).substr(2, 9),
+        companyId,
+        name: c.name || 'Sem Nome',
+        methods: c.methods || [],
+      })) as Contact[]
 
-    if (existingCompany) {
-      updateState({
-        companies: state.companies.map((c) => (c.id === companyId ? newCompany : c)),
-        contacts: [...state.contacts.filter((c) => c.companyId !== companyId), ...finalContacts],
+      if (existingCompany) {
+        updateState({
+          companies: state.companies.map((c) => (c.id === companyId ? newCompany : c)),
+          contacts: [...state.contacts.filter((c) => c.companyId !== companyId), ...finalContacts],
+        })
+        toast({ title: 'Ficha da empresa atualizada!' })
+      } else {
+        updateState({
+          companies: [...state.companies, newCompany],
+          contacts: [...state.contacts, ...finalContacts],
+        })
+        toast({ title: 'Empresa cadastrada com sucesso!' })
+        navigate(`/empresa/${companyId}/editar`, { replace: true })
+      }
+    } catch (e) {
+      toast({
+        variant: 'destructive',
+        title: 'Erro de Sistema',
+        description: 'Não foi possível salvar a ficha da empresa.',
       })
-      toast({ title: 'Ficha da empresa atualizada!' })
-    } else {
-      updateState({
-        companies: [...state.companies, newCompany],
-        contacts: [...state.contacts, ...finalContacts],
-      })
-      toast({ title: 'Empresa cadastrada com sucesso!' })
-      navigate(`/empresa/${companyId}/editar`, { replace: true })
     }
   }
 
@@ -180,14 +181,23 @@ export default function EmpresaForm() {
     : formData.nomeFantasia || formData.razaoSocial || 'Ficha da Empresa'
 
   const renderLabel = (label: string, field: string) => (
-    <Label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-      {label} {isMandatory(field) && <span className="text-red-500">*</span>}
+    <Label
+      htmlFor={field}
+      className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1.5"
+    >
+      {label}{' '}
+      {isMandatory(field) && (
+        <span className="text-red-500" aria-hidden="true">
+          *
+        </span>
+      )}
       {isMaster && field !== 'nomeFantasia' && (
         <button
           type="button"
           onClick={() => toggleMandatory(field)}
           className="text-slate-300 hover:text-amber-500 ml-1"
           title="Tornar obrigatório (Master)"
+          aria-label={`Tornar ${label} obrigatório`}
         >
           <Star className="w-3 h-3" fill={isMandatory(field) ? 'currentColor' : 'none'} />
         </button>
@@ -203,13 +213,14 @@ export default function EmpresaForm() {
             variant="ghost"
             size="icon"
             asChild
+            aria-label="Voltar para empresas"
             className="mr-2 text-slate-500 hover:text-slate-800"
           >
             <Link to="/empresas">
               <ArrowLeft className="w-5 h-5" />
             </Link>
           </Button>
-          <div className="bg-blue-100/60 p-2 rounded-lg border border-blue-200">
+          <div className="bg-blue-100/60 p-2 rounded-lg border border-blue-200" aria-hidden="true">
             <Building2 className="w-5 h-5 text-blue-600" />
           </div>
           <h1 className="text-xl font-bold flex items-center gap-2 text-blue-950 tracking-tight">
@@ -221,11 +232,13 @@ export default function EmpresaForm() {
             variant="outline"
             onClick={() => navigate('/empresas')}
             className="h-9 font-medium"
+            aria-label="Cancelar edição"
           >
             Cancelar
           </Button>
           <Button
             onClick={handleSave}
+            aria-label="Salvar Ficha 360"
             className="h-9 bg-blue-600 hover:bg-blue-700 text-white font-medium shadow-sm transition-all active:scale-95"
           >
             <Save className="w-4 h-4 mr-2" /> Salvar Ficha 360
@@ -237,7 +250,10 @@ export default function EmpresaForm() {
         <div className="flex-1 overflow-y-auto flex flex-col p-6 lg:p-8 items-center">
           <div className="w-full max-w-4xl space-y-6">
             {error.form && (
-              <div className="bg-red-50 text-red-600 p-3 rounded-md border border-red-200 text-sm font-medium">
+              <div
+                className="bg-red-50 text-red-600 p-3 rounded-md border border-red-200 text-sm font-medium"
+                role="alert"
+              >
                 {error.form}
               </div>
             )}
@@ -245,7 +261,8 @@ export default function EmpresaForm() {
             <Card className="shadow-sm border-blue-100/60 overflow-hidden bg-white/80 backdrop-blur-sm">
               <CardHeader className="bg-blue-50/50 border-b border-blue-100 py-3.5 px-6">
                 <CardTitle className="text-base font-semibold flex items-center gap-2 text-blue-900">
-                  <Building2 className="w-4 h-4 text-blue-600" /> Dados Cadastrais
+                  <Building2 className="w-4 h-4 text-blue-600" aria-hidden="true" /> Dados
+                  Cadastrais
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6">
@@ -253,6 +270,7 @@ export default function EmpresaForm() {
                   <div className="space-y-2">
                     {renderLabel('Nome Fantasia', 'nomeFantasia')}
                     <Input
+                      id="nomeFantasia"
                       value={formData.nomeFantasia || ''}
                       onChange={(e) => setFormData({ ...formData, nomeFantasia: e.target.value })}
                       className={cn(
@@ -264,6 +282,7 @@ export default function EmpresaForm() {
                   <div className="space-y-2">
                     {renderLabel('Razão Social', 'razaoSocial')}
                     <Input
+                      id="razaoSocial"
                       value={formData.razaoSocial || ''}
                       onChange={(e) => setFormData({ ...formData, razaoSocial: e.target.value })}
                       className="bg-white border-slate-200 focus-visible:ring-blue-500/50"
@@ -272,6 +291,7 @@ export default function EmpresaForm() {
                   <div className="space-y-2">
                     {renderLabel('CNPJ', 'cnpj')}
                     <Input
+                      id="cnpj"
                       value={formData.cnpj || ''}
                       onChange={(e) =>
                         setFormData({ ...formData, cnpj: formatCnpj(e.target.value) })
@@ -284,12 +304,15 @@ export default function EmpresaForm() {
                       placeholder="00.000.000/0000-00"
                     />
                     {error.cnpj && (
-                      <span className="text-[10px] text-red-500 font-medium">{error.cnpj}</span>
+                      <span className="text-[10px] text-red-500 font-medium" role="alert">
+                        {error.cnpj}
+                      </span>
                     )}
                   </div>
                   <div className="space-y-2">
                     {renderLabel('Endereço Principal', 'endereco')}
                     <Input
+                      id="endereco"
                       value={formData.endereco || ''}
                       onChange={(e) => setFormData({ ...formData, endereco: e.target.value })}
                       className="bg-white border-slate-200 focus-visible:ring-blue-500/50"
@@ -297,11 +320,15 @@ export default function EmpresaForm() {
                     />
                   </div>
                   <div className="space-y-2 md:col-span-2">
-                    <Label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block flex items-center gap-1.5">
+                    <Label
+                      htmlFor="clusterInput"
+                      className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block flex items-center gap-1.5"
+                    >
                       <MapPin className="w-3.5 h-3.5" /> Clusters / Praças de Atuação
                     </Label>
                     <div className="flex gap-2">
                       <Input
+                        id="clusterInput"
                         value={clusterInput}
                         onChange={(e) => setClusterInput(e.target.value)}
                         onKeyDown={(e) => {
@@ -317,6 +344,7 @@ export default function EmpresaForm() {
                         type="button"
                         onClick={addCluster}
                         variant="secondary"
+                        aria-label="Adicionar cluster"
                         className="bg-blue-50 text-blue-700 hover:bg-blue-100"
                       >
                         Add
@@ -329,6 +357,7 @@ export default function EmpresaForm() {
                           variant="outline"
                           className="bg-white text-blue-800 border-blue-200 px-2 py-0.5 rounded-md cursor-pointer hover:bg-red-50 hover:text-red-600 hover:border-red-200"
                           onClick={() => removeCluster(i)}
+                          aria-label={`Remover cluster ${cluster}`}
                         >
                           {cluster} &times;
                         </Badge>
@@ -342,7 +371,8 @@ export default function EmpresaForm() {
             <Card className="shadow-sm border-blue-100/60 overflow-hidden bg-white/80 backdrop-blur-sm">
               <CardHeader className="bg-blue-50/50 border-b border-blue-100 py-3.5 px-6">
                 <CardTitle className="text-base font-semibold flex items-center gap-2 text-blue-900">
-                  <Briefcase className="w-4 h-4 text-blue-600" /> Resumo Estratégico
+                  <Briefcase className="w-4 h-4 text-blue-600" aria-hidden="true" /> Resumo
+                  Estratégico
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6">
@@ -353,7 +383,11 @@ export default function EmpresaForm() {
                       value={formData.pipeline || ''}
                       onValueChange={(v) => setFormData({ ...formData, pipeline: v })}
                     >
-                      <SelectTrigger className="bg-white border-slate-200 focus:ring-blue-500/50">
+                      <SelectTrigger
+                        id="pipeline"
+                        className="bg-white border-slate-200 focus:ring-blue-500/50"
+                        aria-label="Selecione o Pipeline"
+                      >
                         <SelectValue placeholder="Selecione..." />
                       </SelectTrigger>
                       <SelectContent>
@@ -370,7 +404,11 @@ export default function EmpresaForm() {
                       value={formData.segmento || ''}
                       onValueChange={(v) => setFormData({ ...formData, segmento: v })}
                     >
-                      <SelectTrigger className="bg-white border-slate-200 focus:ring-blue-500/50">
+                      <SelectTrigger
+                        id="segmento"
+                        className="bg-white border-slate-200 focus:ring-blue-500/50"
+                        aria-label="Selecione o Segmento"
+                      >
                         <SelectValue placeholder="Selecione o segmento..." />
                       </SelectTrigger>
                       <SelectContent>
@@ -383,10 +421,14 @@ export default function EmpresaForm() {
                     </Select>
                   </div>
                   <div className="space-y-2 md:col-span-4">
-                    <Label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block flex items-center gap-1.5">
+                    <Label
+                      htmlFor="observacoes"
+                      className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block flex items-center gap-1.5"
+                    >
                       <AlignLeft className="w-3.5 h-3.5" /> Observações Gerais
                     </Label>
                     <Textarea
+                      id="observacoes"
                       value={formData.observacoes || ''}
                       onChange={(e) => setFormData({ ...formData, observacoes: e.target.value })}
                       placeholder="Informações adicionais relevantes sobre a empresa..."

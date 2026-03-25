@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -32,6 +32,21 @@ export function LossReasonModal({
   const [reason, setReason] = useState('')
   const [details, setDetails] = useState('')
 
+  useEffect(() => {
+    if (!open) {
+      setReason('')
+      setDetails('')
+    }
+  }, [open])
+
+  const handleConfirm = () => {
+    try {
+      onConfirm(reason, details)
+    } catch (error) {
+      console.error('Failed to confirm loss reason:', error)
+    }
+  }
+
   const isConfirmDisabled = !reason || (reason === 'Outro' && !details.trim())
 
   return (
@@ -39,7 +54,7 @@ export function LossReasonModal({
       <DialogContent className="border-rose-200 shadow-2xl bg-rose-50/95 backdrop-blur-md sm:max-w-md">
         <DialogHeader className="border-b border-rose-100 pb-4">
           <DialogTitle className="text-rose-950 flex items-center gap-2 text-xl font-bold">
-            <div className="bg-rose-100 p-1.5 rounded-lg border border-rose-200">
+            <div className="bg-rose-100 p-1.5 rounded-lg border border-rose-200" aria-hidden="true">
               <AlertOctagon className="w-5 h-5 text-rose-600" />
             </div>
             Registrar Perda de Negócio
@@ -47,11 +62,18 @@ export function LossReasonModal({
         </DialogHeader>
         <div className="space-y-5 py-4">
           <div className="space-y-2">
-            <Label className="text-rose-900 font-semibold">
-              Motivo Principal <span className="text-rose-600">*</span>
+            <Label htmlFor="loss-reason" className="text-rose-900 font-semibold">
+              Motivo Principal{' '}
+              <span className="text-rose-600" aria-hidden="true">
+                *
+              </span>
             </Label>
             <Select value={reason} onValueChange={setReason}>
-              <SelectTrigger className="bg-white/80 border-rose-200 focus:ring-rose-500/50">
+              <SelectTrigger
+                id="loss-reason"
+                aria-label="Selecione o motivo da perda"
+                className="bg-white/80 border-rose-200 focus:ring-rose-500/50"
+              >
                 <SelectValue placeholder="Selecione o motivo de perda..." />
               </SelectTrigger>
               <SelectContent>
@@ -65,14 +87,22 @@ export function LossReasonModal({
           </div>
           {reason && (
             <div className="space-y-2 animate-fade-in-up">
-              <Label className="text-rose-900 font-semibold">
+              <Label htmlFor="loss-details" className="text-rose-900 font-semibold">
                 Detalhes{' '}
-                {reason === 'Outro' ? <span className="text-rose-600">*</span> : '(Opcional)'}
+                {reason === 'Outro' ? (
+                  <span className="text-rose-600" aria-hidden="true">
+                    *
+                  </span>
+                ) : (
+                  '(Opcional)'
+                )}
               </Label>
               <Textarea
+                id="loss-details"
                 value={details}
                 onChange={(e) => setDetails(e.target.value)}
                 placeholder="Especifique o contexto da perda..."
+                aria-label="Detalhes adicionais da perda"
                 className="bg-white/80 border-rose-200 focus-visible:ring-rose-500/50 min-h-[100px]"
               />
             </div>
@@ -82,6 +112,7 @@ export function LossReasonModal({
           <Button
             variant="outline"
             onClick={onCancel}
+            aria-label="Cancelar registro de perda"
             className="border-rose-200 text-rose-800 hover:bg-rose-100/50 bg-white/50"
           >
             Cancelar
@@ -89,7 +120,8 @@ export function LossReasonModal({
           <Button
             variant="destructive"
             disabled={isConfirmDisabled}
-            onClick={() => onConfirm(reason, details)}
+            onClick={handleConfirm}
+            aria-label="Confirmar registro de perda"
             className="bg-rose-600 hover:bg-rose-700 text-white shadow-md active:scale-95 transition-all font-semibold"
           >
             Confirmar Perda

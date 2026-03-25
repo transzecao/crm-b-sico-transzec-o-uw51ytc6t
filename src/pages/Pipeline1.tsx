@@ -26,6 +26,8 @@ const COLUMNS = [
   'Perda',
 ]
 
+const VALID_STAGES = [...COLUMNS, 'Perda']
+
 export default function Pipeline1() {
   const { state, updateState } = useCrmStore()
   const { toast } = useToast()
@@ -36,48 +38,73 @@ export default function Pipeline1() {
   const prospectionLeads = state.leads.filter((l) => l.pipeline === 'Prospection')
 
   const handleMove = (id: string, stage: string) => {
-    if (stage === 'Perda') {
-      setPendingMove({ id, stage })
-      setLossModalOpen(true)
-      return
-    }
-
-    if (stage === 'Ganho') {
-      updateState({
-        leads: state.leads.map((l) => (l.id === id ? { ...l, stage, score: 'Hot' } : l)),
-      })
+    if (!VALID_STAGES.includes(stage)) {
       toast({
-        title: 'Parabéns!',
-        description: 'Negócio marcado como Ganho. Aceitou cotação/teste.',
+        variant: 'destructive',
+        title: 'Erro de Validação',
+        description: 'Etapa de destino inválida.',
       })
       return
     }
 
-    if (stage === '3º contato sem resposta') {
+    try {
+      if (stage === 'Perda') {
+        setPendingMove({ id, stage })
+        setLossModalOpen(true)
+        return
+      }
+
+      if (stage === 'Ganho') {
+        updateState({
+          leads: state.leads.map((l) => (l.id === id ? { ...l, stage, score: 'Hot' } : l)),
+        })
+        toast({
+          title: 'Parabéns!',
+          description: 'Negócio marcado como Ganho. Aceitou cotação/teste.',
+        })
+        return
+      }
+
+      if (stage === '3º contato sem resposta') {
+        toast({
+          title: 'Atenção Automática',
+          description: 'Lead será movido para Nutrição em 1 dia útil (Regra de 3º sem resposta).',
+        })
+        updateState({
+          leads: state.leads.map((l) => (l.id === id ? { ...l, stage, score: 'Cold' } : l)),
+        })
+        return
+      }
+
+      updateState({ leads: state.leads.map((l) => (l.id === id ? { ...l, stage } : l)) })
+    } catch (error) {
       toast({
-        title: 'Atenção Automática',
-        description: 'Lead será movido para Nutrição em 1 dia útil (Regra de 3º sem resposta).',
+        variant: 'destructive',
+        title: 'Erro do Sistema',
+        description: 'Falha ao processar movimento do lead.',
       })
-      updateState({
-        leads: state.leads.map((l) => (l.id === id ? { ...l, stage, score: 'Cold' } : l)),
-      })
-      return
     }
-
-    updateState({ leads: state.leads.map((l) => (l.id === id ? { ...l, stage } : l)) })
   }
 
   const confirmLoss = (reason: string, details?: string) => {
-    if (pendingMove) {
+    if (!pendingMove) return
+    try {
       updateState({
         leads: state.leads.map((l) =>
           l.id === pendingMove.id ? { ...l, stage: 'Perda', score: 'Cold' } : l,
         ),
       })
       toast({ title: 'Perda registrada', description: `Motivo: ${reason}`, variant: 'destructive' })
+    } catch (e) {
+      toast({
+        variant: 'destructive',
+        title: 'Erro',
+        description: 'Não foi possível registrar a perda.',
+      })
+    } finally {
+      setLossModalOpen(false)
+      setPendingMove(null)
     }
-    setLossModalOpen(false)
-    setPendingMove(null)
   }
 
   return (
@@ -86,21 +113,27 @@ export default function Pipeline1() {
         <div className="flex items-center justify-between p-4 pb-2">
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-bold text-violet-950 flex items-center gap-2 mr-2">
-              Negócios <Pin className="w-5 h-5 text-violet-500 rotate-45" />
+              Negócios <Pin className="w-5 h-5 text-violet-500 rotate-45" aria-hidden="true" />
             </h1>
 
             <div className="flex items-center bg-violet-600 hover:bg-violet-700 text-white rounded shadow-sm overflow-hidden transition-colors">
-              <button className="px-4 py-1.5 text-sm font-semibold border-r border-violet-700/50">
+              <button
+                aria-label="Criar novo negócio"
+                className="px-4 py-1.5 text-sm font-semibold border-r border-violet-700/50"
+              >
                 Criar
               </button>
-              <button className="px-2 py-1.5">
+              <button aria-label="Opções de criação" className="px-2 py-1.5">
                 <ChevronDown className="w-4 h-4" />
               </button>
             </div>
 
             <div className="h-6 w-px bg-violet-200/80 mx-1" />
 
-            <button className="flex items-center gap-2 bg-violet-50 hover:bg-violet-100 text-violet-800 px-3 py-1.5 rounded-full text-sm font-medium border border-violet-200/80 transition-colors shadow-sm">
+            <button
+              aria-label="Filtro de Pipeline"
+              className="flex items-center gap-2 bg-violet-50 hover:bg-violet-100 text-violet-800 px-3 py-1.5 rounded-full text-sm font-medium border border-violet-200/80 transition-colors shadow-sm"
+            >
               <Filter className="w-3 h-3 text-violet-600" />
               Pipeline Prospecção
               <span className="bg-rose-500 text-white rounded-full text-[10px] font-bold w-4 h-4 inline-flex items-center justify-center leading-none shadow-sm">
@@ -117,16 +150,23 @@ export default function Pipeline1() {
                 <input
                   type="text"
                   placeholder="+ pesquisa"
+                  aria-label="Buscar negócios"
                   className="bg-transparent border-none outline-none text-sm px-3 py-1.5 w-40 focus:w-64 transition-all placeholder:text-violet-400 text-violet-900 font-medium"
                 />
-                <button className="px-3 text-violet-400 hover:text-violet-700 transition-colors">
+                <button
+                  aria-label="Confirmar pesquisa"
+                  className="px-3 text-violet-400 hover:text-violet-700 transition-colors"
+                >
                   <Search className="w-4 h-4" />
                 </button>
               </div>
             </div>
           </div>
           <div className="flex items-center">
-            <button className="p-2 text-violet-500 hover:bg-violet-100 hover:text-violet-800 rounded-full transition-colors">
+            <button
+              aria-label="Configurações do Pipeline"
+              className="p-2 text-violet-500 hover:bg-violet-100 hover:text-violet-800 rounded-full transition-colors"
+            >
               <Settings className="w-5 h-5" />
             </button>
           </div>
@@ -134,16 +174,28 @@ export default function Pipeline1() {
 
         <div className="flex items-center justify-between px-4 py-2 text-sm text-violet-700/80 font-medium">
           <div className="flex items-center gap-1 bg-violet-50/80 p-1 rounded-md border border-violet-100/60">
-            <button className="px-3 py-1 bg-white shadow-sm rounded text-violet-900 font-semibold flex items-center gap-2">
+            <button
+              aria-label="Visualização Kanban"
+              className="px-3 py-1 bg-white shadow-sm rounded text-violet-900 font-semibold flex items-center gap-2"
+            >
               <LayoutGrid className="w-4 h-4" /> Kanban
             </button>
-            <button className="px-3 py-1 hover:text-violet-900 hover:bg-white/60 rounded flex items-center gap-2 transition-colors">
+            <button
+              aria-label="Visualização em Lista"
+              className="px-3 py-1 hover:text-violet-900 hover:bg-white/60 rounded flex items-center gap-2 transition-colors"
+            >
               <List className="w-4 h-4" /> Lista
             </button>
-            <button className="px-3 py-1 hover:text-violet-900 hover:bg-white/60 rounded flex items-center gap-2 transition-colors">
+            <button
+              aria-label="Visualização de Atividades"
+              className="px-3 py-1 hover:text-violet-900 hover:bg-white/60 rounded flex items-center gap-2 transition-colors"
+            >
               <CheckSquare className="w-4 h-4" /> Atividades
             </button>
-            <button className="px-3 py-1 hover:text-violet-900 hover:bg-white/60 rounded flex items-center gap-2 transition-colors">
+            <button
+              aria-label="Visualização de Calendário"
+              className="px-3 py-1 hover:text-violet-900 hover:bg-white/60 rounded flex items-center gap-2 transition-colors"
+            >
               <CalendarIcon className="w-4 h-4" /> Calendário
             </button>
           </div>
@@ -162,13 +214,19 @@ export default function Pipeline1() {
                 </span>
                 Planejado
               </span>
-              <button className="flex items-center gap-1 hover:text-violet-900 ml-2 bg-violet-50/50 px-2 py-0.5 rounded">
+              <button
+                aria-label="Mais filtros"
+                className="flex items-center gap-1 hover:text-violet-900 ml-2 bg-violet-50/50 px-2 py-0.5 rounded"
+              >
                 Mais <ChevronDown className="w-3 h-3" />
               </button>
             </div>
             <div className="h-4 w-px bg-violet-200/80"></div>
             <div className="flex items-center gap-2">
-              <button className="flex items-center gap-1.5 bg-violet-50/80 hover:bg-violet-100 border border-violet-200/80 px-3 py-1 rounded-md text-violet-800 transition-colors">
+              <button
+                aria-label="Regras de automação"
+                className="flex items-center gap-1.5 bg-violet-50/80 hover:bg-violet-100 border border-violet-200/80 px-3 py-1 rounded-md text-violet-800 transition-colors"
+              >
                 <Settings className="w-3 h-3" /> Regras de automação
               </button>
             </div>

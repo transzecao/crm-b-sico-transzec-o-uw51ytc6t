@@ -65,12 +65,14 @@ export function KanbanBoard({
     <div className="flex gap-4 overflow-x-auto h-full items-start pb-4 scrollbar-thin scrollbar-thumb-violet-300/50 scrollbar-track-transparent">
       {columns.map((stage) => {
         const stageLeads = leads.filter((l) => l.stage === stage)
-        const totalValue = stageLeads.reduce((acc, l) => acc + l.value, 0)
+        const totalValue = stageLeads.reduce((acc, l) => acc + Math.max(0, l.value), 0)
         const colors = COLUMN_COLORS[stage] || { bg: 'bg-slate-200/90', text: 'text-slate-800' }
 
         return (
           <div
             key={stage}
+            role="region"
+            aria-label={`Coluna do funil: ${stage}`}
             className="flex-shrink-0 w-[310px] flex flex-col h-full max-h-full"
             onDragOver={handleDragOver}
             onDrop={(e) => handleDrop(e, stage)}
@@ -89,12 +91,16 @@ export function KanbanBoard({
                 </span>
               </div>
               {stage === 'Primeiro contato' && (
-                <div className="w-2.5 h-2.5 rounded-sm bg-green-400 border border-green-500/50"></div>
+                <div
+                  className="w-2.5 h-2.5 rounded-sm bg-green-400 border border-green-500/50"
+                  aria-hidden="true"
+                ></div>
               )}
               {stage === 'Negociação' && (
                 <div
                   className="w-3 h-3 rounded-full bg-black/20 text-[10px] flex items-center justify-center font-bold"
                   title="Recomenda-se max 3 semanas"
+                  aria-label="Aviso: Máximo de 3 semanas"
                 >
                   <AlertCircle className="w-2.5 h-2.5 text-white" />
                 </div>
@@ -102,16 +108,27 @@ export function KanbanBoard({
             </div>
 
             <div className="flex-1 flex flex-col gap-3 bg-white/40 backdrop-blur-sm px-2.5 py-3 rounded-b-lg border-x border-b border-violet-200/60 shadow-inner overflow-hidden">
-              <div className="text-center text-[22px] font-light text-violet-950/80 my-1 font-mono tracking-tight">
+              <div
+                className="text-center text-[22px] font-light text-violet-950/80 my-1 font-mono tracking-tight"
+                aria-label={`Valor total em ${stage}`}
+              >
                 R$ {totalValue.toLocaleString('pt-BR')}
               </div>
 
               {stage === 'Primeiro contato' || stage === '1º contato sem resposta' ? (
-                <button className="text-xs font-semibold text-violet-700 bg-white/80 backdrop-blur-sm hover:bg-white py-1.5 rounded-md transition-colors flex items-center justify-center gap-1 shadow-sm border border-violet-200/60">
-                  <Plus className="w-3 h-3" /> Negócio rápido
+                <button
+                  aria-label={`Adicionar negócio rápido em ${stage}`}
+                  className="text-xs font-semibold text-violet-700 bg-white/80 backdrop-blur-sm hover:bg-white py-1.5 rounded-md transition-colors flex items-center justify-center gap-1 shadow-sm border border-violet-200/60"
+                >
+                  <Plus className="w-3 h-3" aria-hidden="true" /> Negócio rápido
                 </button>
               ) : (
-                <div className="h-7 flex items-center justify-center text-violet-400 font-bold hover:bg-violet-200/50 hover:text-violet-600 rounded-md cursor-pointer transition-colors border border-dashed border-transparent hover:border-violet-300">
+                <div
+                  aria-label={`Adicionar novo em ${stage}`}
+                  role="button"
+                  tabIndex={0}
+                  className="h-7 flex items-center justify-center text-violet-400 font-bold hover:bg-violet-200/50 hover:text-violet-600 rounded-md cursor-pointer transition-colors border border-dashed border-transparent hover:border-violet-300"
+                >
                   +
                 </div>
               )}
@@ -123,6 +140,8 @@ export function KanbanBoard({
                     <Card
                       key={lead.id}
                       draggable
+                      role="listitem"
+                      aria-label={`Negócio: ${lead.title}`}
                       onDragStart={(e) => handleDragStart(e, lead.id)}
                       className={cn(
                         'p-3 bg-white/95 backdrop-blur-sm hover:bg-white hover:shadow-violet-200/50 hover:shadow-md transition-all duration-200 cursor-grab active:cursor-grabbing border border-violet-100/80 hover:border-violet-300 rounded-lg relative group',
@@ -134,19 +153,29 @@ export function KanbanBoard({
                         <div
                           className="absolute -top-2 -right-2 bg-orange-100 text-orange-600 border border-orange-200 rounded-full p-1 shadow-sm z-20"
                           title="Muito tempo nesta etapa (Aviso)"
+                          aria-label="Aviso: Estagnado na etapa"
                         >
                           <Clock className="w-3 h-3" />
                         </div>
                       )}
 
                       <div className="absolute right-2 top-3 flex flex-col gap-2.5 text-violet-300 opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 p-1 rounded backdrop-blur-md border border-violet-50 shadow-sm z-10">
-                        <button className="hover:text-violet-600 transition-colors">
+                        <button
+                          aria-label="Ligar para o lead"
+                          className="hover:text-violet-600 transition-colors"
+                        >
                           <Phone className="w-[16px] h-[16px]" />
                         </button>
-                        <button className="hover:text-violet-600 transition-colors">
+                        <button
+                          aria-label="Enviar email para o lead"
+                          className="hover:text-violet-600 transition-colors"
+                        >
                           <Mail className="w-[16px] h-[16px]" />
                         </button>
-                        <button className="hover:text-violet-600 transition-colors">
+                        <button
+                          aria-label="Enviar mensagem no chat"
+                          className="hover:text-violet-600 transition-colors"
+                        >
                           <MessageSquare className="w-[16px] h-[16px]" />
                         </button>
                       </div>
@@ -191,7 +220,7 @@ export function KanbanBoard({
                             </span>
                             <div className="flex items-center gap-1.5">
                               <Avatar className="w-5 h-5 border border-violet-200 shadow-sm">
-                                <AvatarImage src={lead.ownerAvatar} />
+                                <AvatarImage src={lead.ownerAvatar} alt={lead.owner} />
                                 <AvatarFallback className="text-[10px] bg-violet-700 text-white font-bold">
                                   {lead.owner.charAt(0)}
                                 </AvatarFallback>
@@ -221,12 +250,14 @@ export function KanbanBoard({
                           <div className="pt-3 mt-3 border-t border-violet-100/60 grid grid-cols-2 gap-1.5">
                             <button
                               onClick={() => onReactivate(lead.id, 'Qualificação')}
+                              aria-label="Reativar para Qualificação"
                               className="text-blue-600 bg-blue-50 hover:bg-blue-100 py-1.5 rounded flex items-center justify-center gap-1 text-[10px] font-bold transition-colors border border-blue-100 shadow-sm"
                             >
                               <RefreshCw className="w-3 h-3" /> Qualif.
                             </button>
                             <button
                               onClick={() => onReactivate(lead.id, 'Negociação')}
+                              aria-label="Reativar para Negociação"
                               className="text-emerald-600 bg-emerald-50 hover:bg-emerald-100 py-1.5 rounded flex items-center justify-center gap-1 text-[10px] font-bold transition-colors border border-emerald-100 shadow-sm"
                               title="Inbound - Pedido de Preço"
                             >
@@ -235,7 +266,10 @@ export function KanbanBoard({
                           </div>
                         ) : (
                           <div className="pt-3 mt-3 border-t border-violet-100/60">
-                            <button className="text-violet-600 bg-violet-50 hover:bg-violet-100 px-2 py-1 rounded flex items-center gap-1 text-[11px] font-bold transition-colors w-full justify-center border border-violet-100 shadow-sm">
+                            <button
+                              aria-label="Adicionar atividade ao lead"
+                              className="text-violet-600 bg-violet-50 hover:bg-violet-100 px-2 py-1 rounded flex items-center gap-1 text-[11px] font-bold transition-colors w-full justify-center border border-violet-100 shadow-sm"
+                            >
                               <Plus className="w-3 h-3" /> Adicionar Atividade
                             </button>
                           </div>

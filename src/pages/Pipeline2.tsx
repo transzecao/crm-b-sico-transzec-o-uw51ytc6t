@@ -18,20 +18,48 @@ export default function Pipeline2() {
   const nutritionLeads = state.leads.filter((l) => l.pipeline === 'Nutrition')
 
   const handleMove = (id: string, stage: string) => {
-    updateState({ leads: state.leads.map((l) => (l.id === id ? { ...l, stage } : l)) })
-    toast({ title: `Movido para ${stage}` })
+    if (!COLUMNS.includes(stage)) {
+      toast({
+        variant: 'destructive',
+        title: 'Erro de Validação',
+        description: 'Etapa de nutrição inválida.',
+      })
+      return
+    }
+    try {
+      updateState({ leads: state.leads.map((l) => (l.id === id ? { ...l, stage } : l)) })
+      toast({ title: `Movido para ${stage}` })
+    } catch (e) {
+      toast({
+        variant: 'destructive',
+        title: 'Erro',
+        description: 'Não foi possível mover o negócio.',
+      })
+    }
   }
 
   const handleReactivate = (id: string, stage: 'Negociação' | 'Qualificação') => {
-    updateState({
-      leads: state.leads.map((l) =>
-        l.id === id ? { ...l, pipeline: 'Prospection', stage, score: 'Hot' } : l,
-      ),
-    })
-    toast({
-      title: `Lead reativado para ${stage} em Prospecção!`,
-      description: 'Score atualizado para Quente.',
-    })
+    if (!['Negociação', 'Qualificação'].includes(stage)) {
+      toast({ variant: 'destructive', title: 'Erro', description: 'Etapa de prospecção inválida.' })
+      return
+    }
+    try {
+      updateState({
+        leads: state.leads.map((l) =>
+          l.id === id ? { ...l, pipeline: 'Prospection', stage, score: 'Hot' } : l,
+        ),
+      })
+      toast({
+        title: `Lead reativado para ${stage} em Prospecção!`,
+        description: 'Score atualizado para Quente.',
+      })
+    } catch (e) {
+      toast({
+        variant: 'destructive',
+        title: 'Erro',
+        description: 'Não foi possível reativar o negócio.',
+      })
+    }
   }
 
   const handleDistribute = () => {
@@ -48,12 +76,18 @@ export default function Pipeline2() {
         <div className="flex justify-between items-start">
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-amber-950 flex items-center gap-2">
-              <div className="bg-amber-100/80 p-1.5 rounded-lg border border-amber-200/60">
+              <div
+                className="bg-amber-100/80 p-1.5 rounded-lg border border-amber-200/60"
+                aria-hidden="true"
+              >
                 <Sprout className="w-5 h-5 text-amber-600" />
               </div>
               Pipeline de Nutrição
             </h1>
-            <p className="text-amber-700/80 font-medium mt-1 text-sm">
+            <p
+              className="text-amber-700/80 font-medium mt-1 text-sm"
+              aria-describedby="Descrição do pipeline de nutrição"
+            >
               Reaquecimento de leads parados, sem resposta ou perdidos por timing. Utilize os botões
               para reativar para prospecção.
             </p>
@@ -61,6 +95,7 @@ export default function Pipeline2() {
           {['Master', 'Marketing', 'Supervisor'].includes(state.role) && (
             <Button
               onClick={handleDistribute}
+              aria-label="Distribuir conteúdo em lote"
               className="bg-amber-600 hover:bg-amber-700 text-white shadow-sm transition-all"
             >
               <Mail className="w-4 h-4 mr-2" /> Distribuir Conteúdo (Lote)

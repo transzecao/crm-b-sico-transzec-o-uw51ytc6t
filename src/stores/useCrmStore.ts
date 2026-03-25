@@ -223,8 +223,13 @@ export default function useCrmStore() {
   }, [])
 
   const updateState = (newState: Partial<CrmState>) => {
-    globalState = { ...globalState, ...newState }
-    listeners.forEach((listener) => listener(globalState))
+    try {
+      if (!newState) return
+      globalState = { ...globalState, ...newState }
+      listeners.forEach((listener) => listener(globalState))
+    } catch (error) {
+      console.error('Integrity failure during CRM state update:', error)
+    }
   }
 
   return { state, updateState }
