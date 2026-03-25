@@ -38,7 +38,7 @@ export function KanbanBoard({
             }}
             onDrop={(e) => {
               e.preventDefault()
-              draggedLead && onMove(draggedLead, stage)
+              if (draggedLead) onMove(draggedLead, stage)
               setDraggedLead(null)
             }}
           >
