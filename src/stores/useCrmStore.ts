@@ -23,12 +23,13 @@ export type Lead = {
   createdAt: string
   lastInteraction?: string
   score?: 'Hot' | 'Warm' | 'Cold'
+  isStalled?: boolean // For negotiation warning
 }
 
 export type Company = {
   id: string
   cnpj: string
-  razaoSocial: string
+  razaoSocial?: string
   nomeFantasia: string
   tipoCarga?: string
   endereco: string
@@ -39,6 +40,7 @@ export type Company = {
   origin?: string
   segmento?: string
   clusters?: string[]
+  observacoes?: string
   customData?: Record<string, any>
 }
 
@@ -138,6 +140,21 @@ const mockLeads: Lead[] = [
     updatedAt: '20/03/2026 09:15:00',
     createdAt: '15 de janeiro de 2026',
     score: 'Warm',
+  },
+  {
+    id: '3',
+    companyId: '1',
+    title: 'Projeto Especial Metalúrgica',
+    pipeline: 'Prospection',
+    stage: 'Negociação',
+    value: 85000,
+    owner: 'Bruna Araujo',
+    ownerAvatar: 'https://img.usecurling.com/ppl/thumbnail?gender=female&seed=1',
+    updatedBy: 'Bruna Araujo',
+    updatedAt: '01/03/2026 10:00:00',
+    createdAt: '01 de março de 2026',
+    score: 'Hot',
+    isStalled: true, // Em Negociação há muito tempo
   },
 ]
 

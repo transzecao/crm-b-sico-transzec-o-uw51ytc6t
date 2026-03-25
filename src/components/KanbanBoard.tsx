@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Card } from '@/components/ui/card'
 import { Lead, Company } from '@/stores/useCrmStore'
-import { Phone, Mail, MessageSquare, Plus, RefreshCw, AlertCircle } from 'lucide-react'
+import { Phone, Mail, MessageSquare, Plus, RefreshCw, AlertCircle, Clock } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
@@ -117,8 +117,21 @@ export function KanbanBoard({
                       key={lead.id}
                       draggable
                       onDragStart={(e) => handleDragStart(e, lead.id)}
-                      className="p-3 bg-white/95 backdrop-blur-sm hover:bg-white hover:shadow-violet-200/50 hover:shadow-md transition-all duration-200 cursor-grab active:cursor-grabbing border border-violet-100/80 hover:border-violet-300 rounded-lg relative group"
+                      className={cn(
+                        'p-3 bg-white/95 backdrop-blur-sm hover:bg-white hover:shadow-violet-200/50 hover:shadow-md transition-all duration-200 cursor-grab active:cursor-grabbing border border-violet-100/80 hover:border-violet-300 rounded-lg relative group',
+                        lead.isStalled &&
+                          'border-orange-300 shadow-[0_0_10px_-2px_rgba(251,146,60,0.4)]',
+                      )}
                     >
+                      {lead.isStalled && (
+                        <div
+                          className="absolute -top-2 -right-2 bg-orange-100 text-orange-600 border border-orange-200 rounded-full p-1 shadow-sm z-20"
+                          title="Muito tempo nesta etapa (Aviso)"
+                        >
+                          <Clock className="w-3 h-3" />
+                        </div>
+                      )}
+
                       <div className="absolute right-2 top-3 flex flex-col gap-2.5 text-violet-300 opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 p-1 rounded backdrop-blur-md border border-violet-50 shadow-sm z-10">
                         <button className="hover:text-violet-600 transition-colors">
                           <Phone className="w-[16px] h-[16px]" />
@@ -186,7 +199,7 @@ export function KanbanBoard({
                                 Empresa
                               </span>
                               <span className="font-medium text-violet-800/80 line-clamp-1 leading-tight">
-                                {company.razaoSocial}
+                                {company.nomeFantasia || company.razaoSocial}
                               </span>
                               {company.clusters && company.clusters.length > 0 && (
                                 <span className="text-[9px] text-violet-500 mt-1 block">

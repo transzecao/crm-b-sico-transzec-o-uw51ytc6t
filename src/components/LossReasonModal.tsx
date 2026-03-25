@@ -18,17 +18,8 @@ import {
 import { Textarea } from '@/components/ui/textarea'
 import { AlertOctagon } from 'lucide-react'
 
-const reasons = [
-  'FIT',
-  'Preço',
-  'Prazo',
-  'Cobertura',
-  'SLA',
-  'Rastreamento',
-  'Avarias',
-  'Atrasos',
-  'Outro',
-]
+// Updated strictly based on AC: FIT, Price, Deadline, Coverage, SLA/Tracking/Damage/Delays, Other
+const reasons = ['FIT', 'Preço', 'Prazo', 'Cobertura', 'SLA/Rastreamento/Avarias/Atrasos', 'Outro']
 
 export function LossReasonModal({
   open,
@@ -71,13 +62,15 @@ export function LossReasonModal({
               </SelectContent>
             </Select>
           </div>
-          {reason === 'Outro' && (
+          {reason && (
             <div className="space-y-2 animate-fade-in-up">
-              <Label className="text-rose-900 font-semibold">Detalhes adicionais</Label>
+              <Label className="text-rose-900 font-semibold">
+                Detalhes (Obrigatório para entender a perda)
+              </Label>
               <Textarea
                 value={details}
                 onChange={(e) => setDetails(e.target.value)}
-                placeholder="Especifique o motivo detalhadamente..."
+                placeholder="Especifique o contexto da perda..."
                 className="bg-white/80 border-rose-200 focus-visible:ring-rose-500/50 min-h-[100px]"
               />
             </div>
