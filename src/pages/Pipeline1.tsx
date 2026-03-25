@@ -91,6 +91,7 @@ export default function Pipeline1() {
 
       // Automation Rule: Move to Loss (Perda) on 3rd unanswered contact
       if (stage === '3º contato sem resposta') {
+        updateState({ leads: state.leads.map((l) => (l.id === id ? { ...l, stage } : l)) })
         toast({
           title: 'Automação Disparada',
           description: 'Lead atingiu 3 contatos sem resposta. Movendo para Perda automaticamente.',
@@ -103,7 +104,11 @@ export default function Pipeline1() {
 
       updateState({ leads: state.leads.map((l) => (l.id === id ? { ...l, stage } : l)) })
     } catch (error) {
-      updateState({ leads: previousState }) // Rollback
+      try {
+        updateState({ leads: previousState }) // Rollback
+      } catch (rollbackError) {
+        console.error('Falha de integridade no rollback:', rollbackError)
+      }
       toast({
         variant: 'destructive',
         title: 'Erro de Movimentação',
@@ -128,7 +133,11 @@ export default function Pipeline1() {
         variant: 'destructive',
       })
     } catch (error) {
-      updateState({ leads: previousState })
+      try {
+        updateState({ leads: previousState })
+      } catch (rollbackError) {
+        console.error('Rollback falhou', rollbackError)
+      }
       toast({
         variant: 'destructive',
         title: 'Erro de Sistema',
@@ -167,7 +176,11 @@ export default function Pipeline1() {
       updateState({ leads: [...state.leads, newLead] })
       toast({ title: 'Negócio adicionado com sucesso!' })
     } catch (err) {
-      updateState({ leads: previousState })
+      try {
+        updateState({ leads: previousState })
+      } catch (rollbackError) {
+        console.error('Rollback falhou', rollbackError)
+      }
       toast({
         variant: 'destructive',
         title: 'Erro ao adicionar',

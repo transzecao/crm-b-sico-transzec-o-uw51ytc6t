@@ -150,13 +150,13 @@ export default function EmpresaForm() {
         toast({ title: 'Empresa cadastrada com sucesso!' })
         navigate(`/empresa/${companyId}/editar`, { replace: true })
       }
-    } catch (error) {
+    } catch (err) {
       toast({
         variant: 'destructive',
         title: 'Erro de Sistema',
         description:
-          error instanceof Error
-            ? error.message
+          err instanceof Error
+            ? err.message
             : 'Não foi possível salvar a ficha da empresa com integridade.',
       })
     }
@@ -300,9 +300,28 @@ export default function EmpresaForm() {
                     <Input
                       id="cnpj"
                       value={formData.cnpj || ''}
-                      onChange={(e) =>
-                        setFormData({ ...formData, cnpj: formatCnpj(e.target.value) })
-                      }
+                      onChange={(e) => {
+                        const formatted = formatCnpj(e.target.value)
+                        setFormData({ ...formData, cnpj: formatted })
+
+                        const rawCnpj = formatted.replace(/\D/g, '')
+                        if (error.cnpj && rawCnpj.length === 14) {
+                          setError((prev) => ({ ...prev, cnpj: '' }))
+                        }
+                      }}
+                      onBlur={() => {
+                        if (!formData.cnpj) {
+                          setError((prev) => ({ ...prev, cnpj: '' }))
+                          return
+                        }
+                        const rawCnpj = formData.cnpj.replace(/\D/g, '')
+                        if (rawCnpj.length !== 14) {
+                          setError((prev) => ({
+                            ...prev,
+                            cnpj: 'CNPJ inválido. Exatamente 14 números são requeridos sem letras.',
+                          }))
+                        }
+                      }}
                       maxLength={18}
                       aria-required={isMandatory('cnpj')}
                       aria-invalid={!!error.cnpj}

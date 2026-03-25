@@ -47,7 +47,11 @@ export default function Pipeline2() {
       updateState({ leads: state.leads.map((l) => (l.id === id ? { ...l, stage } : l)) })
       toast({ title: `Movido para ${stage}` })
     } catch (error) {
-      updateState({ leads: prevState })
+      try {
+        updateState({ leads: prevState })
+      } catch (rollbackError) {
+        console.error('Falha de integridade no rollback:', rollbackError)
+      }
       toast({
         variant: 'destructive',
         title: 'Erro de Movimentação',
@@ -79,7 +83,11 @@ export default function Pipeline2() {
         description: 'Atividade Inbound detectada. Score atualizado para Quente na Prospecção.',
       })
     } catch (error) {
-      updateState({ leads: prevState })
+      try {
+        updateState({ leads: prevState })
+      } catch (rollbackError) {
+        console.error('Falha de integridade no rollback:', rollbackError)
+      }
       toast({
         variant: 'destructive',
         title: 'Erro do Sistema',
