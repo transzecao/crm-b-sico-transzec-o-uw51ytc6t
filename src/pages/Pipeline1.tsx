@@ -1,8 +1,9 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { useLocation } from 'react-router-dom'
 import { KanbanBoard } from '@/components/KanbanBoard'
-import useCrmStore from '@/stores/useCrmStore'
+import useCrmStore, { Lead } from '@/stores/useCrmStore'
 import { LossReasonModal } from '@/components/LossReasonModal'
+import { QuickLeadModal } from '@/components/QuickLeadModal'
 import { useToast } from '@/hooks/use-toast'
 import {
   Pin,
@@ -33,8 +34,11 @@ export default function Pipeline1() {
   const { state, updateState } = useCrmStore()
   const { toast } = useToast()
   const location = useLocation()
+  const hasAlerted = useRef(false)
 
   const [lossModalOpen, setLossModalOpen] = useState(false)
+  const [quickAddOpen, setQuickAddOpen] = useState(false)
+  const [quickAddStage, setQuickAddStage] = useState('')
   const [pendingMove, setPendingMove] = useState<{ id: string; stage: string } | null>(null)
 
   const prospectionLeads = useMemo(
@@ -44,17 +48,20 @@ export default function Pipeline1() {
 
   useEffect(() => {
     // Route-based tracking for optimized pipeline refresh and telemetry
-    const isPipelineView = location.pathname.includes('/pipeline/1')
-    if (isPipelineView && state.leads.length === 0) {
-      toast({
-        title: 'Nenhum negócio encontrado',
-        description: 'O funil de prospecção está vazio no momento.',
-        variant: 'default',
-      })
+    if (location.pathname.includes('/pipeline/1')) {
+      if (state.leads.length === 0 && !hasAlerted.current) {
+        hasAlerted.current = true
+        toast({
+          title: 'Nenhum negócio encontrado',
+          description: 'O funil de prospecção está vazio no momento.',
+          variant: 'default',
+        })
+      }
     }
   }, [location.pathname, state.leads.length, toast])
 
   const handleMove = (id: string, stage: string) => {
+    const previousState = [...state.leads]
     try {
       if (!VALID_STAGES.includes(stage)) {
         throw new Error(`Etapa de destino inválida: ${stage}`)
@@ -96,16 +103,19 @@ export default function Pipeline1() {
 
       updateState({ leads: state.leads.map((l) => (l.id === id ? { ...l, stage } : l)) })
     } catch (error) {
+      updateState({ leads: previousState }) // Rollback
       toast({
         variant: 'destructive',
-        title: 'Erro de Validação',
-        description: error instanceof Error ? error.message : 'Falha ao processar movimento.',
+        title: 'Erro de Movimentação',
+        description:
+          error instanceof Error ? error.message : 'Falha ao processar movimento. Card revertido.',
       })
     }
   }
 
   const confirmLoss = (reason: string, details?: string) => {
     if (!pendingMove) return
+    const previousState = [...state.leads]
     try {
       updateState({
         leads: state.leads.map((l) =>
@@ -118,6 +128,7 @@ export default function Pipeline1() {
         variant: 'destructive',
       })
     } catch (error) {
+      updateState({ leads: previousState })
       toast({
         variant: 'destructive',
         title: 'Erro de Sistema',
@@ -127,6 +138,43 @@ export default function Pipeline1() {
     } finally {
       setLossModalOpen(false)
       setPendingMove(null)
+    }
+  }
+
+  const handleQuickAdd = (stage: string) => {
+    setQuickAddStage(stage)
+    setQuickAddOpen(true)
+  }
+
+  const confirmQuickAdd = (title: string, value: number) => {
+    const previousState = [...state.leads]
+    const newLead: Lead = {
+      id: Math.random().toString(36).substr(2, 9),
+      companyId: state.companies[0]?.id || '1',
+      title,
+      value,
+      pipeline: 'Prospection',
+      stage: quickAddStage,
+      owner: state.currentUser.name,
+      ownerAvatar: state.currentUser.avatar,
+      updatedBy: state.currentUser.name,
+      updatedAt: new Date().toLocaleString('pt-BR'),
+      createdAt: new Date().toLocaleDateString('pt-BR'),
+      score: 'Warm',
+    }
+
+    try {
+      updateState({ leads: [...state.leads, newLead] })
+      toast({ title: 'Negócio adicionado com sucesso!' })
+    } catch (err) {
+      updateState({ leads: previousState })
+      toast({
+        variant: 'destructive',
+        title: 'Erro ao adicionar',
+        description: 'Não foi possível salvar o negócio devido a erro de integridade.',
+      })
+    } finally {
+      setQuickAddOpen(false)
     }
   }
 
@@ -264,6 +312,7 @@ export default function Pipeline1() {
             leads={prospectionLeads}
             companies={state.companies}
             onMove={handleMove}
+            onQuickAdd={handleQuickAdd}
           />
         </div>
       </div>
@@ -275,6 +324,12 @@ export default function Pipeline1() {
           setLossModalOpen(false)
           setPendingMove(null)
         }}
+      />
+      <QuickLeadModal
+        open={quickAddOpen}
+        stage={quickAddStage}
+        onConfirm={confirmQuickAdd}
+        onCancel={() => setQuickAddOpen(false)}
       />
     </div>
   )

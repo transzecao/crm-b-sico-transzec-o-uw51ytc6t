@@ -1,4 +1,4 @@
-import { useMemo, useEffect } from 'react'
+import { useMemo, useEffect, useRef } from 'react'
 import { useLocation } from 'react-router-dom'
 import { KanbanBoard } from '@/components/KanbanBoard'
 import useCrmStore from '@/stores/useCrmStore'
@@ -17,6 +17,7 @@ export default function Pipeline2() {
   const { state, updateState } = useCrmStore()
   const { toast } = useToast()
   const location = useLocation()
+  const hasLogged = useRef(false)
 
   const nutritionLeads = useMemo(
     () => state.leads.filter((l) => l.pipeline === 'Nutrition'),
@@ -25,13 +26,16 @@ export default function Pipeline2() {
 
   useEffect(() => {
     // Route-based tracking to avoid stale states
-    const isNutritionView = location.pathname.includes('/pipeline/2')
-    if (isNutritionView) {
-      console.debug('Pipeline Nutrição acessado. Preparando dados de reaquecimento.')
+    if (location.pathname.includes('/pipeline/2')) {
+      if (!hasLogged.current) {
+        hasLogged.current = true
+        console.debug('Pipeline Nutrição acessado. Preparando dados de reaquecimento.')
+      }
     }
   }, [location.pathname])
 
   const handleMove = (id: string, stage: string) => {
+    const prevState = [...state.leads]
     try {
       if (!COLUMNS.includes(stage)) {
         throw new Error(`Etapa de nutrição inválida: ${stage}`)
@@ -43,18 +47,20 @@ export default function Pipeline2() {
       updateState({ leads: state.leads.map((l) => (l.id === id ? { ...l, stage } : l)) })
       toast({ title: `Movido para ${stage}` })
     } catch (error) {
+      updateState({ leads: prevState })
       toast({
         variant: 'destructive',
         title: 'Erro de Movimentação',
         description:
           error instanceof Error
             ? error.message
-            : 'Não foi possível mover o negócio devido a erro interno.',
+            : 'Não foi possível mover o negócio. Estado revertido.',
       })
     }
   }
 
   const handleReactivate = (id: string, stage: 'Negociação' | 'Qualificação') => {
+    const prevState = [...state.leads]
     try {
       if (!['Negociação', 'Qualificação'].includes(stage)) {
         throw new Error(`Etapa de prospecção de destino inválida: ${stage}`)
@@ -73,6 +79,7 @@ export default function Pipeline2() {
         description: 'Atividade Inbound detectada. Score atualizado para Quente na Prospecção.',
       })
     } catch (error) {
+      updateState({ leads: prevState })
       toast({
         variant: 'destructive',
         title: 'Erro do Sistema',

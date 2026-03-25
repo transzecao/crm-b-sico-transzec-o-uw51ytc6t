@@ -34,12 +34,14 @@ export function KanbanBoard({
   companies,
   onMove,
   onReactivate,
+  onQuickAdd,
 }: {
   columns: string[]
   leads: Lead[]
   companies?: Company[]
   onMove: (leadId: string, toStage: string) => void
   onReactivate?: (leadId: string, toStage: 'Negociação' | 'Qualificação') => void
+  onQuickAdd?: (stage: string) => void
 }) {
   const [draggedLead, setDraggedLead] = useState<string | null>(null)
 
@@ -120,6 +122,7 @@ export function KanbanBoard({
 
               {stage === 'Primeiro contato' || stage === '1º contato sem resposta' ? (
                 <button
+                  onClick={() => onQuickAdd?.(stage)}
                   aria-label={`Adicionar negócio rápido na etapa ${stage}`}
                   className="text-xs font-semibold text-violet-700 bg-white/80 backdrop-blur-sm hover:bg-white py-1.5 rounded-md transition-colors flex items-center justify-center gap-1 shadow-sm border border-violet-200/60"
                 >
