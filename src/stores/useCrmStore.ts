@@ -224,11 +224,14 @@ export default function useCrmStore() {
 
   const updateState = (newState: Partial<CrmState>) => {
     try {
-      if (!newState) return
+      if (!newState || typeof newState !== 'object') {
+        throw new Error('Payload de atualização de estado inválido.')
+      }
       globalState = { ...globalState, ...newState }
       listeners.forEach((listener) => listener(globalState))
     } catch (error) {
-      console.error('Integrity failure during CRM state update:', error)
+      console.error('Falha de integridade durante atualização do CRM:', error)
+      throw error // Permite que os componentes capturem e exibam erros
     }
   }
 

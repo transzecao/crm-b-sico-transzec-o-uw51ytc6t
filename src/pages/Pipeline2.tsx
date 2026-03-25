@@ -1,4 +1,5 @@
-import { useMemo } from 'react'
+import { useMemo, useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
 import { KanbanBoard } from '@/components/KanbanBoard'
 import useCrmStore from '@/stores/useCrmStore'
 import { useToast } from '@/hooks/use-toast'
@@ -15,24 +16,40 @@ const COLUMNS = [
 export default function Pipeline2() {
   const { state, updateState } = useCrmStore()
   const { toast } = useToast()
+  const location = useLocation()
 
   const nutritionLeads = useMemo(
     () => state.leads.filter((l) => l.pipeline === 'Nutrition'),
     [state.leads],
   )
 
+  useEffect(() => {
+    // Route-based tracking to avoid stale states
+    const isNutritionView = location.pathname.includes('/pipeline/2')
+    if (isNutritionView) {
+      console.debug('Pipeline Nutrição acessado. Preparando dados de reaquecimento.')
+    }
+  }, [location.pathname])
+
   const handleMove = (id: string, stage: string) => {
     try {
       if (!COLUMNS.includes(stage)) {
         throw new Error(`Etapa de nutrição inválida: ${stage}`)
       }
+
+      const lead = state.leads.find((l) => l.id === id)
+      if (!lead) throw new Error('Negócio não encontrado na base de dados.')
+
       updateState({ leads: state.leads.map((l) => (l.id === id ? { ...l, stage } : l)) })
       toast({ title: `Movido para ${stage}` })
     } catch (error) {
       toast({
         variant: 'destructive',
-        title: 'Erro de Validação',
-        description: error instanceof Error ? error.message : 'Não foi possível mover o negócio.',
+        title: 'Erro de Movimentação',
+        description:
+          error instanceof Error
+            ? error.message
+            : 'Não foi possível mover o negócio devido a erro interno.',
       })
     }
   }
@@ -40,8 +57,12 @@ export default function Pipeline2() {
   const handleReactivate = (id: string, stage: 'Negociação' | 'Qualificação') => {
     try {
       if (!['Negociação', 'Qualificação'].includes(stage)) {
-        throw new Error(`Etapa de prospecção inválida: ${stage}`)
+        throw new Error(`Etapa de prospecção de destino inválida: ${stage}`)
       }
+
+      const lead = state.leads.find((l) => l.id === id)
+      if (!lead) throw new Error('Negócio não encontrado para reativação.')
+
       updateState({
         leads: state.leads.map((l) =>
           l.id === id ? { ...l, pipeline: 'Prospection', stage, score: 'Hot' } : l,
@@ -56,7 +77,7 @@ export default function Pipeline2() {
         variant: 'destructive',
         title: 'Erro do Sistema',
         description:
-          error instanceof Error ? error.message : 'Não foi possível reativar o negócio.',
+          error instanceof Error ? error.message : 'Falha grave ao tentar reativar o negócio.',
       })
     }
   }

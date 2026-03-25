@@ -109,7 +109,7 @@ export default function EmpresaForm() {
 
     const rawCnpj = formData.cnpj?.replace(/\D/g, '') || ''
     if (formData.cnpj && rawCnpj.length !== 14) {
-      newError.cnpj = 'CNPJ inválido. Exatamente 14 números são requeridos.'
+      newError.cnpj = 'CNPJ inválido. Exatamente 14 números são requeridos sem letras.'
       hasError = true
     }
 
@@ -154,7 +154,10 @@ export default function EmpresaForm() {
       toast({
         variant: 'destructive',
         title: 'Erro de Sistema',
-        description: 'Não foi possível salvar a ficha da empresa com integridade.',
+        description:
+          error instanceof Error
+            ? error.message
+            : 'Não foi possível salvar a ficha da empresa com integridade.',
       })
     }
   }
@@ -306,15 +309,16 @@ export default function EmpresaForm() {
                       aria-describedby={error.cnpj ? 'cnpj-error' : undefined}
                       className={cn(
                         'bg-white font-mono border-slate-200 focus-visible:ring-blue-500/50',
-                        error.cnpj && 'border-red-500',
+                        error.cnpj && 'border-red-500 focus-visible:ring-red-500',
                       )}
                       placeholder="00.000.000/0000-00"
                     />
                     {error.cnpj && (
                       <span
                         id="cnpj-error"
-                        className="text-[10px] text-red-500 font-medium"
+                        className="text-[11px] text-red-500 font-bold block mt-1"
                         role="alert"
+                        aria-live="polite"
                       >
                         {error.cnpj}
                       </span>

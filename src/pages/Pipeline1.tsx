@@ -1,4 +1,5 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
 import { KanbanBoard } from '@/components/KanbanBoard'
 import useCrmStore from '@/stores/useCrmStore'
 import { LossReasonModal } from '@/components/LossReasonModal'
@@ -31,6 +32,7 @@ const VALID_STAGES = [...COLUMNS, 'Perda']
 export default function Pipeline1() {
   const { state, updateState } = useCrmStore()
   const { toast } = useToast()
+  const location = useLocation()
 
   const [lossModalOpen, setLossModalOpen] = useState(false)
   const [pendingMove, setPendingMove] = useState<{ id: string; stage: string } | null>(null)
@@ -40,10 +42,27 @@ export default function Pipeline1() {
     [state.leads],
   )
 
+  useEffect(() => {
+    // Route-based tracking for optimized pipeline refresh and telemetry
+    const isPipelineView = location.pathname.includes('/pipeline/1')
+    if (isPipelineView && state.leads.length === 0) {
+      toast({
+        title: 'Nenhum negócio encontrado',
+        description: 'O funil de prospecção está vazio no momento.',
+        variant: 'default',
+      })
+    }
+  }, [location.pathname, state.leads.length, toast])
+
   const handleMove = (id: string, stage: string) => {
     try {
       if (!VALID_STAGES.includes(stage)) {
         throw new Error(`Etapa de destino inválida: ${stage}`)
+      }
+
+      const lead = state.leads.find((l) => l.id === id)
+      if (!lead) {
+        throw new Error('Negócio não encontrado na base de dados.')
       }
 
       if (stage === 'Perda') {
@@ -102,7 +121,8 @@ export default function Pipeline1() {
       toast({
         variant: 'destructive',
         title: 'Erro de Sistema',
-        description: 'Não foi possível registrar a perda de forma segura.',
+        description:
+          'Não foi possível registrar a perda de forma segura devido a um erro de integridade.',
       })
     } finally {
       setLossModalOpen(false)
