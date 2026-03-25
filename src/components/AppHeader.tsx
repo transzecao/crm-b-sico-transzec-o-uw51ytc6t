@@ -29,10 +29,11 @@ export function AppHeader() {
             to="/"
             className="flex items-center gap-2 hover:opacity-90 transition-opacity whitespace-nowrap"
           >
+            <span className="text-lg font-black tracking-tight text-white">Transzecão</span>
             <img
               src="https://storage.googleapis.com/skip-public-assets/public/7d501963-a24b-45d1-9072-0521cd179a05/1e6d4432-6a68-45af-bad2-e427cf6c9860/image.png"
-              alt="Transzecão Logo"
-              className="h-8 bg-white/95 p-1 rounded-sm object-contain shadow-sm"
+              alt="Transzecão Icon"
+              className="h-6 w-6 bg-white/95 p-1 rounded-sm object-contain shadow-sm"
             />
           </Link>
           <span className="hidden lg:inline-block text-white/60 text-sm font-medium ml-2 border-l border-white/20 pl-4">
