@@ -1,5 +1,5 @@
 export const formatCnpj = (value: string) => {
-  const digits = value.replace(/\D/g, '').slice(0, 14) // Enforce exactly 14 digits max and no letters
+  const digits = value.replace(/\D/g, '').slice(0, 14) // Strict 14 digits format
   let formatted = digits
   if (digits.length > 2) formatted = `${digits.slice(0, 2)}.${digits.slice(2)}`
   if (digits.length > 5) formatted = `${formatted.slice(0, 6)}.${digits.slice(5)}`

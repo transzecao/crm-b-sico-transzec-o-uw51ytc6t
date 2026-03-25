@@ -1,7 +1,8 @@
-import { Search, Globe, Bell, Settings } from 'lucide-react'
+import { Search, Globe, Bell, Settings, Plus, BarChart3 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { SidebarTrigger } from '@/components/ui/sidebar'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Button } from '@/components/ui/button'
 import {
   Select,
   SelectContent,
@@ -23,29 +24,44 @@ export function AppHeader() {
       <div className="flex items-center gap-4 sm:gap-6">
         <SidebarTrigger className="text-slate-300 hover:bg-slate-800 hover:text-white transition-colors" />
 
-        <Link
-          to="/"
-          className="font-bold text-lg tracking-wider flex items-center gap-2 text-white hover:text-slate-200 transition-colors whitespace-nowrap"
-        >
-          <div className="bg-indigo-500/20 p-1.5 rounded-md">
-            <Globe className="w-4 h-4 text-indigo-400" />
-          </div>
-          <span className="hidden sm:inline-block">TRANSZECÃO</span>
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            to="/"
+            className="font-bold text-lg tracking-wider flex items-center gap-2 text-white hover:text-slate-200 transition-colors whitespace-nowrap"
+          >
+            <div className="bg-indigo-500/20 p-1.5 rounded-md">
+              <Globe className="w-4 h-4 text-indigo-400" />
+            </div>
+            <span className="hidden sm:inline-block">TRANSZECÃO</span>
+          </Link>
+          <span className="hidden lg:inline-block text-slate-400 text-sm font-medium ml-2 border-l border-slate-700 pl-4">
+            CRM - Pipeline de Prospecção
+          </span>
+        </div>
 
-        <nav className="hidden lg:flex items-center gap-1 text-sm font-medium ml-4">
-          <Link
-            to="/pipeline/1"
-            className="px-3 py-1.5 text-slate-300 hover:text-white hover:bg-slate-800 rounded-md transition-colors"
+        <nav className="hidden lg:flex items-center gap-2 ml-2">
+          <Button
+            variant="secondary"
+            size="sm"
+            asChild
+            className="bg-indigo-600 hover:bg-indigo-700 text-white border-none h-8 px-3"
           >
-            Negócios
-          </Link>
-          <Link
-            to="/empresas"
-            className="px-3 py-1.5 text-slate-300 hover:text-white hover:bg-slate-800 rounded-md transition-colors"
+            <Link to="/empresa/nova">
+              <Plus className="w-3.5 h-3.5 mr-1" />
+              Criar Lead
+            </Link>
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            asChild
+            className="text-slate-300 border-slate-700 hover:bg-slate-800 hover:text-white h-8 px-3"
           >
-            Empresas
-          </Link>
+            <Link to="/analytics">
+              <BarChart3 className="w-3.5 h-3.5 mr-1" />
+              Relatórios
+            </Link>
+          </Button>
         </nav>
       </div>
 

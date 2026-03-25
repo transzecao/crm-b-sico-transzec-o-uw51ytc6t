@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Textarea } from '@/components/ui/textarea'
+import { Button } from '@/components/ui/button'
 import {
   BrainCircuit,
   CheckCircle,
@@ -12,13 +14,20 @@ import {
   FileText,
   ShieldAlert,
   ArrowRightLeft,
+  Edit2,
+  Save,
 } from 'lucide-react'
 import { Interaction } from '@/stores/useCrmStore'
+import useCrmStore from '@/stores/useCrmStore'
 import { useToast } from '@/hooks/use-toast'
 
 export function BrainAnalysis({ interactions }: { interactions: Interaction[] }) {
-  const [loading, setLoading] = useState(true)
+  const { state } = useCrmStore()
   const { toast } = useToast()
+  const [loading, setLoading] = useState(true)
+  const [isEditing, setIsEditing] = useState(false)
+
+  const canEdit = ['Master', 'Supervisor'].includes(state.role)
 
   const defaultAnalysis = {
     achieved: [
@@ -45,32 +54,6 @@ export function BrainAnalysis({ interactions }: { interactions: Interaction[] })
   useEffect(() => {
     setLoading(true)
     const timer = setTimeout(() => {
-      const latest = interactions[0]
-      if (
-        latest &&
-        latest.type === 'whatsapp' &&
-        latest.content
-          .toLowerCase()
-          .normalize('NFD')
-          .replace(/[\u0300-\u036f]/g, '')
-          .includes('ja tenho parceiro')
-      ) {
-        setAnalysis({
-          achieved: ['Contato inicial realizado e objeção identificada.'],
-          critical: ['Cliente mencionou que já possui parceiro concorrente.'],
-          objections: ['Já possui parceiro -> sugerir teste em região específica.'],
-          fit: '90%',
-          fitText: 'Estrutura pronta para preenchimento de campos pré-definidos.',
-          nextSteps: ['Propor teste em Sumaré com janela de 48h.'],
-          signals: {
-            advance: 'Cliente respondeu rapidamente.',
-            retreat: 'Objeção direta de fornecedor atual.',
-          },
-          copy: '"Olá [Nome], vi que já possuem um parceiro. Que tal explorarmos uma rota específica em Sumaré para reduzir custos? Posso te enviar os detalhes?"',
-        })
-      } else {
-        setAnalysis(defaultAnalysis)
-      }
       setLoading(false)
     }, 1500)
     return () => clearTimeout(timer)
@@ -100,14 +83,28 @@ export function BrainAnalysis({ interactions }: { interactions: Interaction[] })
         <div className="bg-indigo-100 p-1.5 rounded-lg border border-indigo-200 shadow-sm">
           <BrainCircuit className="w-5 h-5 text-indigo-700" />
         </div>
-        <div>
+        <div className="flex-1">
           <CardTitle className="text-indigo-900 text-lg font-bold tracking-tight">
             The Brain (IA)
           </CardTitle>
           <p className="text-xs text-indigo-600/80 font-medium">
-            Diagnóstico inteligente gerado em tempo real
+            Diagnóstico inteligente baseado nas últimas interações
           </p>
         </div>
+        {canEdit && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              if (isEditing) toast({ title: 'Alterações salvas com sucesso!' })
+              setIsEditing(!isEditing)
+            }}
+            className="text-indigo-700 border-indigo-200 bg-white"
+          >
+            {isEditing ? <Save className="w-4 h-4 mr-1" /> : <Edit2 className="w-4 h-4 mr-1" />}
+            {isEditing ? 'Salvar' : 'Editar'}
+          </Button>
+        )}
       </CardHeader>
       <CardContent className="space-y-5 pt-5 relative z-10">
         <div className="grid gap-4 md:grid-cols-2">
@@ -123,31 +120,7 @@ export function BrainAnalysis({ interactions }: { interactions: Interaction[] })
           </div>
           <div className="space-y-3">
             <h4 className="text-[11px] font-bold text-indigo-800 uppercase tracking-wider flex items-center gap-1.5">
-              <AlertTriangle className="w-3.5 h-3.5 text-rose-500" /> 3) Pontos críticos
-            </h4>
-            <div className="text-sm text-slate-600 bg-rose-50/30 p-2.5 rounded-md border border-rose-100/50 space-y-2">
-              {analysis.critical.map((item, i) => (
-                <p key={i}>{item}</p>
-              ))}
-            </div>
-          </div>
-        </div>
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-3">
-            <h4 className="text-[11px] font-bold text-indigo-800 uppercase tracking-wider flex items-center gap-1.5">
-              <ShieldAlert className="w-3.5 h-3.5 text-orange-500" /> 4) Objeções não quebradas
-            </h4>
-            <div className="text-sm text-slate-600 bg-orange-50/30 p-2.5 rounded-md border border-orange-100/50">
-              {analysis.objections.map((item, i) => (
-                <p key={i} className="italic font-medium text-orange-800">
-                  {item}
-                </p>
-              ))}
-            </div>
-          </div>
-          <div className="space-y-3">
-            <h4 className="text-[11px] font-bold text-indigo-800 uppercase tracking-wider flex items-center gap-1.5">
-              <Zap className="w-3.5 h-3.5 text-amber-500" /> 5) Avaliação de FIT
+              <Zap className="w-3.5 h-3.5 text-amber-500" /> Avaliação de FIT
             </h4>
             <div className="flex items-center gap-3 bg-amber-50/30 p-2.5 rounded-md border border-amber-100/50">
               <div className="text-xl font-black text-amber-600">{analysis.fit}</div>
@@ -155,55 +128,38 @@ export function BrainAnalysis({ interactions }: { interactions: Interaction[] })
             </div>
           </div>
         </div>
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-3">
-            <h4 className="text-[11px] font-bold text-indigo-800 uppercase tracking-wider flex items-center gap-1.5">
-              <TrendingUp className="w-3.5 h-3.5 text-blue-500" /> 2) Próximos passos
-            </h4>
-            <ul className="text-sm text-slate-600 list-none space-y-1.5 bg-blue-50/30 p-2.5 rounded-md border border-blue-100/50">
-              {analysis.nextSteps.map((item, i) => (
-                <li key={i} className="flex items-start gap-1.5">
-                  <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5 shrink-0" /> {item}
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div className="space-y-3">
-            <h4 className="text-[11px] font-bold text-indigo-800 uppercase tracking-wider flex items-center gap-1.5">
-              <ArrowRightLeft className="w-3.5 h-3.5 text-violet-500" /> 6) Sinais de avanço/recuo
-            </h4>
-            <div className="text-sm text-slate-600 bg-violet-50/30 p-2.5 rounded-md border border-violet-100/50 space-y-2">
-              <p>
-                <span className="text-emerald-600 font-bold">Avanço:</span>{' '}
-                {analysis.signals.advance}
-              </p>
-              <p>
-                <span className="text-rose-600 font-bold">Recuo:</span> {analysis.signals.retreat}
-              </p>
-            </div>
-          </div>
-        </div>
+
         <div className="pt-3 border-t border-indigo-100/60 space-y-3">
           <h4 className="text-xs font-bold text-indigo-800 uppercase tracking-wider flex items-center gap-1.5">
-            <Target className="w-4 h-4 text-indigo-500" /> 7) Sugestão de copy
+            <Target className="w-4 h-4 text-indigo-500" /> Copy Pronta Sugerida
           </h4>
           <div className="bg-white rounded-lg p-3.5 border border-indigo-100 shadow-sm relative group">
-            <div
-              className="absolute top-3 right-3 text-indigo-300 group-hover:text-indigo-500 transition-colors cursor-pointer"
-              title="Copiar texto"
-              onClick={() => {
-                navigator.clipboard.writeText(analysis.copy)
-                toast({ title: 'Copiado!' })
-              }}
-            >
-              <FileText className="w-4 h-4" />
-            </div>
+            {!isEditing && (
+              <div
+                className="absolute top-3 right-3 text-indigo-300 group-hover:text-indigo-500 transition-colors cursor-pointer"
+                title="Copiar texto"
+                onClick={() => {
+                  navigator.clipboard.writeText(analysis.copy)
+                  toast({ title: 'Copy Pronta Copiada!' })
+                }}
+              >
+                <FileText className="w-4 h-4" />
+              </div>
+            )}
             <p className="text-[11px] font-semibold text-indigo-400 mb-2 flex items-center gap-1.5 uppercase tracking-wider">
-              <MessageSquareQuote className="w-3.5 h-3.5" /> Sugestão Estratégica
+              <MessageSquareQuote className="w-3.5 h-3.5" /> Mensagem para o Lead
             </p>
-            <p className="text-sm font-medium text-slate-700 italic leading-relaxed">
-              {analysis.copy}
-            </p>
+            {isEditing ? (
+              <Textarea
+                value={analysis.copy}
+                onChange={(e) => setAnalysis({ ...analysis, copy: e.target.value })}
+                className="text-sm font-medium text-slate-700 min-h-[100px] border-indigo-200 focus-visible:ring-indigo-500"
+              />
+            ) : (
+              <p className="text-sm font-medium text-slate-700 italic leading-relaxed">
+                {analysis.copy}
+              </p>
+            )}
           </div>
         </div>
       </CardContent>

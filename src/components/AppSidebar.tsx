@@ -7,6 +7,7 @@ import {
   Sprout,
   DollarSign,
   BarChart3,
+  BrainCircuit,
 } from 'lucide-react'
 import {
   Sidebar,
@@ -64,6 +65,12 @@ export function AppSidebar() {
       icon: BarChart3,
       roles: ['Master', 'Supervisor', 'Diretoria'],
     },
+    {
+      title: 'The Brain (IA)',
+      url: '/ia',
+      icon: BrainCircuit,
+      roles: ['Master', 'Supervisor', 'Comercial', 'Marketing', 'Diretoria'],
+    },
   ]
 
   const visibleItems = items.filter((item) => item.roles.includes(state.role))
@@ -79,6 +86,8 @@ export function AppSidebar() {
       return 'data-[active=true]:bg-amber-100/80 data-[active=true]:text-amber-900 hover:bg-amber-50 hover:text-amber-800'
     if (url.startsWith('/analytics'))
       return 'data-[active=true]:bg-slate-200/80 data-[active=true]:text-slate-900 hover:bg-slate-100 hover:text-slate-800'
+    if (url.startsWith('/ia'))
+      return 'data-[active=true]:bg-fuchsia-100/80 data-[active=true]:text-fuchsia-900 hover:bg-fuchsia-50 hover:text-fuchsia-800'
     return 'data-[active=true]:bg-indigo-100/80 data-[active=true]:text-indigo-900 hover:bg-indigo-50 hover:text-indigo-800'
   }
 

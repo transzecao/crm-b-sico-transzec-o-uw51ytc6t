@@ -47,7 +47,6 @@ export default function Pipeline1() {
   )
 
   useEffect(() => {
-    // Route-based tracking for optimized pipeline refresh and telemetry
     if (location.pathname.includes('/pipeline/1')) {
       if (state.leads.length === 0 && !hasAlerted.current) {
         hasAlerted.current = true
@@ -89,19 +88,21 @@ export default function Pipeline1() {
         return
       }
 
-      // Automation Rule: Move to Loss (Perda) on 3rd unanswered contact
+      // Automation Rule: 3rd attempt without response moves to Nutrition
       if (stage === '3º contato sem resposta') {
-        updateState({ leads: state.leads.map((l) => (l.id === id ? { ...l, stage } : l)) })
-        toast({
-          title: 'Automação Disparada',
-          description: 'Lead atingiu 3 contatos sem resposta. Movendo para Perda automaticamente.',
-          variant: 'destructive',
+        updateState({
+          leads: state.leads.map((l) =>
+            l.id === id ? { ...l, pipeline: 'Nutrition', stage: 'Nutrição – Aquecimento' } : l,
+          ),
         })
-        setPendingMove({ id, stage: 'Perda' })
-        setLossModalOpen(true)
+        toast({
+          title: 'Automação Disparada: Nutrição',
+          description: '3º contato sem resposta atingido. Lead movido para o fluxo de nutrição.',
+        })
         return
       }
 
+      // Rule: Mark 2º contato completes 1º automatically handled by kanban drop.
       updateState({ leads: state.leads.map((l) => (l.id === id ? { ...l, stage } : l)) })
     } catch (error) {
       try {

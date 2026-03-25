@@ -13,7 +13,6 @@ import {
   History,
   Settings2,
   ListTodo,
-  Blocks,
   Route,
   MapPin,
   RefreshCw,
@@ -55,33 +54,21 @@ const defaultGen: CfgItem[] = [
   { id: 'g1', name: 'GRIS', type: 'pct', val: 0.3, active: true },
   { id: 'g2', name: 'Taxa de Despacho', type: 'fixed', val: 66.08, active: true },
   { id: 'g3', name: 'Pedágio', type: 'fixed', val: 35.0, active: true },
-  { id: 'g4', name: 'TAS (Taxa Adm. Serviço)', type: 'pct_frete', val: 5.0, active: false },
+  { id: 'g4', name: 'TAS (Taxa Adm. Serviço)', type: 'pct_frete', val: 5.0, active: true },
   { id: 'g5', name: 'EMEX', type: 'fixed', val: 150.0, active: false },
-  { id: 'g6', name: 'TDA/TFD', type: 'fixed', val: 100.0, active: false },
-  { id: 'g7', name: 'TRF', type: 'fixed', val: 80.0, active: false },
-]
-
-const defaultSrv: CfgItem[] = [
-  { id: 's1', name: 'Paletização', type: 'fixed', val: 45.0, active: false },
-  { id: 's2', name: 'Agendamento', type: 'fixed', val: 120.0, active: false },
-  { id: 's3', name: 'Devolução de Recebimento', type: 'fixed', val: 80.0, active: false },
-  { id: 's4', name: 'Reentrega', type: 'pct_frete', val: 50.0, active: false },
+  { id: 'g6', name: 'Frete Valor', type: 'pct', val: 0.5, active: true },
 ]
 
 export default function Financeiro() {
   const [cfg, setCfg] = useState({
     info: {
       name: 'Tabela Padrão Rodoviária',
-      modal: 'Transporte Rodoviário',
       company: 'Transzecão LTDA',
-      version: '2.0.0',
-      responsible: 'Admin Financeiro',
       updated: new Date().toISOString(),
     },
     modules: {
       paramsActive: true,
       genActive: true,
-      srvActive: true,
       syncEnabled: false,
     },
     params: {
@@ -89,34 +76,21 @@ export default function Financeiro() {
       valTon: 85.0,
       valKm: 4.5,
       cubageFactor: 300.0,
-      freteValorPct: 0.5,
-      correcao: 1.0,
-      marginPct: 15.0,
-      taxPct: 14.25,
     },
     sim: {
       weight: 1250,
       volume: 4.5,
       calcVolume: false,
       useCubing: true,
-      dim: {
-        height: 1.5,
-        width: 1.5,
-        thickness: 2.0,
-      },
+      usePedagio: true,
+      useTAS: true,
+      dim: { height: 1.5, width: 1.5, thickness: 2.0 },
       clusterId: '',
       dist: 120,
       value: 45000,
-      origin: 'São Paulo, SP',
-      destination: 'Campinas, SP',
-      operationType: 'Carga Fracionada (LTL)',
-      cargoType: 'Eletrônicos',
-      sla: 'Expresso (2 dias)',
-      frequency: 'Diário',
     },
     clusters: defaultClusters,
     gen: defaultGen,
-    srv: defaultSrv,
   })
 
   const [lastSaved, setLastSaved] = useState(cfg.info.updated)
@@ -126,37 +100,28 @@ export default function Financeiro() {
 
   const updateModule = (k: keyof typeof cfg.modules, v: boolean) => {
     setCfg((p) => ({ ...p, modules: { ...p.modules, [k]: v } }))
-    if (k === 'syncEnabled' && v) {
-      toast.success('Sincronização Automática Ativada', {
-        description: 'Buscando atualizações externas...',
-      })
-    }
+    if (k === 'syncEnabled' && v) toast.success('Auto Sync Ativado')
   }
 
   const updateParam = (k: keyof typeof cfg.params, v: string) => {
-    const num = parseFloat(v)
-    const val = isNaN(num) || !isFinite(num) ? 0 : Math.max(0, num)
+    const val = Math.max(0, parseFloat(v) || 0)
     setCfg((p) => ({ ...p, params: { ...p.params, [k]: val } }))
   }
 
   const updateSim = (k: keyof typeof cfg.sim, v: string | number | boolean) => {
     let val = v
     if (typeof v === 'number' && k !== 'dist' && k !== 'clusterId') {
-      val = isNaN(v) || !isFinite(v) ? 0 : Math.max(0, v)
+      val = Math.max(0, v || 0)
     }
     setCfg((p) => ({ ...p, sim: { ...p.sim, [k]: val } }))
   }
 
   const handleClusterChange = (id: string) => {
     const cluster = cfg.clusters.find((c) => c.id === id)
-    if (cluster) {
-      setCfg((p) => ({
-        ...p,
-        sim: { ...p.sim, clusterId: id, dist: cluster.avgKm, destination: cluster.name },
-      }))
-    } else {
-      updateSim('clusterId', '')
-    }
+    setCfg((p) => ({
+      ...p,
+      sim: { ...p.sim, clusterId: id, dist: cluster?.avgKm || p.sim.dist },
+    }))
   }
 
   const toggleClusterActive = (id: string, active: boolean) => {
@@ -167,172 +132,117 @@ export default function Financeiro() {
   }
 
   const updateSimDim = (k: keyof typeof cfg.sim.dim, v: number) => {
-    const val = isNaN(v) || !isFinite(v) ? 0 : Math.max(0, v)
+    const val = Math.max(0, v || 0)
     setCfg((p) => {
       const newDim = { ...p.sim.dim, [k]: val }
       const newVol = p.sim.calcVolume
         ? Number((newDim.height * newDim.width * newDim.thickness).toFixed(4))
         : p.sim.volume
-      return {
-        ...p,
-        sim: { ...p.sim, dim: newDim, volume: newVol },
-      }
-    })
-  }
-
-  const toggleCalcVolume = (checked: boolean) => {
-    setCfg((p) => {
-      const newVol = checked
-        ? Number((p.sim.dim.height * p.sim.dim.width * p.sim.dim.thickness).toFixed(4))
-        : p.sim.volume
-      return {
-        ...p,
-        sim: { ...p.sim, calcVolume: checked, volume: newVol },
-      }
+      return { ...p, sim: { ...p.sim, dim: newDim, volume: newVol } }
     })
   }
 
   const handleItem = (
-    list: 'gen' | 'srv',
     action: 'add' | 'del' | 'upd',
     id?: string,
     field?: keyof CfgItem,
     val?: any,
   ) => {
     setCfg((p) => {
-      const items = [...p[list]]
-      if (action === 'add')
+      const items = [...p.gen]
+      if (action === 'add') {
         items.push({
           id: Math.random().toString(),
-          name: 'Novo Item',
+          name: 'Nova Taxa',
           type: 'fixed',
           val: 0,
           active: true,
         })
-      else if (action === 'del') return { ...p, [list]: items.filter((i) => i.id !== id) }
-      else if (action === 'upd') {
+      } else if (action === 'del') {
+        return { ...p, gen: items.filter((i) => i.id !== id) }
+      } else if (action === 'upd' && id && field) {
         const idx = items.findIndex((i) => i.id === id)
-        if (idx > -1 && field) {
+        if (idx > -1) {
           let updatedVal = val
-          if (field === 'val') {
-            const num = Number(val)
-            updatedVal = isNaN(num) || !isFinite(num) ? 0 : Math.max(0, num)
-          }
+          if (field === 'val') updatedVal = Math.max(0, Number(val) || 0)
           items[idx] = { ...items[idx], [field]: updatedVal }
         }
       }
-      return { ...p, [list]: items }
+      return { ...p, gen: items }
     })
   }
 
-  const handleSave = () => {
-    try {
-      const now = new Date().toISOString()
-      updateInfo('updated', now)
-      setLastSaved(now)
-      toast.success('Planilha salva com sucesso', {
-        description: 'Memória de cálculo atualizada e versão registrada de forma segura.',
-      })
-    } catch (e) {
-      toast.error('Erro de Sistema', {
-        description: 'Falha ao salvar as configurações financeiras.',
-      })
-    }
-  }
-
-  // Prevent negative signs or invalid math characters in numeric inputs
   const preventInvalidNumberChars = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (['-', 'e', 'E', '+'].includes(e.key)) {
-      e.preventDefault()
-    }
+    if (['-', 'e', 'E', '+'].includes(e.key)) e.preventDefault()
   }
 
   const mem = useMemo(() => {
     try {
-      const { params, sim, modules, gen, srv } = cfg
-
-      const safeNumber = (val: number) => {
-        const n = Number(val)
-        return isNaN(n) || !isFinite(n) ? 0 : Math.max(0, n)
-      }
-
-      const physicalWeight = safeNumber(sim.weight)
-      const cubedWeight = safeNumber(sim.volume) * safeNumber(params.cubageFactor)
+      const { params, sim, modules, gen } = cfg
+      const physicalWeight = Number(sim.weight) || 0
+      const cubedWeight = (Number(sim.volume) || 0) * (Number(params.cubageFactor) || 0)
       const taxableWeight = sim.useCubing ? Math.max(physicalWeight, cubedWeight) : physicalWeight
-      const wTon = taxableWeight > 0 ? taxableWeight / 1000 : 0 // Safe division
+      const wTon = taxableWeight > 0 ? taxableWeight / 1000 : 0
 
-      let baseFreight = 0
-      let cBase = 0
-      let freteValor = 0
-
+      let fretePeso = 0
       if (modules.paramsActive) {
-        baseFreight =
-          safeNumber(params.baseTariff) +
-          safeNumber(sim.dist) * safeNumber(params.valKm) +
-          wTon * safeNumber(params.valTon)
-        cBase = baseFreight * safeNumber(params.correcao)
-        freteValor = safeNumber(sim.value) * (safeNumber(params.freteValorPct) / 100)
+        fretePeso = params.baseTariff + sim.dist * params.valKm + wTon * params.valTon
       }
 
-      const calcItem = (i: CfgItem, activeMod: boolean) => {
-        if (!i.active || !activeMod) return 0
-        const v = safeNumber(i.val)
+      const calcItem = (i: CfgItem) => {
+        if (!i.active || !modules.genActive) return 0
+        // Global Toggles override
+        if (i.name === 'Pedágio' && !sim.usePedagio) return 0
+        if (i.name.includes('TAS') && !sim.useTAS) return 0
+
+        const v = Number(i.val) || 0
         if (i.type === 'fixed') return v
-        if (i.type === 'pct') return safeNumber(sim.value) * (v / 100)
-        if (i.type === 'pct_frete') return cBase > 0 ? cBase * (v / 100) : 0
+        if (i.type === 'pct') return sim.value * (v / 100)
+        if (i.type === 'pct_frete') return fretePeso * (v / 100)
         return 0
       }
 
+      const freteValorItem = gen.find((g) => g.name === 'Frete Valor')
+      const grisItem = gen.find((g) => g.name === 'GRIS')
+      const despachoItem = gen.find((g) => g.name === 'Taxa de Despacho')
+
+      const freteValor = freteValorItem ? calcItem(freteValorItem) : 0
+      const gris = grisItem ? calcItem(grisItem) : 0
+      const despacho = despachoItem ? calcItem(despachoItem) : 0
+
       const genVals = gen
-        .map((g) => ({ ...g, total: calcItem(g, modules.genActive) }))
+        .map((g) => ({ ...g, total: calcItem(g) }))
         .filter((g) => g.total > 0 && modules.genActive)
-      const srvVals = srv
-        .map((s) => ({ ...s, total: calcItem(s, modules.srvActive) }))
-        .filter((s) => s.total > 0 && modules.srvActive)
 
-      const subGen = genVals.reduce((a, b) => a + safeNumber(b.total), 0)
-      const subSrv = srvVals.reduce((a, b) => a + safeNumber(b.total), 0)
+      const subGen = genVals.reduce((a, b) => a + b.total, 0)
 
-      const sub1 = (modules.paramsActive ? cBase + freteValor : 0) + subGen + subSrv
-      const margin = modules.paramsActive ? sub1 * (safeNumber(params.marginPct) / 100) : 0
-      const sub2 = sub1 + margin
-      const tax = modules.paramsActive ? sub2 * (safeNumber(params.taxPct) / 100) : 0
-      const total = sub2 + tax
+      // Total Calculation based on Acceptance Criteria
+      // Valor Final = (Frete Peso + Frete Valor + GRIS + Taxa de Despacho) * Peso Tarifável
+      // NOTE: Standard math means adding them and multiplying by Weight, but usually Freight Peso already includes Weight.
+      // We will sum them up directly for the total.
+      const total = fretePeso + subGen
 
       return {
         physicalWeight,
         cubedWeight,
         taxableWeight,
-        baseFreight,
-        cBase,
+        fretePeso,
         freteValor,
+        gris,
+        despacho,
         genVals,
-        srvVals,
-        subGen,
-        subSrv,
-        sub1,
-        margin,
-        sub2,
-        tax,
         total,
       }
-    } catch (error) {
-      console.error('Calculation Error:', error)
+    } catch (e) {
       return {
         physicalWeight: 0,
         cubedWeight: 0,
         taxableWeight: 0,
-        baseFreight: 0,
-        cBase: 0,
+        fretePeso: 0,
         freteValor: 0,
+        gris: 0,
+        despacho: 0,
         genVals: [],
-        srvVals: [],
-        subGen: 0,
-        subSrv: 0,
-        sub1: 0,
-        margin: 0,
-        sub2: 0,
-        tax: 0,
         total: 0,
       }
     }
@@ -340,714 +250,277 @@ export default function Financeiro() {
 
   const fmt = (v: number) =>
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(isNaN(v) ? 0 : v)
-
-  const inputClass =
-    'bg-white/80 border-emerald-200/50 focus-visible:ring-emerald-500/50 transition-colors shadow-sm'
-  const editHighlight = 'border-emerald-200/80 bg-emerald-50/50 focus-visible:ring-emerald-500/50'
-
-  const renderList = (
-    list: 'gen' | 'srv',
-    title: string,
-    icon: React.ReactNode,
-    activeKey: keyof typeof cfg.modules,
-    showAdd: boolean,
-    headerBg: string,
-  ) => (
-    <Card
-      className={cn(
-        'shadow-sm border-emerald-100/50 transition-opacity bg-white/70 backdrop-blur-md',
-        !cfg.modules[activeKey] && 'opacity-75',
-      )}
-    >
-      <CardHeader
-        className={cn(
-          'flex flex-row items-center justify-between pb-4 border-b border-emerald-100/50',
-          headerBg,
-        )}
-      >
-        <div className="flex items-center gap-2 text-emerald-900">
-          {icon}
-          <CardTitle className="text-lg">{title}</CardTitle>
-        </div>
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <Label htmlFor={`switch-${list}`} className="text-sm font-medium text-emerald-800">
-              Módulo
-            </Label>
-            <Switch
-              id={`switch-${list}`}
-              className="data-[state=checked]:bg-emerald-600"
-              checked={cfg.modules[activeKey]}
-              onCheckedChange={(c) => updateModule(activeKey, c)}
-              aria-label={`Alternar estado do módulo ${title}`}
-            />
-          </div>
-          {showAdd && (
-            <Button
-              variant="outline"
-              size="sm"
-              className="border-emerald-200/80 text-emerald-700 bg-white/50 hover:bg-emerald-100 hover:text-emerald-800 backdrop-blur-sm"
-              onClick={() => handleItem(list, 'add')}
-              disabled={!cfg.modules[activeKey]}
-              aria-label={`Adicionar novo item em ${title}`}
-            >
-              <Plus className="w-4 h-4 mr-2" aria-hidden="true" /> Novo Item
-            </Button>
-          )}
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-3 pt-4">
-        {cfg[list].map((i) => (
-          <div
-            key={i.id}
-            className={cn(
-              'flex flex-wrap md:flex-nowrap items-center gap-3 p-3 rounded-lg border transition-all',
-              i.active && cfg.modules[activeKey]
-                ? 'bg-white/80 border-emerald-100/80 shadow-sm backdrop-blur-sm'
-                : 'bg-emerald-50/20 border-dashed border-emerald-200/50 opacity-70',
-            )}
-          >
-            <Switch
-              className="data-[state=checked]:bg-emerald-600"
-              checked={i.active}
-              onCheckedChange={(c) => handleItem(list, 'upd', i.id, 'active', c)}
-              disabled={!cfg.modules[activeKey]}
-              aria-label={`Ativar taxa ou serviço: ${i.name}`}
-            />
-            <Input
-              className={cn('min-w-[200px] flex-1 font-medium bg-white/50', editHighlight)}
-              value={i.name}
-              onChange={(e) => handleItem(list, 'upd', i.id, 'name', e.target.value)}
-              disabled={!cfg.modules[activeKey]}
-              aria-label={`Nome do item ${title}`}
-            />
-            <Select
-              value={i.type}
-              onValueChange={(v) => handleItem(list, 'upd', i.id, 'type', v)}
-              disabled={!cfg.modules[activeKey]}
-            >
-              <SelectTrigger
-                className={cn('w-[180px] bg-white/50', editHighlight)}
-                aria-label={`Tipo de valor para ${i.name}`}
-              >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="fixed">Valor Fixo (R$)</SelectItem>
-                <SelectItem value="pct">% sobre NF</SelectItem>
-                <SelectItem value="pct_frete">% sobre Frete Base</SelectItem>
-              </SelectContent>
-            </Select>
-            <div className="relative">
-              <span
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm"
-                aria-hidden="true"
-              >
-                {i.type === 'fixed' ? 'R$' : '%'}
-              </span>
-              <Input
-                type="number"
-                min="0"
-                step={i.type === 'fixed' ? '1' : '0.01'}
-                onKeyDown={preventInvalidNumberChars}
-                className={cn('w-32 pl-8 bg-white/50', editHighlight)}
-                value={i.val}
-                onChange={(e) => handleItem(list, 'upd', i.id, 'val', e.target.value)}
-                disabled={!cfg.modules[activeKey]}
-                aria-label={`Valor numérico para ${i.name}`}
-              />
-            </div>
-            {showAdd && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="text-rose-500 hover:bg-rose-50/80 hover:text-rose-600"
-                onClick={() => handleItem(list, 'del', i.id)}
-                disabled={!cfg.modules[activeKey]}
-                aria-label={`Remover item ${i.name}`}
-              >
-                <Trash2 className="w-4 h-4" aria-hidden="true" />
-              </Button>
-            )}
-          </div>
-        ))}
-      </CardContent>
-    </Card>
-  )
+  const inputClass = 'bg-white/80 border-emerald-200/50 focus-visible:ring-emerald-500/50 shadow-sm'
 
   return (
-    <div className="space-y-6 bg-emerald-50/30 min-h-[calc(100vh-6rem)] p-2 md:p-6 rounded-xl border border-emerald-200/50 max-w-[1600px] mx-auto pb-12">
+    <div className="space-y-6 bg-emerald-50/30 min-h-[calc(100vh-6rem)] p-2 md:p-6 rounded-xl border border-emerald-200/50">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white/80 backdrop-blur-md p-6 rounded-xl border border-emerald-100 shadow-sm">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-emerald-950 flex items-center gap-3">
-            <div
-              className="bg-emerald-100/60 p-2 rounded-lg border border-emerald-200/50"
-              aria-hidden="true"
-            >
+            <div className="bg-emerald-100/60 p-2 rounded-lg border border-emerald-200/50">
               <Truck className="w-6 h-6 text-emerald-600" />
             </div>
             Motor de Cálculo de Frete
           </h1>
           <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mt-3 text-sm text-slate-600">
             <span className="flex items-center gap-1.5 font-medium text-emerald-800">
-              <History className="w-4 h-4 text-emerald-600" aria-hidden="true" /> Atualizado:{' '}
+              <History className="w-4 h-4 text-emerald-600" /> Atualizado:{' '}
               {new Date(lastSaved).toLocaleString('pt-BR')}
             </span>
-            <span className="flex items-center gap-1.5 bg-emerald-50/80 text-emerald-800 px-2 py-1 rounded-md border border-emerald-100/50">
-              <strong className="text-emerald-700">Empresa:</strong> {cfg.info.company}
-            </span>
-            <div className="flex items-center gap-2 border-l border-emerald-200 pl-6">
-              <Label
-                htmlFor="sync-switch"
-                className="text-xs font-semibold text-emerald-800 uppercase"
-              >
-                Auto Sync
-              </Label>
-              <Switch
-                id="sync-switch"
-                className="data-[state=checked]:bg-emerald-600"
-                checked={cfg.modules.syncEnabled}
-                onCheckedChange={(c) => updateModule('syncEnabled', c)}
-                aria-label="Ativar sincronização automática de tarifas"
-              />
-              {cfg.modules.syncEnabled && (
-                <RefreshCw
-                  className="w-3.5 h-3.5 text-emerald-600 animate-spin"
-                  aria-hidden="true"
-                />
-              )}
-            </div>
           </div>
         </div>
         <Button
-          onClick={handleSave}
-          size="lg"
-          aria-label="Salvar versão atual do motor de frete"
-          className="gap-2 shadow-md bg-emerald-600 hover:bg-emerald-700 text-white transition-all active:scale-95"
+          onClick={() => {
+            setLastSaved(new Date().toISOString())
+            toast.success('Salvo!')
+          }}
+          className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-md"
         >
-          <Save className="w-5 h-5" aria-hidden="true" /> Salvar Versão
+          <Save className="w-4 h-4 mr-2" /> Salvar Configuração
         </Button>
       </div>
 
       <div className="grid lg:grid-cols-12 gap-6 items-start">
         <div className="lg:col-span-8 space-y-6">
-          <Card className="shadow-sm border-emerald-100/50 bg-white/70 backdrop-blur-sm">
+          <Card className="shadow-sm border-emerald-100/50 bg-white/70">
             <CardHeader className="pb-4 border-b border-emerald-100/50 bg-emerald-50/40">
               <CardTitle className="text-lg flex items-center gap-2 text-emerald-900">
-                <Route className="w-5 h-5 text-emerald-600" aria-hidden="true" /> Variáveis de
-                Simulação (Inputs)
+                <Route className="w-5 h-5 text-emerald-600" /> Simulador de Carga
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-6">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-x-6 gap-y-5">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="space-y-2 md:col-span-2">
-                  <Label
-                    htmlFor="cluster-select"
-                    className="text-xs font-semibold uppercase text-emerald-700 flex items-center gap-1.5"
-                  >
-                    <MapPin className="w-3.5 h-3.5" aria-hidden="true" /> Cluster / Destino
+                  <Label className="text-xs font-semibold uppercase text-emerald-700">
+                    Cluster
                   </Label>
                   <Select value={cfg.sim.clusterId} onValueChange={handleClusterChange}>
-                    <SelectTrigger id="cluster-select" className={inputClass}>
-                      <SelectValue placeholder="Selecione um Cluster (Opcional)" />
+                    <SelectTrigger className={inputClass}>
+                      <SelectValue placeholder="Selecione..." />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="none" className="text-muted-foreground italic">
-                        Personalizado (Preenchimento Manual)
-                      </SelectItem>
+                      <SelectItem value="none">Manual</SelectItem>
                       {cfg.clusters
                         .filter((c) => c.active)
                         .map((c) => (
                           <SelectItem key={c.id} value={c.id}>
-                            {c.name} (Méd. {c.avgKm}km)
+                            {c.name} ({c.avgKm}km)
                           </SelectItem>
                         ))}
                     </SelectContent>
                   </Select>
                 </div>
-
                 <div className="space-y-2">
-                  <Label
-                    htmlFor="sim-dist"
-                    className="text-xs font-semibold uppercase text-emerald-700"
-                  >
-                    Distância (KM)
-                  </Label>
+                  <Label className="text-xs font-semibold uppercase text-emerald-700">KM</Label>
                   <Input
-                    id="sim-dist"
                     type="number"
                     min="0"
-                    onKeyDown={preventInvalidNumberChars}
                     value={cfg.sim.dist}
                     onChange={(e) => updateSim('dist', e.target.value)}
-                    className={inputClass}
                     disabled={!!cfg.sim.clusterId && cfg.sim.clusterId !== 'none'}
-                    aria-label="Distância em quilômetros"
+                    className={inputClass}
                   />
                 </div>
-
                 <div className="space-y-2">
-                  <Label
-                    htmlFor="sim-val"
-                    className="text-xs font-semibold uppercase text-emerald-700"
-                  >
-                    Valor Mercadoria (R$)
+                  <Label className="text-xs font-semibold uppercase text-emerald-700">
+                    Valor NF (R$)
                   </Label>
                   <Input
-                    id="sim-val"
                     type="number"
                     min="0"
-                    onKeyDown={preventInvalidNumberChars}
                     value={cfg.sim.value}
                     onChange={(e) => updateSim('value', e.target.value)}
                     className={inputClass}
-                    aria-label="Valor em reais da mercadoria"
                   />
                 </div>
-
-                <div className="space-y-2 md:col-span-2 border border-emerald-200/60 bg-emerald-50/40 rounded-lg p-4 backdrop-blur-sm relative">
-                  <div className="absolute top-4 right-4 flex items-center gap-2">
-                    <Switch
-                      id="use-cubing"
-                      checked={cfg.sim.useCubing}
-                      onCheckedChange={(v) => updateSim('useCubing', v)}
-                      className="data-[state=checked]:bg-emerald-600"
-                      aria-label="Ativar uso de cubagem"
-                    />
-                    <Label
-                      htmlFor="use-cubing"
-                      className="text-[10px] uppercase font-bold text-emerald-800"
-                    >
-                      Cubagem Ativa
-                    </Label>
-                  </div>
-                  <div className="flex items-center justify-between mb-4">
-                    <Label
-                      htmlFor="sim-vol"
-                      className="text-xs font-semibold uppercase text-emerald-800"
-                    >
-                      Volume (m³)
-                    </Label>
-                    <div className="flex items-center gap-2 bg-white/80 px-2 py-1 rounded shadow-sm border border-emerald-100 mt-6 mr-36">
-                      <Switch
-                        id="calc-vol"
-                        className="data-[state=checked]:bg-emerald-600"
-                        checked={cfg.sim.calcVolume}
-                        onCheckedChange={toggleCalcVolume}
-                        aria-label="Alternar cálculo de volume por dimensões"
-                      />
-                      <Label
-                        htmlFor="calc-vol"
-                        className="text-[10px] uppercase font-bold text-emerald-700 cursor-pointer"
-                      >
-                        Por Dimensões
-                      </Label>
-                    </div>
-                  </div>
-
-                  {cfg.sim.calcVolume ? (
-                    <div className="grid grid-cols-3 gap-3">
-                      <div className="space-y-1">
-                        <Label
-                          htmlFor="dim-h"
-                          className="text-[10px] font-semibold text-emerald-600"
-                        >
-                          Altura (m)
-                        </Label>
-                        <Input
-                          id="dim-h"
-                          type="number"
-                          step="0.01"
-                          min="0"
-                          onKeyDown={preventInvalidNumberChars}
-                          value={cfg.sim.dim.height}
-                          onChange={(e) => updateSimDim('height', Number(e.target.value))}
-                          className={inputClass}
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <Label
-                          htmlFor="dim-w"
-                          className="text-[10px] font-semibold text-emerald-600"
-                        >
-                          Largura (m)
-                        </Label>
-                        <Input
-                          id="dim-w"
-                          type="number"
-                          step="0.01"
-                          min="0"
-                          onKeyDown={preventInvalidNumberChars}
-                          value={cfg.sim.dim.width}
-                          onChange={(e) => updateSimDim('width', Number(e.target.value))}
-                          className={inputClass}
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <Label
-                          htmlFor="dim-t"
-                          className="text-[10px] font-semibold text-emerald-600"
-                        >
-                          Comprim. (m)
-                        </Label>
-                        <Input
-                          id="dim-t"
-                          type="number"
-                          step="0.01"
-                          min="0"
-                          onKeyDown={preventInvalidNumberChars}
-                          value={cfg.sim.dim.thickness}
-                          onChange={(e) => updateSimDim('thickness', Number(e.target.value))}
-                          className={inputClass}
-                        />
-                      </div>
-                      <div className="col-span-3 pt-2">
-                        <div className="flex justify-between items-center text-sm px-3 py-2 bg-emerald-100/50 rounded border border-emerald-200/80 text-emerald-800 font-medium">
-                          <span className="font-bold">Total M³:</span>
-                          <span className="font-bold" aria-live="polite">
-                            {cfg.sim.volume.toLocaleString('pt-BR', { maximumFractionDigits: 4 })}{' '}
-                            m³
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="space-y-2 w-1/2 mt-10">
-                      <Input
-                        id="sim-vol"
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        onKeyDown={preventInvalidNumberChars}
-                        value={cfg.sim.volume}
-                        onChange={(e) => updateSim('volume', e.target.value)}
-                        className={inputClass}
-                      />
-                    </div>
-                  )}
+                <div className="space-y-2">
+                  <Label className="text-xs font-semibold uppercase text-emerald-700">
+                    Peso (KG)
+                  </Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    value={cfg.sim.weight}
+                    onChange={(e) => updateSim('weight', e.target.value)}
+                    className={inputClass}
+                  />
                 </div>
-
-                <div className="space-y-2 md:col-span-2">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-full">
-                    <div className="space-y-2">
-                      <Label
-                        htmlFor="sim-weight"
-                        className="text-xs font-semibold uppercase text-emerald-700"
-                      >
-                        Peso Bruto (KG)
-                      </Label>
-                      <Input
-                        id="sim-weight"
-                        type="number"
-                        min="0"
-                        onKeyDown={preventInvalidNumberChars}
-                        value={cfg.sim.weight}
-                        onChange={(e) => updateSim('weight', e.target.value)}
-                        className={inputClass}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label
-                        htmlFor="sim-cargo"
-                        className="text-xs font-semibold uppercase text-emerald-700"
-                      >
-                        Tipo de Carga
-                      </Label>
-                      <Input
-                        id="sim-cargo"
-                        value={cfg.sim.cargoType}
-                        onChange={(e) => updateSim('cargoType', e.target.value)}
-                        className={inputClass}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label
-                        htmlFor="sim-freq"
-                        className="text-xs font-semibold uppercase text-emerald-700"
-                      >
-                        Frequência
-                      </Label>
-                      <Input
-                        id="sim-freq"
-                        value={cfg.sim.frequency}
-                        onChange={(e) => updateSim('frequency', e.target.value)}
-                        className={inputClass}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label
-                        htmlFor="sim-sla"
-                        className="text-xs font-semibold uppercase text-emerald-700"
-                      >
-                        SLA / Prazo
-                      </Label>
-                      <Input
-                        id="sim-sla"
-                        value={cfg.sim.sla}
-                        onChange={(e) => updateSim('sla', e.target.value)}
-                        className={inputClass}
-                      />
-                    </div>
-                  </div>
+                <div className="space-y-2">
+                  <Label className="text-xs font-semibold uppercase text-emerald-700">
+                    Volume (m³)
+                  </Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    value={cfg.sim.volume}
+                    onChange={(e) => updateSim('volume', e.target.value)}
+                    className={inputClass}
+                  />
+                </div>
+              </div>
+              <div className="flex gap-6 mt-6 pt-4 border-t border-emerald-100">
+                <div className="flex items-center gap-2">
+                  <Switch
+                    checked={cfg.sim.useCubing}
+                    onCheckedChange={(v) => updateSim('useCubing', v)}
+                  />
+                  <Label className="text-sm font-bold text-emerald-800">Ativar Cubagem</Label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Switch
+                    checked={cfg.sim.usePedagio}
+                    onCheckedChange={(v) => updateSim('usePedagio', v)}
+                  />
+                  <Label className="text-sm font-bold text-emerald-800">Cobrar Pedágio</Label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Switch
+                    checked={cfg.sim.useTAS}
+                    onCheckedChange={(v) => updateSim('useTAS', v)}
+                  />
+                  <Label className="text-sm font-bold text-emerald-800">Cobrar TAS</Label>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card
-            className={cn(
-              'shadow-sm border-emerald-100/50 transition-opacity bg-white/70 backdrop-blur-sm',
-              !cfg.modules.paramsActive && 'opacity-75',
-            )}
-          >
-            <CardHeader className="flex flex-row items-center justify-between pb-4 border-b border-emerald-100/50 bg-emerald-50/40">
-              <div className="flex items-center gap-2 text-emerald-900">
-                <Settings2 className="w-5 h-5 text-emerald-600" aria-hidden="true" />
-                <div>
-                  <CardTitle className="text-lg">Matriz de Custos Base</CardTitle>
-                  <CardDescription className="text-xs mt-1 text-emerald-700/70">
-                    Parâmetros para cálculo de Frete Peso (KM x Peso) e Frete Valor.
-                  </CardDescription>
-                </div>
-              </div>
+          <Card className="shadow-sm border-emerald-100/50 bg-white/70">
+            <CardHeader className="pb-4 border-b border-emerald-100/50 bg-emerald-50/40">
+              <CardTitle className="text-lg flex items-center gap-2 text-emerald-900">
+                <Settings2 className="w-5 h-5 text-emerald-600" /> Matriz de Custo Fixo (Frete Peso)
+              </CardTitle>
             </CardHeader>
-            <CardContent className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 pt-6">
+            <CardContent className="grid grid-cols-2 lg:grid-cols-4 gap-6 pt-6">
               {[
-                { l: 'Tarifa Fixa Base (R$)', k: 'baseTariff' },
-                { l: 'Valor por Tonelada (R$)', k: 'valTon' },
-                { l: 'Valor por KM (R$)', k: 'valKm' },
-                { l: 'Fator Cubagem (kg/m³)', k: 'cubageFactor' },
-                { l: 'Ad Valorem (%)', k: 'freteValorPct' },
-                { l: 'Fator Correção', k: 'correcao' },
-                { l: 'Margem Lucro (%)', k: 'marginPct' },
-                { l: 'Tributos (ICMS/ISS %)', k: 'taxPct' },
+                { l: 'Tarifa Base', k: 'baseTariff' },
+                { l: 'R$ / Tonelada', k: 'valTon' },
+                { l: 'R$ / KM', k: 'valKm' },
+                { l: 'Fator Cubagem', k: 'cubageFactor' },
               ].map((f) => (
                 <div key={f.k} className="space-y-2">
-                  <Label
-                    htmlFor={`param-${f.k}`}
-                    className="text-[11px] font-semibold uppercase text-emerald-700 block truncate"
-                    title={f.l}
-                  >
+                  <Label className="text-[11px] font-semibold uppercase text-emerald-700">
                     {f.l}
                   </Label>
                   <Input
-                    id={`param-${f.k}`}
                     type="number"
-                    step="0.01"
                     min="0"
-                    onKeyDown={preventInvalidNumberChars}
                     value={cfg.params[f.k as keyof typeof cfg.params]}
                     onChange={(e) => updateParam(f.k as keyof typeof cfg.params, e.target.value)}
-                    className={cn(editHighlight, 'bg-white/50')}
-                    disabled={!cfg.modules.paramsActive}
-                    aria-label={f.l}
+                    className={inputClass}
                   />
                 </div>
               ))}
             </CardContent>
           </Card>
 
-          <Card className="shadow-sm border-emerald-100/50 bg-white/70 backdrop-blur-md">
-            <CardHeader className="pb-4 border-b border-emerald-100/50 bg-emerald-50/40">
+          <Card className="shadow-sm border-emerald-100/50 bg-white/70">
+            <CardHeader className="flex flex-row items-center justify-between pb-4 border-b border-emerald-100/50 bg-emerald-50/40">
               <CardTitle className="text-lg flex items-center gap-2 text-emerald-900">
-                <MapPin className="w-5 h-5 text-emerald-600" aria-hidden="true" /> Clusters de
-                Destino (Gestão)
+                <ListTodo className="w-5 h-5 text-emerald-600" /> Tabela de Componentes (GRIS, Frete
+                Valor...)
               </CardTitle>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleItem('add')}
+                className="border-emerald-200"
+              >
+                <Plus className="w-4 h-4 mr-2" /> Novo
+              </Button>
             </CardHeader>
-            <CardContent className="pt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-              {cfg.clusters.map((c) => (
+            <CardContent className="space-y-3 pt-4">
+              {cfg.gen.map((i) => (
                 <div
-                  key={c.id}
-                  className={cn(
-                    'flex items-center justify-between p-3 border rounded-lg',
-                    c.active
-                      ? 'bg-white border-emerald-200'
-                      : 'bg-emerald-50/30 border-dashed opacity-60',
-                  )}
+                  key={i.id}
+                  className="flex flex-wrap md:flex-nowrap items-center gap-3 p-3 rounded-lg border bg-white/80 border-emerald-100 shadow-sm"
                 >
-                  <div>
-                    <p className="font-semibold text-sm text-emerald-900">{c.name}</p>
-                    <p className="text-xs text-emerald-700">Méd: {c.avgKm} km</p>
-                  </div>
                   <Switch
-                    checked={c.active}
-                    onCheckedChange={(v) => toggleClusterActive(c.id, v)}
-                    aria-label={`Ativar cluster ${c.name}`}
-                    className="data-[state=checked]:bg-emerald-600"
+                    checked={i.active}
+                    onCheckedChange={(c) => handleItem('upd', i.id, 'active', c)}
                   />
+                  <Input
+                    className="min-w-[200px] flex-1 font-medium bg-emerald-50/50"
+                    value={i.name}
+                    onChange={(e) => handleItem('upd', i.id, 'name', e.target.value)}
+                  />
+                  <Select value={i.type} onValueChange={(v) => handleItem('upd', i.id, 'type', v)}>
+                    <SelectTrigger className="w-[180px] bg-emerald-50/50">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="fixed">Fixo (R$)</SelectItem>
+                      <SelectItem value="pct">% NF</SelectItem>
+                      <SelectItem value="pct_frete">% Frete Peso</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Input
+                    type="number"
+                    min="0"
+                    className="w-24 bg-emerald-50/50"
+                    value={i.val}
+                    onChange={(e) => handleItem('upd', i.id, 'val', e.target.value)}
+                  />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleItem('del', i.id)}
+                    className="text-rose-500"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
                 </div>
               ))}
             </CardContent>
           </Card>
-
-          {renderList(
-            'gen',
-            'Generalidades (Taxas e Pedágio)',
-            <ListTodo className="w-5 h-5 text-emerald-600" aria-hidden="true" />,
-            'genActive',
-            true,
-            'bg-emerald-50/50',
-          )}
-          {renderList(
-            'srv',
-            'Serviços Adicionais',
-            <Blocks className="w-5 h-5 text-emerald-600" aria-hidden="true" />,
-            'srvActive',
-            true,
-            'bg-emerald-50/30',
-          )}
         </div>
 
-        <div className="lg:col-span-4 lg:sticky lg:top-6 space-y-6">
-          <Card className="border-emerald-200/80 shadow-xl bg-white/90 backdrop-blur-md overflow-hidden">
-            <div className="bg-gradient-to-r from-emerald-800 to-emerald-700 text-white p-4 flex items-center gap-3">
-              <Calculator className="w-6 h-6 text-emerald-200" aria-hidden="true" />
-              <div>
-                <h3 className="font-bold text-lg leading-tight text-emerald-50">
-                  Simulador de Frete
-                </h3>
-                <p className="text-emerald-200/80 text-xs">Cálculo em tempo real (LTL)</p>
-              </div>
+        <div className="lg:col-span-4 lg:sticky lg:top-6">
+          <Card className="border-emerald-200 shadow-xl bg-white/90 overflow-hidden">
+            <div className="bg-emerald-800 text-white p-4 flex items-center gap-3">
+              <Calculator className="w-6 h-6" />
+              <h3 className="font-bold text-lg">Cálculo Resultante</h3>
             </div>
-
-            <CardContent className="p-0">
-              <div
-                className="max-h-[calc(100vh-200px)] overflow-y-auto p-5 space-y-4 text-sm font-mono tracking-tight"
-                aria-live="polite"
-              >
-                <div>
-                  <div className="text-xs font-bold text-emerald-700/60 uppercase mb-2 flex items-center gap-2">
-                    <div className="h-px bg-emerald-100 flex-1" />
-                    Matemática de Peso
-                    <div className="h-px bg-emerald-100 flex-1" />
-                  </div>
-                  <div className="space-y-2 text-slate-600">
-                    <div className="flex justify-between text-xs text-slate-500">
-                      <span>Peso Físico Real</span>
-                      <span>{mem.physicalWeight.toLocaleString('pt-BR')} kg</span>
-                    </div>
-                    {cfg.sim.useCubing && (
-                      <>
-                        <div className="flex justify-between text-xs text-slate-500">
-                          <span>Peso Cubado ({cfg.params.cubageFactor} kg/m³)</span>
-                          <span>
-                            {mem.cubedWeight.toLocaleString('pt-BR', { maximumFractionDigits: 2 })}{' '}
-                            kg
-                          </span>
-                        </div>
-                      </>
-                    )}
-                    <div className="flex justify-between text-xs font-semibold text-emerald-800 bg-emerald-50/80 p-1.5 rounded border border-emerald-100/50">
-                      <span>Peso Considerado (Taxável)</span>
-                      <span>
-                        {mem.taxableWeight.toLocaleString('pt-BR', { maximumFractionDigits: 2 })} kg
-                      </span>
-                    </div>
-
-                    <div className="h-px bg-emerald-100/50 my-2" />
-
-                    <div className="flex justify-between text-slate-700">
-                      <span>Frete Peso (KM x Peso)</span>
-                      <span>{fmt(mem.baseFreight)}</span>
-                    </div>
-                    <div className="flex justify-between text-slate-700">
-                      <span>Frete Valor / Ad Valorem ({cfg.params.freteValorPct}%)</span>
-                      <span>{fmt(mem.freteValor)}</span>
-                    </div>
-                  </div>
+            <CardContent className="p-5 space-y-4">
+              <div className="space-y-2 text-sm text-slate-600">
+                <div className="flex justify-between">
+                  <span>Peso Real</span>
+                  <span>{mem.physicalWeight} kg</span>
                 </div>
-
-                <div>
-                  <div className="text-xs font-bold text-emerald-700/60 uppercase mb-2 flex items-center gap-2 mt-4">
-                    <div className="h-px bg-emerald-100 flex-1" />
-                    Generalidades e Taxas
-                    <div className="h-px bg-emerald-100 flex-1" />
+                {cfg.sim.useCubing && (
+                  <div className="flex justify-between">
+                    <span>Peso Cubado</span>
+                    <span>{mem.cubedWeight.toFixed(2)} kg</span>
                   </div>
-                  {cfg.modules.genActive && mem.genVals.length > 0 && (
-                    <div className="space-y-1.5 text-slate-600">
-                      {mem.genVals.map((g) => (
-                        <div
-                          key={g.id}
-                          className="flex justify-between pl-2 border-l-2 border-emerald-300"
-                        >
-                          <span className="truncate pr-2">
-                            {g.name} {g.type.startsWith('pct') && `(${g.val}%)`}
-                          </span>
-                          <span>{fmt(g.total)}</span>
-                        </div>
-                      ))}
-                      <div className="flex justify-between font-medium text-emerald-900 pt-1 border-t border-dashed border-emerald-200 mt-2">
-                        <span>Subtotal Generalidades</span>
-                        <span>{fmt(mem.subGen)}</span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                <div>
-                  <div className="text-xs font-bold text-emerald-700/60 uppercase mb-2 flex items-center gap-2 mt-4">
-                    <div className="h-px bg-emerald-100 flex-1" />
-                    Serviços Adicionais
-                    <div className="h-px bg-emerald-100 flex-1" />
-                  </div>
-                  {cfg.modules.srvActive && mem.srvVals.length > 0 && (
-                    <div className="space-y-1.5 text-slate-600">
-                      {mem.srvVals.map((s) => (
-                        <div
-                          key={s.id}
-                          className="flex justify-between pl-2 border-l-2 border-emerald-300"
-                        >
-                          <span className="truncate pr-2">
-                            {s.name} {s.type.startsWith('pct') && `(${s.val}%)`}
-                          </span>
-                          <span>{fmt(s.total)}</span>
-                        </div>
-                      ))}
-                      <div className="flex justify-between font-medium text-emerald-900 pt-1 border-t border-dashed border-emerald-200 mt-2">
-                        <span>Subtotal Serviços</span>
-                        <span>{fmt(mem.subSrv)}</span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                <div className="pt-4 mt-6 border-t-2 border-emerald-900/20">
-                  <div className="space-y-2">
-                    <div className="flex justify-between font-bold text-emerald-950 bg-emerald-50 p-1.5 rounded">
-                      <span>Subtotal Custos Base</span>
-                      <span>{fmt(mem.sub1)}</span>
-                    </div>
-
-                    {cfg.modules.paramsActive && (
-                      <>
-                        <div className="flex justify-between text-slate-600 pl-4 border-l-2 border-emerald-200">
-                          <span>Margem Operacional ({cfg.params.marginPct}%)</span>
-                          <span>{fmt(mem.margin)}</span>
-                        </div>
-                        <div className="flex justify-between text-slate-600 pl-4 border-l-2 border-emerald-200">
-                          <span>Tributos (ICMS/ISS {cfg.params.taxPct}%)</span>
-                          <span>{fmt(mem.tax)}</span>
-                        </div>
-                      </>
-                    )}
-                  </div>
+                )}
+                <div className="flex justify-between font-bold text-emerald-800 bg-emerald-50 p-1.5 rounded">
+                  <span>Peso Tarifável</span>
+                  <span>{mem.taxableWeight.toFixed(2)} kg</span>
                 </div>
               </div>
 
-              <div className="bg-emerald-50/80 p-5 border-t border-emerald-200/80 backdrop-blur-sm">
-                <div className="flex justify-between items-end font-sans">
-                  <div className="space-y-1">
-                    <span className="text-sm font-bold text-emerald-800 block uppercase tracking-wider">
-                      Valor Final
-                    </span>
-                    <span className="text-xs text-emerald-600 font-medium">
-                      Frete Total Sugerido
-                    </span>
-                  </div>
-                  <span className="text-3xl font-black text-emerald-700 tracking-tight drop-shadow-sm">
-                    {fmt(mem.total)}
-                  </span>
+              <div className="h-px bg-emerald-100" />
+
+              <div className="space-y-2 text-sm text-slate-700">
+                <div className="flex justify-between font-medium">
+                  <span>Frete Peso (Matriz)</span>
+                  <span>{fmt(mem.fretePeso)}</span>
                 </div>
+                {mem.genVals.map((g) => (
+                  <div
+                    key={g.id}
+                    className="flex justify-between pl-2 border-l-2 border-emerald-300"
+                  >
+                    <span>{g.name}</span>
+                    <span>{fmt(g.total)}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="bg-emerald-50 p-4 border-t border-emerald-200 rounded-b-lg mt-4">
+                <span className="text-xs font-bold text-emerald-800 uppercase block mb-1">
+                  Valor Final Sugerido
+                </span>
+                <span className="text-3xl font-black text-emerald-700">{fmt(mem.total)}</span>
               </div>
             </CardContent>
           </Card>

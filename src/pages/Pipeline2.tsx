@@ -25,7 +25,6 @@ export default function Pipeline2() {
   )
 
   useEffect(() => {
-    // Route-based tracking to avoid stale states
     if (location.pathname.includes('/pipeline/2')) {
       if (!hasLogged.current) {
         hasLogged.current = true
@@ -63,10 +62,13 @@ export default function Pipeline2() {
     }
   }
 
-  const handleReactivate = (id: string, stage: 'Negociação' | 'Qualificação') => {
+  const handleReactivate = (
+    id: string,
+    stage: 'Negociação' | 'Qualificação' | 'Primeiro contato',
+  ) => {
     const prevState = [...state.leads]
     try {
-      if (!['Negociação', 'Qualificação'].includes(stage)) {
+      if (!['Negociação', 'Qualificação', 'Primeiro contato'].includes(stage)) {
         throw new Error(`Etapa de prospecção de destino inválida: ${stage}`)
       }
 
@@ -79,8 +81,8 @@ export default function Pipeline2() {
         ),
       })
       toast({
-        title: `Automação: Lead reativado para ${stage}!`,
-        description: 'Atividade Inbound detectada. Score atualizado para Quente na Prospecção.',
+        title: `Automação: Lead reativado!`,
+        description: `Atividade Inbound detectada. Movido para ${stage} na Prospecção com Score Quente.`,
       })
     } catch (error) {
       try {
@@ -123,8 +125,8 @@ export default function Pipeline2() {
               className="text-amber-700/80 font-medium mt-1 text-sm"
               aria-describedby="Descrição do pipeline de nutrição"
             >
-              Reaquecimento de leads parados, sem resposta ou perdidos por timing. Utilize os botões
-              para reativar para prospecção.
+              Reaquecimento de leads parados. Utilize os botões de reativação caso haja interação
+              Inbound.
             </p>
           </div>
           {['Master', 'Marketing', 'Supervisor'].includes(state.role) && (
