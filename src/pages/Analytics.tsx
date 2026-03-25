@@ -7,6 +7,7 @@ import {
   Clock,
   Target,
   Filter,
+  Table as TableIcon,
 } from 'lucide-react'
 import {
   ChartContainer,
@@ -17,8 +18,8 @@ import {
   ChartConfig,
 } from '@/components/ui/chart'
 import {
-  BarChart,
-  Bar,
+  LineChart,
+  Line,
   XAxis,
   YAxis,
   ResponsiveContainer,
@@ -26,8 +27,8 @@ import {
   PieChart,
   Pie,
   Cell,
-  LineChart,
-  Line,
+  BarChart,
+  Bar,
 } from 'recharts'
 import {
   Select,
@@ -36,16 +37,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 import useCrmStore from '@/stores/useCrmStore'
 
 const analyticsConfig = {
   conversion: { label: 'Conversão (%)', color: '#10b981' },
-  price: { label: 'Preço', color: '#e11d48' },
-  fit: { label: 'FIT', color: '#94a3b8' },
-  coverage: { label: 'Cobertura', color: '#d97706' },
-  deadline: { label: 'Prazo', color: '#475569' },
-  sla: { label: 'SLA/Avarias', color: '#64748b' },
-  others: { label: 'Outros', color: '#cbd5e1' },
+  FIT: { label: 'FIT', color: '#6366f1' },
+  Preço: { label: 'Preço', color: '#e11d48' },
+  Prazo: { label: 'Prazo', color: '#f59e0b' },
+  Cobertura: { label: 'Cobertura', color: '#0ea5e9' },
+  SLA: { label: 'SLA/Avarias', color: '#8b5cf6' },
+  Outros: { label: 'Outros', color: '#94a3b8' },
 } satisfies ChartConfig
 
 const conversionData = [
@@ -56,12 +65,12 @@ const conversionData = [
 ]
 
 const lossReasonsData = [
-  { name: 'price', value: 35, fill: 'var(--color-price)' },
-  { name: 'fit', value: 25, fill: 'var(--color-fit)' },
-  { name: 'coverage', value: 20, fill: 'var(--color-coverage)' },
-  { name: 'deadline', value: 10, fill: 'var(--color-deadline)' },
-  { name: 'sla', value: 5, fill: 'var(--color-sla)' },
-  { name: 'others', value: 5, fill: 'var(--color-others)' },
+  { name: 'FIT', value: 45, fill: 'var(--color-FIT)' },
+  { name: 'Preço', value: 30, fill: 'var(--color-Preço)' },
+  { name: 'Prazo', value: 10, fill: 'var(--color-Prazo)' },
+  { name: 'Cobertura', value: 8, fill: 'var(--color-Cobertura)' },
+  { name: 'SLA', value: 5, fill: 'var(--color-SLA)' },
+  { name: 'Outros', value: 2, fill: 'var(--color-Outros)' },
 ]
 
 const distData = [
@@ -81,7 +90,6 @@ export default function Analytics() {
   const { state } = useCrmStore()
   const [period, setPeriod] = useState('30d')
 
-  // Example filtering logic visibility based on role
   const isGlobalView = ['Master', 'Supervisor', 'Diretoria'].includes(state.role)
 
   return (
@@ -96,8 +104,8 @@ export default function Analytics() {
               Dashboards Analíticos
             </h1>
             <p className="text-slate-600 font-medium mt-1">
-              Visão de conversões, tempo por etapa e motivos de perda operacionais.
-              {!isGlobalView && ' (Visualizando apenas seus dados)'}
+              Atualizado automaticamente toda sexta-feira.
+              {!isGlobalView && ' (Visualizando apenas seus dados gerais e anonimizados)'}
             </p>
           </div>
         </div>
@@ -117,117 +125,15 @@ export default function Analytics() {
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="bg-white/80 border-slate-200 shadow-sm backdrop-blur-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-semibold text-slate-700">
-              Taxa de Conversão
-            </CardTitle>
-            <Target className="h-4 w-4 text-emerald-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-slate-900">22.4%</div>
-            <p className="text-xs text-slate-500">Média geral dos funis</p>
-          </CardContent>
-        </Card>
-        <Card className="bg-white/80 border-slate-200 shadow-sm backdrop-blur-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-semibold text-slate-700">
-              Tempo Médio Conversão
-            </CardTitle>
-            <Clock className="h-4 w-4 text-blue-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-slate-900">28 Dias</div>
-            <p className="text-xs text-slate-500">Do 1º Contato ao Ganho</p>
-          </CardContent>
-        </Card>
-        <Card className="bg-white/80 border-slate-200 shadow-sm backdrop-blur-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-semibold text-slate-700">
-              Distribuição (Ganho)
-            </CardTitle>
-            <TrendingUp className="h-4 w-4 text-emerald-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-slate-900">35%</div>
-            <p className="text-xs text-slate-500">Em relação ao total de leads</p>
-          </CardContent>
-        </Card>
-        <Card className="bg-white/80 border-slate-200 shadow-sm backdrop-blur-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-semibold text-slate-700">
-              Principal Ofensor
-            </CardTitle>
-            <AlertCircle className="h-4 w-4 text-rose-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-slate-900">Preço (35%)</div>
-            <p className="text-xs text-slate-500">Maior motivo de perda</p>
-          </CardContent>
-        </Card>
-      </div>
-
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {/* Gráfico de Linha: Taxas de Conversão */}
-        <Card className="col-span-1 lg:col-span-2 flex flex-col bg-white/80 border-slate-200 shadow-sm relative overflow-hidden backdrop-blur-sm">
-          <div className="absolute top-5 left-5 flex items-center gap-2 text-emerald-900 bg-emerald-50/80 px-3 py-1.5 rounded-md border border-emerald-100 backdrop-blur-md shadow-sm z-10">
-            <TrendingUp className="w-5 h-5 text-emerald-600" />
-            <span className="font-bold text-sm tracking-wide">Taxa de Conversão por Etapa (%)</span>
-          </div>
-          <CardHeader className="pt-20 pb-0 px-6">
-            <CardTitle className="sr-only">Conversão</CardTitle>
-            <CardDescription className="text-slate-500">
-              Evolução da retenção de leads ao longo do funil comercial.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="pt-6 pb-6 px-6 flex-1 min-h-[300px]">
-            <ChartContainer config={analyticsConfig} className="h-full w-full min-h-[250px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart
-                  data={conversionData}
-                  margin={{ top: 20, right: 20, left: -20, bottom: 10 }}
-                >
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    vertical={false}
-                    stroke="hsl(var(--border))"
-                  />
-                  <XAxis
-                    dataKey="stage"
-                    stroke="#888888"
-                    fontSize={12}
-                    tickLine={false}
-                    axisLine={false}
-                  />
-                  <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <Line
-                    type="monotone"
-                    dataKey="conversion"
-                    name="conversion"
-                    stroke="var(--color-conversion)"
-                    strokeWidth={4}
-                    dot={{ r: 6, fill: 'var(--color-conversion)' }}
-                    activeDot={{ r: 8 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </ChartContainer>
-          </CardContent>
-        </Card>
-
         {/* Gráfico de Pizza: Motivos de Perda */}
-        <Card className="flex flex-col bg-white/80 border-slate-200 shadow-sm relative overflow-hidden backdrop-blur-sm">
+        <Card className="flex flex-col bg-white/80 border-slate-200 shadow-sm relative overflow-hidden backdrop-blur-sm lg:col-span-1">
           <div className="absolute top-5 left-5 flex items-center gap-2 text-rose-900 bg-rose-50/80 px-3 py-1.5 rounded-md border border-rose-100 backdrop-blur-md shadow-sm z-10">
             <AlertCircle className="w-5 h-5 text-rose-500" />
             <span className="font-bold text-sm tracking-wide">Motivos de Perda</span>
           </div>
           <CardHeader className="pt-20 pb-0 px-6 text-center">
             <CardTitle className="sr-only">Motivos</CardTitle>
-            <CardDescription className="text-slate-500">
-              Classificação obrigatória em Perdas.
-            </CardDescription>
           </CardHeader>
           <CardContent className="pt-6 pb-6 px-2 flex-1 min-h-[300px]">
             <ChartContainer config={analyticsConfig} className="h-full w-full min-h-[250px]">
@@ -258,7 +164,43 @@ export default function Analytics() {
           </CardContent>
         </Card>
 
-        {/* Gráfico de Barras: Tempo por Etapa */}
+        {/* Tabela de Motivos */}
+        <Card className="flex flex-col bg-white/80 border-slate-200 shadow-sm backdrop-blur-sm lg:col-span-2">
+          <CardHeader className="pb-3 border-b border-slate-100">
+            <CardTitle className="text-lg flex items-center gap-2 text-slate-800">
+              <TableIcon className="w-5 h-5 text-slate-500" /> Tabela de Motivos de Perda
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-4 p-0">
+            <Table>
+              <TableHeader className="bg-slate-50">
+                <TableRow>
+                  <TableHead>Motivo</TableHead>
+                  <TableHead className="text-right">Quantidade</TableHead>
+                  <TableHead className="text-right">Porcentagem (%)</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {lossReasonsData.map((item, index) => (
+                  <TableRow key={index}>
+                    <TableCell className="font-medium flex items-center gap-2">
+                      <div
+                        className="w-3 h-3 rounded-full"
+                        style={{ backgroundColor: item.fill }}
+                      ></div>
+                      {item.name}
+                    </TableCell>
+                    <TableCell className="text-right font-semibold">
+                      {item.value * 2} leads
+                    </TableCell>
+                    <TableCell className="text-right text-slate-500">{item.value}%</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+
         <Card className="col-span-1 lg:col-span-2 flex flex-col bg-white/80 border-slate-200 shadow-sm relative overflow-hidden backdrop-blur-sm">
           <div className="absolute top-5 left-5 flex items-center gap-2 text-blue-900 bg-blue-50/80 px-3 py-1.5 rounded-md border border-blue-100 backdrop-blur-md shadow-sm z-10">
             <Clock className="w-5 h-5 text-blue-600" />
@@ -308,11 +250,10 @@ export default function Analytics() {
           </CardContent>
         </Card>
 
-        {/* Gráfico de Pizza: Distribuição */}
         <Card className="flex flex-col bg-white/80 border-slate-200 shadow-sm relative overflow-hidden backdrop-blur-sm">
           <div className="absolute top-5 left-5 flex items-center gap-2 text-slate-800 bg-slate-100/80 px-3 py-1.5 rounded-md border border-slate-200 backdrop-blur-md shadow-sm z-10">
             <Target className="w-5 h-5 text-slate-600" />
-            <span className="font-bold text-sm tracking-wide">Distribuição Ganhos/Perdas</span>
+            <span className="font-bold text-sm tracking-wide">Distribuição Geral</span>
           </div>
           <CardHeader className="pt-20 pb-0 px-6 text-center">
             <CardTitle className="sr-only">Distribuição</CardTitle>

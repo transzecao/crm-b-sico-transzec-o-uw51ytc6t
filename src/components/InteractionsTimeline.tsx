@@ -1,4 +1,4 @@
-import { Phone, Mail, MessageCircle, Clock } from 'lucide-react'
+import { Phone, Mail, MessageCircle, Clock, Volume2 } from 'lucide-react'
 
 const interactions = [
   {
@@ -16,6 +16,8 @@ const interactions = [
     date: 'Ontem, 14:15',
     content:
       'Ligação de 5 mins. O cliente informou que "já possui parceiro logístico", mas pediu apresentação por e-mail.',
+    transcription:
+      '...então, a gente já tem parceiro logístico consolidado, mas se vocês quiserem mandar o material por e-mail, a gente dá uma olhada na volumetria que vocês atendem...',
     icon: Phone,
     color: 'text-blue-500 bg-blue-50 border-blue-200',
   },
@@ -34,7 +36,7 @@ export function InteractionsTimeline() {
     <div className="space-y-6 bg-slate-50/60 p-5 rounded-xl border border-slate-200/80 backdrop-blur-sm shadow-inner mt-6">
       <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
         <Clock className="w-5 h-5 text-slate-500" />
-        Histórico Cronológico (Email, WhatsApp, Calls)
+        Histórico Cronológico Automático
       </h3>
       <div className="space-y-5 border-l-2 border-slate-200/80 ml-3 pl-6 relative pt-2">
         {interactions.map((item) => (
@@ -49,6 +51,15 @@ export function InteractionsTimeline() {
                 {item.date}
               </p>
               <p className="text-sm text-slate-700 font-medium leading-relaxed">{item.content}</p>
+
+              {item.transcription && (
+                <div className="mt-3 bg-slate-50 p-3 rounded border border-slate-100">
+                  <p className="text-[10px] font-bold text-slate-500 uppercase flex items-center gap-1 mb-1">
+                    <Volume2 className="w-3 h-3" /> Transcrição da IA
+                  </p>
+                  <p className="text-xs text-slate-600 italic">"{item.transcription}"</p>
+                </div>
+              )}
             </div>
           </div>
         ))}

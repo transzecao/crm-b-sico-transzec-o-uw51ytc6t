@@ -15,7 +15,18 @@ import {
   List,
   CheckSquare,
   Calendar as CalendarIcon,
+  Clock,
 } from 'lucide-react'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 
 const COLUMNS = [
   'Primeiro contato',
@@ -38,8 +49,11 @@ export default function Pipeline1() {
 
   const [lossModalOpen, setLossModalOpen] = useState(false)
   const [quickAddOpen, setQuickAddOpen] = useState(false)
+  const [settingsOpen, setSettingsOpen] = useState(false)
   const [quickAddStage, setQuickAddStage] = useState('')
   const [pendingMove, setPendingMove] = useState<{ id: string; stage: string } | null>(null)
+
+  const [rulesForm, setRulesForm] = useState(state.pipelineRules)
 
   const prospectionLeads = useMemo(
     () => state.leads.filter((l) => l.pipeline === 'Prospection'),
@@ -88,22 +102,32 @@ export default function Pipeline1() {
         return
       }
 
-      // Automation Rule: 3rd attempt without response moves to Nutrition
+      // Automation Rules
+      let finalStage = stage
+      let newPipeline = lead.pipeline
+
       if (stage === '3º contato sem resposta') {
-        updateState({
-          leads: state.leads.map((l) =>
-            l.id === id ? { ...l, pipeline: 'Nutrition', stage: 'Nutrição – Aquecimento' } : l,
-          ),
-        })
+        finalStage = 'Nutrição – Aquecimento'
+        newPipeline = 'Nutrition'
         toast({
           title: 'Automação Disparada: Nutrição',
-          description: '3º contato sem resposta atingido. Lead movido para o fluxo de nutrição.',
+          description: '3º contato sem resposta atingido. Movido para Nutrição (inativo).',
         })
-        return
       }
 
-      // Rule: Mark 2º contato completes 1º automatically handled by kanban drop.
-      updateState({ leads: state.leads.map((l) => (l.id === id ? { ...l, stage } : l)) })
+      updateState({
+        leads: state.leads.map((l) =>
+          l.id === id
+            ? {
+                ...l,
+                stage: finalStage,
+                pipeline: newPipeline as any,
+                isStalled: false,
+                stalledDays: 0,
+              }
+            : l,
+        ),
+      })
     } catch (error) {
       try {
         updateState({ leads: previousState }) // Rollback
@@ -142,8 +166,7 @@ export default function Pipeline1() {
       toast({
         variant: 'destructive',
         title: 'Erro de Sistema',
-        description:
-          'Não foi possível registrar a perda de forma segura devido a um erro de integridade.',
+        description: 'Não foi possível registrar a perda.',
       })
     } finally {
       setLossModalOpen(false)
@@ -177,11 +200,7 @@ export default function Pipeline1() {
       updateState({ leads: [...state.leads, newLead] })
       toast({ title: 'Negócio adicionado com sucesso!' })
     } catch (err) {
-      try {
-        updateState({ leads: previousState })
-      } catch (rollbackError) {
-        console.error('Rollback falhou', rollbackError)
-      }
+      updateState({ leads: previousState })
       toast({
         variant: 'destructive',
         title: 'Erro ao adicionar',
@@ -190,6 +209,33 @@ export default function Pipeline1() {
     } finally {
       setQuickAddOpen(false)
     }
+  }
+
+  const simulateTimeSkip = () => {
+    const updatedLeads = state.leads.map((lead) => {
+      if (lead.pipeline !== 'Prospection') return lead
+      let newDays = (lead.stalledDays || 0) + 7
+      let isStalled =
+        newDays >= state.pipelineRules.negotiationMaxDays && lead.stage === 'Negociação'
+
+      let newStage = lead.stage
+      let newPipe = lead.pipeline
+
+      if (isStalled) {
+        newStage = 'Nutrição – Aquecimento'
+        newPipe = 'Nutrition'
+        isStalled = false
+        newDays = 0
+        toast({
+          title: 'Automação SLA Expirado',
+          description: `O negócio ${lead.title} excedeu ${state.pipelineRules.negotiationMaxDays} dias e foi movido para Nutrição.`,
+        })
+      }
+
+      return { ...lead, stalledDays: newDays, isStalled, stage: newStage, pipeline: newPipe }
+    })
+
+    updateState({ leads: updatedLeads })
   }
 
   return (
@@ -226,34 +272,25 @@ export default function Pipeline1() {
               </span>
               <ChevronDown className="w-3 h-3 text-violet-600" />
             </button>
-
-            <div className="relative group ml-2">
-              <div className="flex items-center bg-white border border-violet-200/80 rounded-full overflow-hidden shadow-sm focus-within:ring-2 focus-within:ring-violet-500/30 focus-within:border-violet-300">
-                <span className="px-3 text-xs text-violet-700 font-medium whitespace-nowrap bg-violet-50/80 border-r border-violet-200/60 py-1.5">
-                  Negócios em andamento &times;
-                </span>
-                <input
-                  type="text"
-                  placeholder="+ pesquisa"
-                  aria-label="Buscar negócios"
-                  className="bg-transparent border-none outline-none text-sm px-3 py-1.5 w-40 focus:w-64 transition-all placeholder:text-violet-400 text-violet-900 font-medium"
-                />
-                <button
-                  aria-label="Confirmar pesquisa"
-                  className="px-3 text-violet-400 hover:text-violet-700 transition-colors"
-                >
-                  <Search className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
           </div>
-          <div className="flex items-center">
-            <button
-              aria-label="Configurações do Pipeline"
-              className="p-2 text-violet-500 hover:bg-violet-100 hover:text-violet-800 rounded-full transition-colors"
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={simulateTimeSkip}
+              className="text-xs bg-white text-violet-700 border-violet-200 hover:bg-violet-50"
             >
-              <Settings className="w-5 h-5" />
-            </button>
+              <Clock className="w-3 h-3 mr-1" /> Simular +7 Dias (Testar Regras)
+            </Button>
+            {state.role === 'Master' && (
+              <button
+                onClick={() => setSettingsOpen(true)}
+                aria-label="Configurações do Pipeline"
+                className="p-2 text-violet-500 hover:bg-violet-100 hover:text-violet-800 rounded-full transition-colors"
+              >
+                <Settings className="w-5 h-5" />
+              </button>
+            )}
           </div>
         </div>
 
@@ -265,56 +302,6 @@ export default function Pipeline1() {
             >
               <LayoutGrid className="w-4 h-4" /> Kanban
             </button>
-            <button
-              aria-label="Visualização em Lista"
-              className="px-3 py-1 hover:text-violet-900 hover:bg-white/60 rounded flex items-center gap-2 transition-colors"
-            >
-              <List className="w-4 h-4" /> Lista
-            </button>
-            <button
-              aria-label="Visualização de Atividades"
-              className="px-3 py-1 hover:text-violet-900 hover:bg-white/60 rounded flex items-center gap-2 transition-colors"
-            >
-              <CheckSquare className="w-4 h-4" /> Atividades
-            </button>
-            <button
-              aria-label="Visualização de Calendário"
-              className="px-3 py-1 hover:text-violet-900 hover:bg-white/60 rounded flex items-center gap-2 transition-colors"
-            >
-              <CalendarIcon className="w-4 h-4" /> Calendário
-            </button>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-3">
-              <span className="flex items-center gap-1.5">
-                <span className="w-4 h-4 rounded-full bg-violet-100/80 border border-violet-200 flex items-center justify-center text-[10px] text-violet-800 font-bold">
-                  0
-                </span>
-                Recebidos
-              </span>
-              <span className="flex items-center gap-1.5 font-semibold text-violet-900">
-                <span className="w-4 h-4 rounded-full bg-rose-500 flex items-center justify-center text-[10px] text-white font-bold shadow-sm">
-                  {prospectionLeads.length}
-                </span>
-                Planejado
-              </span>
-              <button
-                aria-label="Mais filtros"
-                className="flex items-center gap-1 hover:text-violet-900 ml-2 bg-violet-50/50 px-2 py-0.5 rounded"
-              >
-                Mais <ChevronDown className="w-3 h-3" />
-              </button>
-            </div>
-            <div className="h-4 w-px bg-violet-200/80"></div>
-            <div className="flex items-center gap-2">
-              <button
-                aria-label="Regras de automação"
-                className="flex items-center gap-1.5 bg-violet-50/80 hover:bg-violet-100 border border-violet-200/80 px-3 py-1 rounded-md text-violet-800 transition-colors"
-              >
-                <Settings className="w-3 h-3" /> Regras de automação
-              </button>
-            </div>
           </div>
         </div>
       </div>
@@ -345,6 +332,58 @@ export default function Pipeline1() {
         onConfirm={confirmQuickAdd}
         onCancel={() => setQuickAddOpen(false)}
       />
+
+      <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-violet-900">
+              <Settings className="w-5 h-5" /> Regras de Automação
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>SLA Máximo na Etapa "Negociação" (Dias)</Label>
+              <Input
+                type="number"
+                value={rulesForm.negotiationMaxDays}
+                onChange={(e) =>
+                  setRulesForm({ ...rulesForm, negotiationMaxDays: parseInt(e.target.value) || 21 })
+                }
+              />
+              <p className="text-xs text-slate-500">
+                Exceder este prazo move o negócio automaticamente para Nutrição.
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label>SLA "3º contato sem resposta" para Nutrição (Dias)</Label>
+              <Input
+                type="number"
+                value={rulesForm.inactivityDaysToNutrition}
+                onChange={(e) =>
+                  setRulesForm({
+                    ...rulesForm,
+                    inactivityDaysToNutrition: parseInt(e.target.value) || 1,
+                  })
+                }
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSettingsOpen(false)}>
+              Cancelar
+            </Button>
+            <Button
+              onClick={() => {
+                updateState({ pipelineRules: rulesForm })
+                setSettingsOpen(false)
+                toast({ title: 'Regras salvas com sucesso!' })
+              }}
+            >
+              Salvar Regras
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

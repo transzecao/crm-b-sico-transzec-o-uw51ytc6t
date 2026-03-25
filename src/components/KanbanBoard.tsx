@@ -40,7 +40,10 @@ export function KanbanBoard({
   leads: Lead[]
   companies?: Company[]
   onMove: (leadId: string, toStage: string) => void
-  onReactivate?: (leadId: string, toStage: 'Negociação' | 'Qualificação') => void
+  onReactivate?: (
+    leadId: string,
+    toStage: 'Negociação' | 'Qualificação' | 'Primeiro contato',
+  ) => void
   onQuickAdd?: (stage: string) => void
 }) {
   const [draggedLead, setDraggedLead] = useState<string | null>(null)
@@ -104,8 +107,8 @@ export function KanbanBoard({
               {stage === 'Negociação' && (
                 <div
                   className="w-3 h-3 rounded-full bg-black/20 text-[10px] flex items-center justify-center font-bold"
-                  title="Recomenda-se max 3 semanas"
-                  aria-label="Aviso: Máximo de 3 semanas"
+                  title="Aviso de SLA de Negociação"
+                  aria-label="Aviso de SLA"
                 >
                   <AlertCircle className="w-2.5 h-2.5 text-white" />
                 </div>
@@ -130,7 +133,7 @@ export function KanbanBoard({
                 </button>
               ) : (
                 <div
-                  aria-label={`Adicionar novo em ${stage}`}
+                  aria-label={`Arraste para ${stage}`}
                   role="button"
                   tabIndex={0}
                   className="h-7 flex items-center justify-center text-violet-400 font-bold hover:bg-violet-200/50 hover:text-violet-600 rounded-md cursor-pointer transition-colors border border-dashed border-transparent hover:border-violet-300"
@@ -162,7 +165,7 @@ export function KanbanBoard({
                       {lead.isStalled && (
                         <div
                           className="absolute -top-2 -right-2 bg-orange-100 text-orange-600 border border-orange-200 rounded-full p-1 shadow-sm z-20"
-                          title="Muito tempo nesta etapa (Aviso)"
+                          title={`SLA Expirado: ${lead.stalledDays} dias nesta etapa`}
                           aria-label="Aviso: Estagnado na etapa"
                         >
                           <Clock className="w-3 h-3" aria-hidden="true" />
@@ -261,19 +264,19 @@ export function KanbanBoard({
                         {onReactivate ? (
                           <div className="pt-3 mt-3 border-t border-violet-100/60 grid grid-cols-2 gap-1.5">
                             <button
-                              onClick={() => onReactivate(lead.id, 'Qualificação')}
-                              aria-label={`Reativar ${lead.title} para Qualificação`}
+                              onClick={() => onReactivate(lead.id, 'Primeiro contato')}
+                              aria-label={`Reativar ${lead.title} para Prospecção`}
                               className="text-blue-600 bg-blue-50 hover:bg-blue-100 py-1.5 rounded flex items-center justify-center gap-1 text-[10px] font-bold transition-colors border border-blue-100 shadow-sm"
                             >
-                              <RefreshCw className="w-3 h-3" aria-hidden="true" /> Qualif.
+                              <RefreshCw className="w-3 h-3" aria-hidden="true" /> Reativar
                             </button>
                             <button
                               onClick={() => onReactivate(lead.id, 'Negociação')}
                               aria-label={`Reativar ${lead.title} para Negociação`}
                               className="text-emerald-600 bg-emerald-50 hover:bg-emerald-100 py-1.5 rounded flex items-center justify-center gap-1 text-[10px] font-bold transition-colors border border-emerald-100 shadow-sm"
-                              title="Inbound - Pedido de Preço"
+                              title="Pedido de Preço (Inbound)"
                             >
-                              <RefreshCw className="w-3 h-3" aria-hidden="true" /> Negoc.
+                              <RefreshCw className="w-3 h-3" aria-hidden="true" /> Cotação
                             </button>
                           </div>
                         ) : (

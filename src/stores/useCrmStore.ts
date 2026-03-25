@@ -24,6 +24,7 @@ export type Lead = {
   lastInteraction?: string
   score?: 'Hot' | 'Warm' | 'Cold'
   isStalled?: boolean
+  stalledDays?: number
 }
 
 export type Company = {
@@ -66,6 +67,7 @@ export type Interaction = {
   author: string
   subject?: string
   isPrincipal?: boolean
+  transcription?: string
 }
 
 export type CustomFieldDef = {
@@ -73,6 +75,11 @@ export type CustomFieldDef = {
   name: string
   type: 'text' | 'select' | 'number' | 'date'
   options?: string[]
+}
+
+export type PipelineRule = {
+  negotiationMaxDays: number
+  inactivityDaysToNutrition: number
 }
 
 type CrmState = {
@@ -84,6 +91,8 @@ type CrmState = {
   contacts: Contact[]
   interactions: Interaction[]
   customFieldDefs: CustomFieldDef[]
+  pipelineRules: PipelineRule
+  accessLogs: { date: string; user: string; role: string; module: string }[]
 }
 
 const mockCompanies: Company[] = [
@@ -159,6 +168,7 @@ const mockLeads: Lead[] = [
     createdAt: '01 de março de 2026',
     score: 'Hot',
     isStalled: true,
+    stalledDays: 16,
   },
 ]
 
@@ -188,9 +198,11 @@ const mockInteractions: Interaction[] = [
   {
     id: 'int2',
     companyId: '1',
-    type: 'email',
-    subject: 'Apresentação Institucional Transzecão',
-    content: 'E-mail enviado contendo a apresentação institucional da Transzecão.',
+    type: 'phone',
+    subject: 'Call de Alinhamento Técnico',
+    content: 'Cliente informou que tem parceiro, mas aceitou analisar.',
+    transcription:
+      '...então, a gente já tem parceiro logístico consolidado, mas se vocês quiserem mandar o material por e-mail, a gente dá uma olhada na volumetria que vocês atendem...',
     date: '19/03/2026 14:15',
     author: 'Bruna Araujo',
   },
@@ -208,6 +220,13 @@ let globalState: CrmState = {
   contacts: mockContacts,
   interactions: mockInteractions,
   customFieldDefs: [{ id: 'cf1', name: 'Concorrente Atual', type: 'text' }],
+  pipelineRules: {
+    negotiationMaxDays: 21,
+    inactivityDaysToNutrition: 1,
+  },
+  accessLogs: [
+    { date: new Date().toISOString(), user: 'Bruna Araujo', role: 'Master', module: 'Login' },
+  ],
 }
 
 const listeners = new Set<(state: CrmState) => void>()
@@ -231,9 +250,19 @@ export default function useCrmStore() {
       listeners.forEach((listener) => listener(globalState))
     } catch (error) {
       console.error('Falha de integridade durante atualização do CRM:', error)
-      throw error // Permite que os componentes capturem e exibam erros
+      throw error
     }
   }
 
-  return { state, updateState }
+  const logAccess = (moduleName: string) => {
+    const newLog = {
+      date: new Date().toISOString(),
+      user: globalState.currentUser.name,
+      role: globalState.role,
+      module: moduleName,
+    }
+    updateState({ accessLogs: [newLog, ...globalState.accessLogs].slice(0, 100) })
+  }
+
+  return { state, updateState, logAccess }
 }

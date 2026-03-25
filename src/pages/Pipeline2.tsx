@@ -1,9 +1,9 @@
-import { useMemo, useEffect, useRef } from 'react'
+import { useMemo, useEffect, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { KanbanBoard } from '@/components/KanbanBoard'
 import useCrmStore from '@/stores/useCrmStore'
 import { useToast } from '@/hooks/use-toast'
-import { Sprout, Mail } from 'lucide-react'
+import { Sprout, Mail, Filter } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 const COLUMNS = [
@@ -17,21 +17,11 @@ export default function Pipeline2() {
   const { state, updateState } = useCrmStore()
   const { toast } = useToast()
   const location = useLocation()
-  const hasLogged = useRef(false)
 
   const nutritionLeads = useMemo(
     () => state.leads.filter((l) => l.pipeline === 'Nutrition'),
     [state.leads],
   )
-
-  useEffect(() => {
-    if (location.pathname.includes('/pipeline/2')) {
-      if (!hasLogged.current) {
-        hasLogged.current = true
-        console.debug('Pipeline Nutrição acessado. Preparando dados de reaquecimento.')
-      }
-    }
-  }, [location.pathname])
 
   const handleMove = (id: string, stage: string) => {
     const prevState = [...state.leads]
@@ -39,25 +29,13 @@ export default function Pipeline2() {
       if (!COLUMNS.includes(stage)) {
         throw new Error(`Etapa de nutrição inválida: ${stage}`)
       }
-
-      const lead = state.leads.find((l) => l.id === id)
-      if (!lead) throw new Error('Negócio não encontrado na base de dados.')
-
       updateState({ leads: state.leads.map((l) => (l.id === id ? { ...l, stage } : l)) })
-      toast({ title: `Movido para ${stage}` })
     } catch (error) {
-      try {
-        updateState({ leads: prevState })
-      } catch (rollbackError) {
-        console.error('Falha de integridade no rollback:', rollbackError)
-      }
+      updateState({ leads: prevState })
       toast({
         variant: 'destructive',
         title: 'Erro de Movimentação',
-        description:
-          error instanceof Error
-            ? error.message
-            : 'Não foi possível mover o negócio. Estado revertido.',
+        description: 'Não foi possível mover o negócio. Estado revertido.',
       })
     }
   }
@@ -68,43 +46,56 @@ export default function Pipeline2() {
   ) => {
     const prevState = [...state.leads]
     try {
-      if (!['Negociação', 'Qualificação', 'Primeiro contato'].includes(stage)) {
-        throw new Error(`Etapa de prospecção de destino inválida: ${stage}`)
-      }
-
       const lead = state.leads.find((l) => l.id === id)
       if (!lead) throw new Error('Negócio não encontrado para reativação.')
 
       updateState({
         leads: state.leads.map((l) =>
-          l.id === id ? { ...l, pipeline: 'Prospection', stage, score: 'Hot' } : l,
+          l.id === id
+            ? {
+                ...l,
+                pipeline: 'Prospection',
+                stage,
+                score: 'Hot',
+                isStalled: false,
+                stalledDays: 0,
+              }
+            : l,
         ),
       })
       toast({
-        title: `Automação: Lead reativado!`,
-        description: `Atividade Inbound detectada. Movido para ${stage} na Prospecção com Score Quente.`,
+        title: `Automação Inbound: Lead reativado!`,
+        description: `Movido para ${stage} na Prospecção com Score Quente.`,
       })
     } catch (error) {
-      try {
-        updateState({ leads: prevState })
-      } catch (rollbackError) {
-        console.error('Falha de integridade no rollback:', rollbackError)
-      }
+      updateState({ leads: prevState })
       toast({
         variant: 'destructive',
         title: 'Erro do Sistema',
-        description:
-          error instanceof Error ? error.message : 'Falha grave ao tentar reativar o negócio.',
+        description: 'Falha grave ao tentar reativar o negócio.',
       })
     }
   }
 
   const handleDistribute = () => {
+    const targetLeads = nutritionLeads.filter(
+      (l) => l.stage === 'Conteúdo do mercado' || l.stage === 'Conteúdo do segmento',
+    )
+    if (targetLeads.length === 0) {
+      toast({ title: 'Nenhum lead elegível nas colunas de mercado/segmento.' })
+      return
+    }
     toast({
-      title: 'Distribuição em Lote',
-      description:
-        'Disparo de conteúdo programado para leads ativos nas colunas de mercado/segmento.',
+      title: 'Distribuição em Lote Executada',
+      description: `E-mails de nutrição agendados para ${targetLeads.length} leads.`,
     })
+  }
+
+  const simulateInbound = () => {
+    if (nutritionLeads.length === 0) return
+    const target = nutritionLeads[0]
+    handleReactivate(target.id, 'Primeiro contato')
+    toast({ title: 'Simulação Inbound', description: 'O cliente respondeu a um e-mail!' })
   }
 
   return (
@@ -129,15 +120,24 @@ export default function Pipeline2() {
               Inbound.
             </p>
           </div>
-          {['Master', 'Marketing', 'Supervisor'].includes(state.role) && (
+          <div className="flex gap-2">
             <Button
-              onClick={handleDistribute}
-              aria-label="Distribuir conteúdo em lote"
-              className="bg-amber-600 hover:bg-amber-700 text-white shadow-sm transition-all"
+              variant="outline"
+              onClick={simulateInbound}
+              className="bg-white border-amber-200 text-amber-700 hover:bg-amber-50"
             >
-              <Mail className="w-4 h-4 mr-2" aria-hidden="true" /> Distribuir Conteúdo (Lote)
+              <Filter className="w-4 h-4 mr-2" /> Simular Inbound
             </Button>
-          )}
+            {['Master', 'Marketing', 'Supervisor'].includes(state.role) && (
+              <Button
+                onClick={handleDistribute}
+                aria-label="Distribuir conteúdo em lote"
+                className="bg-amber-600 hover:bg-amber-700 text-white shadow-sm transition-all"
+              >
+                <Mail className="w-4 h-4 mr-2" aria-hidden="true" /> Distribuir (Lote)
+              </Button>
+            )}
+          </div>
         </div>
       </div>
 
