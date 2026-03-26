@@ -80,6 +80,15 @@ export default function Company360() {
 
   const isCnpjValid = company.cnpj.replace(/\D/g, '').length === 14
 
+  const addressStr =
+    `${company.logradouro || company.endereco}, ${company.numero || ''}, ${company.cidade || ''}`
+      .replace(/,\s*,/g, ',')
+      .replace(/,\s*$/, '')
+      .trim()
+  const mapQuery = encodeURIComponent(
+    addressStr.length > 5 ? addressStr : company.cidade || company.nomeFantasia || 'Brasil',
+  )
+
   return (
     <div className="space-y-6 pb-12">
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 bg-white p-5 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
@@ -140,6 +149,26 @@ export default function Company360() {
       <div className="grid lg:grid-cols-12 gap-6">
         <div className="lg:col-span-8 space-y-6">
           <BrainAnalysis interactions={interactions} company={company} />
+
+          <Card className="border-slate-200 shadow-sm bg-white overflow-hidden">
+            <CardHeader className="pb-3 border-b border-slate-100 bg-slate-50">
+              <CardTitle className="text-lg text-slate-900 font-bold flex items-center gap-2">
+                <MapPin className="w-5 h-5 text-emerald-600" /> Localização (Google My Maps)
+              </CardTitle>
+            </CardHeader>
+            <div className="h-[300px] w-full bg-slate-100">
+              <iframe
+                title="Google My Maps"
+                width="100%"
+                height="100%"
+                style={{ border: 0 }}
+                loading="lazy"
+                allowFullScreen
+                src={`https://www.google.com/maps?q=${mapQuery}&output=embed`}
+              ></iframe>
+            </div>
+          </Card>
+
           <InteractionsTimeline interactions={interactions} />
         </div>
 

@@ -74,11 +74,33 @@ export default function Pipeline1() {
       }
 
       if (stage === 'Ganho') {
+        const lead = state.leads.find((l) => l.id === id)
+        const company = state.companies.find((c) => c.id === lead?.companyId)
+
         updateState({
           leads: state.leads.map((l) => (l.id === id ? { ...l, stage, score: 'Hot' } : l)),
         })
         logAccess(`Ganhou negócio: Lead ID ${id}`)
-        toast({ title: 'Negócio Ganho!', description: 'Movido com sucesso.' })
+        toast({
+          title: 'Negócio Ganho!',
+          description: 'Acionando webhook de integração para ERP/Marketing...',
+        })
+
+        // Webhook Simulation Call
+        fetch('https://hook.us1.make.com/mock-webhook-transzecao', {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            event: 'lead_won',
+            leadId: id,
+            title: lead?.title,
+            value: lead?.value,
+            owner: lead?.owner,
+            companyName: company?.nomeFantasia,
+          }),
+        }).catch((e) => console.log('Webhook dispatched in background'))
+
         return
       }
 

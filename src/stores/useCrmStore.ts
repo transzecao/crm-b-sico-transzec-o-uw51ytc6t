@@ -32,6 +32,13 @@ export type Company = {
   razaoSocial?: string
   nomeFantasia: string
   endereco: string
+  cep?: string
+  logradouro?: string
+  numero?: string
+  complemento?: string
+  bairro?: string
+  cidade?: string
+  estado?: string
   descricaoNegocio?: string
   pipeline?: string
   segmento?: string
@@ -91,7 +98,13 @@ const mockCompanies: Company[] = [
     cnpj: '08.237.002/0042-89',
     razaoSocial: 'Industrial SP Metalurgia',
     nomeFantasia: 'Ind. SP',
-    endereco: 'Rua A',
+    endereco: 'Av. Paulista, 1000 - São Paulo, SP',
+    cep: '01310-100',
+    logradouro: 'Av. Paulista',
+    numero: '1000',
+    bairro: 'Bela Vista',
+    cidade: 'São Paulo',
+    estado: 'SP',
     segmento: 'Metalúrgico',
     clusters: ['Campinas'],
   },
@@ -114,6 +127,19 @@ const mockLeads: Lead[] = [
   },
 ]
 
+const mockContacts: Contact[] = [
+  {
+    id: '1',
+    companyId: '1',
+    name: 'Carlos Oliveira',
+    isPrincipal: true,
+    methods: [
+      { id: 'm1', type: 'email', value: 'carlos@indsp.com.br', isPrincipal: true },
+      { id: 'm2', type: 'whatsapp', value: '(11) 98765-4321', isPrincipal: true },
+    ],
+  },
+]
+
 let globalState: CrmState = {
   role: 'Master',
   currentUser: {
@@ -122,7 +148,7 @@ let globalState: CrmState = {
   },
   companies: mockCompanies,
   leads: mockLeads,
-  contacts: [],
+  contacts: mockContacts,
   interactions: [],
   userLogins: [],
   accessLogs: [],

@@ -21,9 +21,18 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { BarChart3, PieChart as PieIcon, TrendingUp, AlertTriangle, Clock } from 'lucide-react'
+import {
+  BarChart3,
+  PieChart as PieIcon,
+  TrendingUp,
+  AlertTriangle,
+  Clock,
+  Mail,
+} from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import useCrmStore from '@/stores/useCrmStore'
+import { useToast } from '@/hooks/use-toast'
 
 const conversionPerStageData = [
   { stage: '1º Contato', rate: 100 },
@@ -46,23 +55,42 @@ const timeData = [
 
 export default function Analytics() {
   const { state } = useCrmStore()
+  const { toast } = useToast()
   const isComercial = state.role === 'Comercial'
 
   const currentConversion = conversionPerStageData[conversionPerStageData.length - 1].rate
   const isAlertActive = currentConversion < 25
 
+  const handleSendReport = () => {
+    toast({
+      title: 'Relatório Semanal Agendado',
+      description:
+        'O resumo de Analytics será enviado para o e-mail da Diretoria todas as Segundas-feiras às 08:00.',
+    })
+  }
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4 bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-        <div className="bg-primary/10 p-3 rounded-xl border border-primary/20 text-primary">
-          <BarChart3 className="w-6 h-6" />
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+        <div className="flex items-center gap-4">
+          <div className="bg-primary/10 p-3 rounded-xl border border-primary/20 text-primary">
+            <BarChart3 className="w-6 h-6" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight text-slate-900">Analytics & KPIs</h1>
+            <p className="text-slate-500 font-medium">
+              {isComercial ? 'Seu desempenho pessoal' : 'Visão global de métricas e conversões.'}
+            </p>
+          </div>
         </div>
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900">Analytics & KPIs</h1>
-          <p className="text-slate-500 font-medium">
-            {isComercial ? 'Seu desempenho pessoal' : 'Visão global de métricas e conversões.'}
-          </p>
-        </div>
+        {!isComercial && (
+          <Button
+            onClick={handleSendReport}
+            className="bg-primary hover:bg-primary/90 text-white font-bold shadow-sm"
+          >
+            <Mail className="w-4 h-4 mr-2" /> Programar Report (Diretoria)
+          </Button>
+        )}
       </div>
 
       {isAlertActive && !isComercial && (

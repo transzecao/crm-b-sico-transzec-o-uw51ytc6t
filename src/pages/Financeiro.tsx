@@ -11,6 +11,7 @@ import { FinanceGeoTab } from '@/components/finance/FinanceGeoTab'
 import { FinanceFiscalTab } from '@/components/finance/FinanceFiscalTab'
 import { FinanceIntegTab } from '@/components/finance/FinanceIntegTab'
 import { FinanceKpiTab } from '@/components/finance/FinanceKpiTab'
+import { FinanceDocsTab } from '@/components/finance/FinanceDocsTab'
 
 export default function Financeiro() {
   const { state, updateState } = useCrmStore()
@@ -44,7 +45,7 @@ export default function Financeiro() {
               Calculadora de Fretes
             </h1>
             <p className="text-slate-500 font-medium mt-1">
-              Módulo Logístico Financeiro (Fórmulas e Clusters).
+              Módulo Logístico Financeiro (Fórmulas, Clusters e Documentos).
             </p>
           </div>
         </div>
@@ -76,13 +77,19 @@ export default function Financeiro() {
                 value="integ"
                 className="flex-1 py-2 text-sm font-semibold data-[state=active]:bg-primary data-[state=active]:text-white"
               >
-                Ocorrências EDI
+                EDI
               </TabsTrigger>
               <TabsTrigger
                 value="kpi"
                 className="flex-1 py-2 text-sm font-semibold data-[state=active]:bg-primary data-[state=active]:text-white"
               >
-                KPIs Operacionais
+                KPIs
+              </TabsTrigger>
+              <TabsTrigger
+                value="docs"
+                className="flex-1 py-2 text-sm font-semibold data-[state=active]:bg-primary data-[state=active]:text-white"
+              >
+                Documentos
               </TabsTrigger>
             </TabsList>
 
@@ -100,6 +107,9 @@ export default function Financeiro() {
             </TabsContent>
             <TabsContent value="kpi" className="mt-0">
               <FinanceKpiTab calc={calc} />
+            </TabsContent>
+            <TabsContent value="docs" className="mt-0">
+              <FinanceDocsTab />
             </TabsContent>
           </Tabs>
         </div>

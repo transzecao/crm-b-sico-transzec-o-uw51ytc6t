@@ -20,6 +20,7 @@ import { cn } from '@/lib/utils'
 
 import { CompanyActionHub } from '@/components/CompanyActionHub'
 import { CompanyContactsForm } from '@/components/CompanyContactsForm'
+import { CompanyAddressFields } from '@/components/CompanyAddressFields'
 import { Badge } from '@/components/ui/badge'
 
 export default function EmpresaForm() {
@@ -382,7 +383,14 @@ export default function EmpresaForm() {
                       ))}
                     </div>
                   </div>
-                  <div className="space-y-2 md:col-span-2">
+
+                  <CompanyAddressFields
+                    formData={formData}
+                    setFormData={setFormData}
+                    isReadOnly={isReadOnly}
+                  />
+
+                  <div className="space-y-2 md:col-span-2 pt-2 border-t border-slate-100">
                     {renderLabel('Observações', 'observacoes')}
                     <Textarea
                       id="observacoes"
@@ -407,7 +415,7 @@ export default function EmpresaForm() {
         </div>
 
         <div className="hidden lg:flex w-[320px] bg-slate-50 border-l border-slate-200 flex-col h-full shrink-0 shadow-inner z-0 relative">
-          <CompanyActionHub company={existingCompany} />
+          <CompanyActionHub company={existingCompany} contacts={contacts as Contact[]} />
         </div>
       </div>
     </div>
