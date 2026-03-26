@@ -81,6 +81,25 @@ export type UserLogin = {
   updatedAt: string
 }
 
+export type ConsultantGoal = {
+  id: string
+  consultantName: string
+  targetValue: number
+  currentValue: number
+  period: string
+}
+
+export type FreightOrder = {
+  id: string
+  companyId: string
+  trackingCode: string
+  status: 'Pendente' | 'Em Coleta' | 'Em Trânsito' | 'Entregue'
+  origin: string
+  destination: string
+  updatedAt: string
+  invoiceUrl?: string
+}
+
 type CrmState = {
   role: Role
   currentUser: { name: string; avatar: string }
@@ -90,6 +109,8 @@ type CrmState = {
   interactions: Interaction[]
   userLogins: UserLogin[]
   accessLogs: { date: string; user: string; role: string; module: string }[]
+  consultantGoals: ConsultantGoal[]
+  freightOrders: FreightOrder[]
 }
 
 const mockCompanies: Company[] = [
@@ -125,6 +146,20 @@ const mockLeads: Lead[] = [
     createdAt: new Date().toLocaleDateString(),
     score: 'Warm',
   },
+  {
+    id: '2',
+    companyId: '1',
+    title: 'Projeto Logística SP',
+    pipeline: 'Prospection',
+    stage: 'Negociação',
+    value: 45000,
+    owner: 'Admin',
+    ownerAvatar: 'https://img.usecurling.com/ppl/thumbnail?gender=female&seed=1',
+    updatedBy: 'Admin',
+    updatedAt: new Date().toLocaleString(),
+    createdAt: new Date().toLocaleDateString(),
+    score: 'Hot',
+  },
 ]
 
 const mockContacts: Contact[] = [
@@ -140,6 +175,46 @@ const mockContacts: Contact[] = [
   },
 ]
 
+const mockGoals: ConsultantGoal[] = [
+  {
+    id: 'g1',
+    consultantName: 'Admin',
+    targetValue: 150000,
+    currentValue: 125000,
+    period: 'Março/2026',
+  },
+  {
+    id: 'g2',
+    consultantName: 'João Comercial',
+    targetValue: 100000,
+    currentValue: 45000,
+    period: 'Março/2026',
+  },
+]
+
+const mockOrders: FreightOrder[] = [
+  {
+    id: 'o1',
+    companyId: '1',
+    trackingCode: 'TRZ-982374-SP',
+    status: 'Em Trânsito',
+    origin: 'São Paulo, SP',
+    destination: 'Campinas, SP',
+    updatedAt: new Date().toLocaleString(),
+    invoiceUrl: '/mock-invoice-1.pdf',
+  },
+  {
+    id: 'o2',
+    companyId: '1',
+    trackingCode: 'TRZ-112233-RJ',
+    status: 'Entregue',
+    origin: 'São Paulo, SP',
+    destination: 'Rio de Janeiro, RJ',
+    updatedAt: new Date(Date.now() - 86400000 * 2).toLocaleString(),
+    invoiceUrl: '/mock-invoice-2.pdf',
+  },
+]
+
 let globalState: CrmState = {
   role: 'Master',
   currentUser: {
@@ -152,6 +227,8 @@ let globalState: CrmState = {
   interactions: [],
   userLogins: [],
   accessLogs: [],
+  consultantGoals: mockGoals,
+  freightOrders: mockOrders,
 }
 
 const listeners = new Set<(state: CrmState) => void>()

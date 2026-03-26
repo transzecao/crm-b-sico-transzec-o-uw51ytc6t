@@ -68,9 +68,12 @@ export default function Layout() {
                 alt="Transzecão"
                 className="h-10 grayscale opacity-50 mb-2 object-contain mix-blend-multiply"
               />
-              <p className="text-xs font-medium uppercase tracking-wider">
+              <p className="text-xs font-medium uppercase tracking-wider mb-2">
                 Transporte de Cargas &copy; {new Date().getFullYear()}
               </p>
+              <Link to="/portal" className="text-xs text-primary font-bold hover:underline">
+                Acessar Portal do Cliente (Simulação Externa)
+              </Link>
             </footer>
           </main>
         </div>

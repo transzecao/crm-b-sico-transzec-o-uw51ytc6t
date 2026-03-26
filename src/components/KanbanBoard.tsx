@@ -1,10 +1,12 @@
 import React, { useState } from 'react'
 import { Card } from '@/components/ui/card'
 import { Lead, Company } from '@/stores/useCrmStore'
-import { Plus, RefreshCw } from 'lucide-react'
+import { Plus, RefreshCw, BrainCircuit } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
+import { calculateAIProbability } from '@/utils/aiPredict'
+import useCrmStore from '@/stores/useCrmStore'
 
 export function KanbanBoard({
   columns,
@@ -22,6 +24,7 @@ export function KanbanBoard({
   onQuickAdd?: (stage: string) => void
 }) {
   const [draggedLead, setDraggedLead] = useState<string | null>(null)
+  const { state } = useCrmStore()
 
   return (
     <div className="flex gap-4 overflow-x-auto h-full items-start pb-4">
@@ -59,6 +62,8 @@ export function KanbanBoard({
 
               {stageLeads.map((lead) => {
                 const company = companies?.find((c) => c.id === lead.companyId)
+                const prob = calculateAIProbability(lead, state.interactions)
+
                 return (
                   <Card
                     key={lead.id}
@@ -67,11 +72,29 @@ export function KanbanBoard({
                       setDraggedLead(lead.id)
                       e.dataTransfer.effectAllowed = 'move'
                     }}
-                    className="p-3 bg-white border-slate-200 shadow-sm cursor-grab active:cursor-grabbing hover:border-primary transition-colors"
+                    className="p-3 bg-white border-slate-200 shadow-sm cursor-grab active:cursor-grabbing hover:border-primary transition-colors relative"
                   >
-                    <h4 className="font-bold text-slate-800 text-sm leading-snug mb-2">
-                      {lead.title}
-                    </h4>
+                    <div className="flex justify-between items-start mb-2">
+                      <h4 className="font-bold text-slate-800 text-sm leading-snug flex-1 pr-2">
+                        {lead.title}
+                      </h4>
+                      <Badge
+                        variant="secondary"
+                        title="IA: Probabilidade de Fechamento"
+                        className={cn(
+                          'text-[9px] px-1.5 py-0.5 flex items-center gap-1 cursor-help',
+                          prob >= 70
+                            ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
+                            : prob >= 40
+                              ? 'bg-amber-100 text-amber-700 hover:bg-amber-200'
+                              : 'bg-slate-100 text-slate-700 hover:bg-slate-200',
+                        )}
+                      >
+                        <BrainCircuit className="w-2.5 h-2.5" />
+                        {prob}%
+                      </Badge>
+                    </div>
+
                     <div className="flex gap-1 mb-3">
                       {lead.score && (
                         <Badge

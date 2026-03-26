@@ -17,6 +17,7 @@ import LoginAdmin from './pages/LoginAdmin'
 import NotFound from './pages/NotFound'
 import IA from './pages/IA'
 import Roteirizacao from './pages/Roteirizacao'
+import PortalCliente from './pages/PortalCliente'
 
 const App = () => (
   <BrowserRouter future={{ v7_startTransition: false, v7_relativeSplatPath: false }}>
@@ -24,6 +25,8 @@ const App = () => (
       <Toaster />
       <Sonner />
       <Routes>
+        <Route path="/portal" element={<PortalCliente />} />
+
         <Route element={<Layout />}>
           <Route path="/" element={<Index />} />
           <Route path="/empresas" element={<Empresas />} />

@@ -1,5 +1,14 @@
 import { useState } from 'react'
-import { Users, TrendingUp, Activity, Award, Filter, Search, MoreHorizontal } from 'lucide-react'
+import {
+  Users,
+  TrendingUp,
+  Activity,
+  Award,
+  Filter,
+  Search,
+  MoreHorizontal,
+  BrainCircuit,
+} from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Table,
@@ -21,6 +30,8 @@ import { Badge } from '@/components/ui/badge'
 import useCrmStore from '@/stores/useCrmStore'
 import { Link } from 'react-router-dom'
 import { cn } from '@/lib/utils'
+import { ConsultantPerformance } from '@/components/ConsultantPerformance'
+import { calculateAIProbability } from '@/utils/aiPredict'
 
 export default function Index() {
   const { state } = useCrmStore()
@@ -61,8 +72,12 @@ export default function Index() {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight text-slate-900">Dashboard Comercial</h1>
-        <p className="text-slate-500 font-medium mt-1">Acompanhamento central de prospecção.</p>
+        <p className="text-slate-500 font-medium mt-1">
+          Acompanhamento central de prospecção e metas.
+        </p>
       </div>
+
+      <ConsultantPerformance />
 
       <div className="grid gap-4 md:grid-cols-3">
         <Card className="bg-primary border-none shadow-md text-white overflow-hidden relative">
@@ -158,45 +173,68 @@ export default function Index() {
                 <TableHead className="font-bold text-slate-700">Pipeline</TableHead>
                 <TableHead className="font-bold text-slate-700">Status</TableHead>
                 <TableHead className="font-bold text-slate-700">Score</TableHead>
+                <TableHead className="font-bold text-slate-700">
+                  <div className="flex items-center gap-1">
+                    <BrainCircuit className="w-3.5 h-3.5 text-purple-500" /> Prob. IA
+                  </div>
+                </TableHead>
                 <TableHead className="w-[80px]"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredLeads.map((lead) => (
-                <TableRow key={lead.id} className="hover:bg-slate-50 transition-colors">
-                  <TableCell className="font-bold text-slate-900">{lead.title}</TableCell>
-                  <TableCell>
-                    <Badge
-                      className={
-                        lead.pipeline === 'Prospection'
-                          ? 'bg-primary text-white font-bold hover:bg-primary'
-                          : 'bg-green-600 text-white font-bold hover:bg-green-600'
-                      }
-                    >
-                      {lead.pipeline === 'Prospection' ? 'Prospecção' : 'Nutrição'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-slate-600 font-medium">{lead.stage}</TableCell>
-                  <TableCell>
-                    <Badge
-                      variant="outline"
-                      className={cn('font-bold uppercase text-[10px]', getScoreColor(lead.score))}
-                    >
-                      {getScoreLabel(lead.score)}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Link to={`/empresa/${lead.companyId}/360`}>
-                      <button className="p-2 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-md transition-colors">
-                        <MoreHorizontal className="w-4 h-4" />
-                      </button>
-                    </Link>
-                  </TableCell>
-                </TableRow>
-              ))}
+              {filteredLeads.map((lead) => {
+                const prob = calculateAIProbability(lead, state.interactions)
+                return (
+                  <TableRow key={lead.id} className="hover:bg-slate-50 transition-colors">
+                    <TableCell className="font-bold text-slate-900">{lead.title}</TableCell>
+                    <TableCell>
+                      <Badge
+                        className={
+                          lead.pipeline === 'Prospection'
+                            ? 'bg-primary text-white font-bold hover:bg-primary'
+                            : 'bg-green-600 text-white font-bold hover:bg-green-600'
+                        }
+                      >
+                        {lead.pipeline === 'Prospection' ? 'Prospecção' : 'Nutrição'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-slate-600 font-medium">{lead.stage}</TableCell>
+                    <TableCell>
+                      <Badge
+                        variant="outline"
+                        className={cn('font-bold uppercase text-[10px]', getScoreColor(lead.score))}
+                      >
+                        {getScoreLabel(lead.score)}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant="secondary"
+                        className={cn(
+                          'font-bold font-mono text-[11px]',
+                          prob >= 70
+                            ? 'bg-emerald-100 text-emerald-700'
+                            : prob >= 40
+                              ? 'bg-amber-100 text-amber-700'
+                              : 'bg-slate-100 text-slate-700',
+                        )}
+                      >
+                        {prob}%
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Link to={`/empresa/${lead.companyId}/360`}>
+                        <button className="p-2 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-md transition-colors">
+                          <MoreHorizontal className="w-4 h-4" />
+                        </button>
+                      </Link>
+                    </TableCell>
+                  </TableRow>
+                )
+              })}
               {filteredLeads.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={5} className="h-32 text-center text-slate-500 font-medium">
+                  <TableCell colSpan={6} className="h-32 text-center text-slate-500 font-medium">
                     Nenhum lead encontrado.
                   </TableCell>
                 </TableRow>
