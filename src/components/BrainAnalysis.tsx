@@ -19,19 +19,45 @@ export function BrainAnalysis({
 
   useEffect(() => {
     const segment = company?.segmento || 'Mercado Geral'
+    const hasPartnerObjection = interactions.some((i) =>
+      i.content.toLowerCase().includes('parceiro'),
+    )
+
+    let objection = 'Nenhuma objeção detectada.'
+    let strategy =
+      'Apresentar apresentação corporativa padrão e buscar agendar uma call de alinhamento.'
+    let diagnosticQuestions = ['Quais as principais rotas atuais?', 'Qual o volume médio mensal?']
+    let fitScore = 65
+    let copies = {
+      whatsapp: `Olá! Vimos que atuam no segmento de ${segment}. Temos ajudado empresas similares a reduzir custos logísticos em até 15%. Toparia um bate-papo rápido de 10 minutos para apresentarmos nosso modelo?`,
+      email: `Olá,\n\nNotamos o trabalho da ${company?.nomeFantasia || 'sua empresa'} em ${segment}. Nosso foco é otimizar rotas fracionadas e lotação garantindo SLA de 98%. Podemos agendar uma call breve na próxima semana?`,
+      call: `(Roteiro)\n1. Apresentação rápida.\n2. Perguntar sobre o modelo de distribuição atual.\n3. Apresentar diferenciais logísticos para o setor de ${segment}.`,
+    }
+
+    if (hasPartnerObjection) {
+      objection = 'Já tenho parceiro logístico consolidado.'
+      strategy =
+        'Recomendar "Teste Leve" com 1 carga fracionada na rota de São Paulo–Campinas. O risco de troca é mínimo e valida nosso SLA na prática.'
+      diagnosticQuestions = [
+        'Qual a média de entregas semanais?',
+        'Qual o custo médio por carga nas rotas principais?',
+      ]
+      fitScore = 82
+      copies = {
+        whatsapp: `Olá! Entendo perfeitamente que a ${company?.nomeFantasia || 'sua empresa'} já possui parceria consolidada e time de confiança. Topariam um "Teste Leve" sem compromisso com apenas 1 carga (janela flexível) para validarem nosso SLA na prática?`,
+        email: `Vimos que atuam em ${segment} e sabemos que já possuem um parceiro logístico. Nosso índice de sucesso com materiais do seu setor é altíssimo. Que tal um "Teste Leve" com apenas 1 demanda em uma rota específica? O risco para vocês é zero e valida nosso serviço.`,
+        call: `(Roteiro)\n1. Reconheça e valorize a parceria logística atual deles.\n2. Faça as perguntas diagnósticas sugeridas pelo Cérebro.\n3. Ofereça o "Teste Leve" com apenas 1 volume de teste (sem compromisso contratual futuro).`,
+      }
+    }
 
     setAnalysis({
-      objectives: ['1º contato estabelecido', 'Mapeada dor logística no interior'],
+      objectives: ['1º contato estabelecido', 'Mapeada dor logística e status atual'],
       nextSteps: ['Agendar visita presencial', 'Apresentar tabela de Teste Leve'],
-      objection: '"Já tenho parceiro logístico consolidado."',
-      strategy: `Recomendar teste leve com 1 carga fracionada na rota de São Paulo–Campinas. O risco de troca é mínimo e valida nosso SLA.`,
-      diagnosticQuestions: ['Qual a média de entregas semanais?', 'Qual o custo médio por carga?'],
-      fitScore: 82,
-      copies: {
-        whatsapp: `Olá! Entendo que a ${company?.nomeFantasia || 'sua empresa'} já possui parceria consolidada. Topariam um "teste leve" sem compromisso com apenas 1 carga na rota São Paulo-Campinas para validar nosso prazo e SLA?`,
-        email: `Vimos que atuam em ${segment} e sabemos que já possuem um parceiro logístico. Nosso índice de sucesso com materiais do seu setor é de 98% no prazo. Que tal um "teste leve" com apenas 1 demanda crítica na rota de Campinas? O risco é zero.`,
-        call: `(Roteiro)\n1. Reconheça e valorize a parceria atual.\n2. Faça as perguntas diagnósticas sugeridas pelo Brain.\n3. Ofereça o "Teste Leve" com 5 volumes na rota de Campinas sem compromisso futuro.`,
-      },
+      objection,
+      strategy,
+      diagnosticQuestions,
+      fitScore,
+      copies,
     })
   }, [interactions, company])
 
@@ -118,7 +144,7 @@ export function BrainAnalysis({
 
         <div>
           <h4 className="text-xs font-bold text-primary uppercase mb-3 flex items-center gap-1.5">
-            <MessageCircle className="w-4 h-4" /> Gerador de Copy de Objeção
+            <MessageCircle className="w-4 h-4" /> Gerador de Copy Personalizado
           </h4>
           <Tabs defaultValue="whatsapp" className="w-full">
             <TabsList className="grid w-full grid-cols-3 bg-slate-100">

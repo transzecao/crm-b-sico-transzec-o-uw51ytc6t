@@ -1,11 +1,15 @@
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Code2, Clock } from 'lucide-react'
+import { Code2 } from 'lucide-react'
 import { useFinanceCalculator } from '@/hooks/useFinanceCalculator'
 import { cn } from '@/lib/utils'
+import useCrmStore from '@/stores/useCrmStore'
 
 export function FinanceIntegTab({ calc }: { calc: ReturnType<typeof useFinanceCalculator> }) {
+  const { state } = useCrmStore()
+  const canEdit = ['Financeiro', 'Master'].includes(state.role)
+
   const ediDict: Record<string, string> = {
     '01': 'Entrega Realizada Normalmente',
     '02': 'Destinatário Ausente',
@@ -28,6 +32,7 @@ export function FinanceIntegTab({ calc }: { calc: ReturnType<typeof useFinanceCa
               Código de Ocorrência EDI
             </Label>
             <Input
+              disabled={!canEdit}
               value={calc.data.ediCode}
               onChange={(e) => calc.update({ ediCode: e.target.value })}
               placeholder="Ex: 01"
@@ -51,6 +56,7 @@ export function FinanceIntegTab({ calc }: { calc: ReturnType<typeof useFinanceCa
               CEP Destino (Análise de Risco)
             </Label>
             <Input
+              disabled={!canEdit}
               value={calc.data.zipCode}
               onChange={(e) => calc.update({ zipCode: e.target.value })}
               placeholder="00000-000"

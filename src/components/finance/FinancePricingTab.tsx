@@ -4,8 +4,12 @@ import { Switch } from '@/components/ui/switch'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Calculator } from 'lucide-react'
 import { useFinanceCalculator } from '@/hooks/useFinanceCalculator'
+import useCrmStore from '@/stores/useCrmStore'
 
 export function FinancePricingTab({ calc }: { calc: ReturnType<typeof useFinanceCalculator> }) {
+  const { state } = useCrmStore()
+  const canEdit = ['Financeiro', 'Master'].includes(state.role)
+
   return (
     <Card className="border-slate-200 shadow-sm bg-white">
       <CardHeader className="bg-slate-50 border-b border-slate-100">
@@ -24,6 +28,7 @@ export function FinancePricingTab({ calc }: { calc: ReturnType<typeof useFinance
               <Input
                 type="number"
                 value={calc.data.weight}
+                disabled={!canEdit}
                 onChange={(e) => calc.update({ weight: Number(e.target.value) })}
                 className="focus-visible:ring-primary"
               />
@@ -34,6 +39,7 @@ export function FinancePricingTab({ calc }: { calc: ReturnType<typeof useFinance
                 type="number"
                 step="0.1"
                 value={calc.data.volume}
+                disabled={!canEdit}
                 onChange={(e) => calc.update({ volume: Number(e.target.value) })}
                 className="focus-visible:ring-primary"
               />
@@ -43,6 +49,7 @@ export function FinancePricingTab({ calc }: { calc: ReturnType<typeof useFinance
               <Input
                 type="number"
                 value={calc.data.cubageFactor}
+                disabled={!canEdit}
                 onChange={(e) => calc.update({ cubageFactor: Number(e.target.value) })}
                 className="focus-visible:ring-primary"
               />
@@ -50,6 +57,7 @@ export function FinancePricingTab({ calc }: { calc: ReturnType<typeof useFinance
             <div className="flex items-center gap-3 pt-2">
               <Switch
                 checked={calc.data.useCubing}
+                disabled={!canEdit}
                 onCheckedChange={(v) => calc.update({ useCubing: v })}
                 className="data-[state=checked]:bg-primary"
               />
@@ -69,6 +77,7 @@ export function FinancePricingTab({ calc }: { calc: ReturnType<typeof useFinance
                 type="number"
                 step="0.1"
                 value={calc.data.weightFreight}
+                disabled={!canEdit}
                 onChange={(e) => calc.update({ weightFreight: Number(e.target.value) })}
                 className="focus-visible:ring-primary"
               />
@@ -79,6 +88,7 @@ export function FinancePricingTab({ calc }: { calc: ReturnType<typeof useFinance
                 type="number"
                 step="0.1"
                 value={calc.data.valueFreightPercent}
+                disabled={!canEdit}
                 onChange={(e) => calc.update({ valueFreightPercent: Number(e.target.value) })}
                 className="focus-visible:ring-primary"
               />
@@ -89,6 +99,7 @@ export function FinancePricingTab({ calc }: { calc: ReturnType<typeof useFinance
                 type="number"
                 step="0.1"
                 value={calc.data.grisPercent}
+                disabled={!canEdit}
                 onChange={(e) => calc.update({ grisPercent: Number(e.target.value) })}
                 className="focus-visible:ring-primary"
               />
@@ -98,6 +109,7 @@ export function FinancePricingTab({ calc }: { calc: ReturnType<typeof useFinance
               <Input
                 type="number"
                 value={calc.data.dispatchFee}
+                disabled={!canEdit}
                 onChange={(e) => calc.update({ dispatchFee: Number(e.target.value) })}
                 className="focus-visible:ring-primary"
               />
@@ -107,6 +119,7 @@ export function FinancePricingTab({ calc }: { calc: ReturnType<typeof useFinance
             <div className="flex items-center gap-3">
               <Switch
                 checked={calc.data.useTolls}
+                disabled={!canEdit}
                 onCheckedChange={(v) => calc.update({ useTolls: v })}
                 className="data-[state=checked]:bg-primary"
               />
@@ -115,6 +128,7 @@ export function FinancePricingTab({ calc }: { calc: ReturnType<typeof useFinance
             <div className="flex items-center gap-3">
               <Switch
                 checked={calc.data.useTas}
+                disabled={!canEdit}
                 onCheckedChange={(v) => calc.update({ useTas: v })}
                 className="data-[state=checked]:bg-primary"
               />

@@ -21,14 +21,15 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { BarChart3, PieChart as PieIcon, TrendingUp, AlertTriangle } from 'lucide-react'
+import { BarChart3, PieChart as PieIcon, TrendingUp, AlertTriangle, Clock } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import useCrmStore from '@/stores/useCrmStore'
 
-const conversionData = [
-  { week: 'Sem 1', rate: 24 },
-  { week: 'Sem 2', rate: 22 },
-  { week: 'Sem 3', rate: 21 },
-  { week: 'Sem Atual', rate: 18 }, // Below 20% to trigger alert
+const conversionPerStageData = [
+  { stage: '1º Contato', rate: 100 },
+  { stage: 'Qualificação', rate: 65 },
+  { stage: 'Negociação', rate: 42 },
+  { stage: 'Ganho', rate: 22 },
 ]
 
 const winLossFitData = [
@@ -44,8 +45,11 @@ const timeData = [
 ]
 
 export default function Analytics() {
-  const currentConversion = conversionData[conversionData.length - 1].rate
-  const isAlertActive = currentConversion < 20
+  const { state } = useCrmStore()
+  const isComercial = state.role === 'Comercial'
+
+  const currentConversion = conversionPerStageData[conversionPerStageData.length - 1].rate
+  const isAlertActive = currentConversion < 25
 
   return (
     <div className="space-y-6">
@@ -56,18 +60,20 @@ export default function Analytics() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-slate-900">Analytics & KPIs</h1>
           <p className="text-slate-500 font-medium">
-            Relatórios semanais interativos de fechamento.
+            {isComercial ? 'Seu desempenho pessoal' : 'Visão global de métricas e conversões.'}
           </p>
         </div>
       </div>
 
-      {isAlertActive && (
+      {isAlertActive && !isComercial && (
         <Alert variant="destructive" className="bg-rose-50 border-rose-200 text-rose-800 shadow-sm">
           <AlertTriangle className="h-4 w-4" />
-          <AlertTitle className="font-bold">Atenção: Queda de Conversão</AlertTitle>
+          <AlertTitle className="font-bold">
+            Atenção: Queda de Conversão de Fundo de Funil
+          </AlertTitle>
           <AlertDescription className="font-medium">
-            A taxa de conversão média caiu para {currentConversion}% nesta semana. O patamar mínimo
-            esperado é 20%. Verifique os motivos de perda recentes.
+            A taxa de conversão final está em {currentConversion}%. O patamar mínimo esperado é 25%.
+            Verifique os motivos de perda recentes.
           </AlertDescription>
         </Alert>
       )}
@@ -76,19 +82,20 @@ export default function Analytics() {
         <Card className="lg:col-span-2 shadow-sm border-slate-200">
           <CardHeader className="bg-slate-50 border-b border-slate-100 pb-3">
             <CardTitle className="text-lg flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-secondary" /> Tendência de Conversão Semanal
+              <TrendingUp className="w-5 h-5 text-secondary" /> Taxa de Conversão por Etapa
             </CardTitle>
           </CardHeader>
           <CardContent className="h-[300px] pt-6">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={conversionData} margin={{ left: -20, right: 20, top: 10 }}>
+              <LineChart data={conversionPerStageData} margin={{ left: -20, right: 20, top: 10 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="week" fontSize={12} tickLine={false} />
+                <XAxis dataKey="stage" fontSize={12} tickLine={false} />
                 <YAxis fontSize={12} tickLine={false} unit="%" />
                 <Tooltip />
                 <Line
                   type="monotone"
                   dataKey="rate"
+                  name="Conversão (%)"
                   stroke="#800020"
                   strokeWidth={3}
                   dot={{ r: 4, fill: '#800020' }}
@@ -128,7 +135,9 @@ export default function Analytics() {
 
         <Card className="shadow-sm border-slate-200">
           <CardHeader className="bg-slate-50 border-b border-slate-100 pb-3">
-            <CardTitle className="text-lg">Tempo Médio por Etapa (Dias)</CardTitle>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Clock className="w-5 h-5 text-amber-600" /> Tempo Médio por Etapa (Dias)
+            </CardTitle>
           </CardHeader>
           <CardContent className="h-[250px] pt-6">
             <ResponsiveContainer width="100%" height="100%">
@@ -141,8 +150,8 @@ export default function Analytics() {
                   tickLine={false}
                   axisLine={false}
                 />
-                <Tooltip />
-                <Bar dataKey="days" fill="#0056B3" radius={[0, 4, 4, 0]} barSize={20} />
+                <Tooltip cursor={{ fill: 'transparent' }} />
+                <Bar dataKey="days" name="Dias" fill="#0056B3" radius={[0, 4, 4, 0]} barSize={20} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -150,7 +159,7 @@ export default function Analytics() {
 
         <Card className="lg:col-span-2 shadow-sm border-slate-200">
           <CardHeader className="bg-slate-50 border-b border-slate-100 pb-3">
-            <CardTitle className="text-lg">Análise de Perda & Status</CardTitle>
+            <CardTitle className="text-lg">Análise de Perda & Status dos Funis</CardTitle>
           </CardHeader>
           <CardContent className="pt-6">
             <div className="grid md:grid-cols-2 gap-8">
@@ -158,25 +167,25 @@ export default function Analytics() {
                 <TableHeader>
                   <TableRow>
                     <TableHead className="font-bold">Motivo Principal</TableHead>
-                    <TableHead className="text-right font-bold">%</TableHead>
+                    <TableHead className="text-right font-bold">Ocorrências</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   <TableRow>
                     <TableCell>Preço</TableCell>
-                    <TableCell className="text-right font-semibold text-rose-600">45%</TableCell>
+                    <TableCell className="text-right font-semibold text-rose-600">45</TableCell>
                   </TableRow>
                   <TableRow>
                     <TableCell>SLA/Prazo</TableCell>
-                    <TableCell className="text-right font-semibold text-rose-600">25%</TableCell>
+                    <TableCell className="text-right font-semibold text-rose-600">25</TableCell>
                   </TableRow>
                   <TableRow>
                     <TableCell>Já Tenho Parceiro</TableCell>
-                    <TableCell className="text-right font-semibold text-rose-600">20%</TableCell>
+                    <TableCell className="text-right font-semibold text-rose-600">20</TableCell>
                   </TableRow>
                   <TableRow>
                     <TableCell>Cobertura</TableCell>
-                    <TableCell className="text-right font-semibold text-rose-600">10%</TableCell>
+                    <TableCell className="text-right font-semibold text-rose-600">10</TableCell>
                   </TableRow>
                 </TableBody>
               </Table>
@@ -191,11 +200,22 @@ export default function Analytics() {
                 <TableBody>
                   <TableRow>
                     <TableCell className="font-bold text-primary">Prospecção</TableCell>
-                    <TableCell className="text-right font-bold">142</TableCell>
+                    <TableCell className="text-right font-bold">
+                      {
+                        state.leads.filter(
+                          (l) =>
+                            l.pipeline === 'Prospection' &&
+                            l.stage !== 'Ganho' &&
+                            l.stage !== 'Perda',
+                        ).length
+                      }
+                    </TableCell>
                   </TableRow>
                   <TableRow>
                     <TableCell className="font-bold text-green-600">Nutrição</TableCell>
-                    <TableCell className="text-right font-bold">86</TableCell>
+                    <TableCell className="text-right font-bold">
+                      {state.leads.filter((l) => l.pipeline === 'Nutrition').length}
+                    </TableCell>
                   </TableRow>
                 </TableBody>
               </Table>

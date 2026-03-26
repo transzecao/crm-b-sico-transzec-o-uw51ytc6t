@@ -1,19 +1,20 @@
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { LineChart, DollarSign } from 'lucide-react'
+import { LineChart } from 'lucide-react'
 import { useFinanceCalculator } from '@/hooks/useFinanceCalculator'
+import useCrmStore from '@/stores/useCrmStore'
 
 export function FinanceKpiTab({ calc }: { calc: ReturnType<typeof useFinanceCalculator> }) {
+  const { state } = useCrmStore()
+  const canEdit = ['Financeiro', 'Master'].includes(state.role)
+
   const otd =
     calc.data.totalDel > 0 ? ((calc.data.onTime / calc.data.totalDel) * 100).toFixed(1) : '0.0'
   const savings =
     calc.data.stdCost > 0
       ? (((calc.data.stdCost - calc.data.negCost) / calc.data.stdCost) * 100).toFixed(1)
       : '0.0'
-
-  const fmt = (v: number) =>
-    new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(isNaN(v) ? 0 : v)
 
   return (
     <Card className="border-slate-200 shadow-sm bg-white">
@@ -31,6 +32,7 @@ export function FinanceKpiTab({ calc }: { calc: ReturnType<typeof useFinanceCalc
             <div className="space-y-2">
               <Label className="text-xs text-slate-600 uppercase font-bold">Total Entregas</Label>
               <Input
+                disabled={!canEdit}
                 type="number"
                 value={calc.data.totalDel}
                 onChange={(e) => calc.update({ totalDel: Number(e.target.value) })}
@@ -40,6 +42,7 @@ export function FinanceKpiTab({ calc }: { calc: ReturnType<typeof useFinanceCalc
             <div className="space-y-2">
               <Label className="text-xs text-slate-600 uppercase font-bold">No Prazo</Label>
               <Input
+                disabled={!canEdit}
                 type="number"
                 value={calc.data.onTime}
                 onChange={(e) => calc.update({ onTime: Number(e.target.value) })}
@@ -63,6 +66,7 @@ export function FinanceKpiTab({ calc }: { calc: ReturnType<typeof useFinanceCalc
                 Tabela Padrão (R$)
               </Label>
               <Input
+                disabled={!canEdit}
                 type="number"
                 value={calc.data.stdCost}
                 onChange={(e) => calc.update({ stdCost: Number(e.target.value) })}
@@ -74,6 +78,7 @@ export function FinanceKpiTab({ calc }: { calc: ReturnType<typeof useFinanceCalc
                 Custo Negociado (R$)
               </Label>
               <Input
+                disabled={!canEdit}
                 type="number"
                 value={calc.data.negCost}
                 onChange={(e) => calc.update({ negCost: Number(e.target.value) })}

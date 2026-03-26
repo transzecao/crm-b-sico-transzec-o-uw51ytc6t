@@ -15,8 +15,12 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
+import useCrmStore from '@/stores/useCrmStore'
 
 export function FinanceGeoTab({ calc }: { calc: ReturnType<typeof useFinanceCalculator> }) {
+  const { state } = useCrmStore()
+  const canEdit = ['Financeiro', 'Master'].includes(state.role)
+
   const [clusters, setClusters] = useState([
     { id: '1', name: 'Campinas e Região', km: 120, active: true },
     { id: '2', name: 'Vale do Paraíba', km: 150, active: true },
@@ -26,7 +30,7 @@ export function FinanceGeoTab({ calc }: { calc: ReturnType<typeof useFinanceCalc
   const [newCluster, setNewCluster] = useState({ name: '', km: '' })
 
   const handleAddCluster = () => {
-    if (newCluster.name && newCluster.km) {
+    if (newCluster.name && newCluster.km && canEdit) {
       setClusters([
         ...clusters,
         {
@@ -41,10 +45,12 @@ export function FinanceGeoTab({ calc }: { calc: ReturnType<typeof useFinanceCalc
   }
 
   const toggleCluster = (id: string) => {
+    if (!canEdit) return
     setClusters(clusters.map((c) => (c.id === id ? { ...c, active: !c.active } : c)))
   }
 
   const removeCluster = (id: string) => {
+    if (!canEdit) return
     setClusters(clusters.filter((c) => c.id !== id))
   }
 
@@ -57,33 +63,37 @@ export function FinanceGeoTab({ calc }: { calc: ReturnType<typeof useFinanceCalc
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-6">
-          <div className="flex gap-4 items-end mb-6 bg-slate-50 p-4 rounded-lg border border-slate-200">
-            <div className="flex-1 space-y-2">
-              <Label className="text-xs font-bold text-slate-500 uppercase">Nome do Cluster</Label>
-              <Input
-                value={newCluster.name}
-                onChange={(e) => setNewCluster({ ...newCluster, name: e.target.value })}
-                placeholder="Ex: Ribeirão Preto"
-                className="bg-white"
-              />
+          {canEdit && (
+            <div className="flex gap-4 items-end mb-6 bg-slate-50 p-4 rounded-lg border border-slate-200">
+              <div className="flex-1 space-y-2">
+                <Label className="text-xs font-bold text-slate-500 uppercase">
+                  Nome do Cluster
+                </Label>
+                <Input
+                  value={newCluster.name}
+                  onChange={(e) => setNewCluster({ ...newCluster, name: e.target.value })}
+                  placeholder="Ex: Ribeirão Preto"
+                  className="bg-white"
+                />
+              </div>
+              <div className="w-32 space-y-2">
+                <Label className="text-xs font-bold text-slate-500 uppercase">KM Médio</Label>
+                <Input
+                  type="number"
+                  value={newCluster.km}
+                  onChange={(e) => setNewCluster({ ...newCluster, km: e.target.value })}
+                  placeholder="Ex: 310"
+                  className="bg-white"
+                />
+              </div>
+              <Button
+                onClick={handleAddCluster}
+                className="bg-primary hover:bg-primary/90 text-white"
+              >
+                <Plus className="w-4 h-4 mr-2" /> Adicionar
+              </Button>
             </div>
-            <div className="w-32 space-y-2">
-              <Label className="text-xs font-bold text-slate-500 uppercase">KM Médio</Label>
-              <Input
-                type="number"
-                value={newCluster.km}
-                onChange={(e) => setNewCluster({ ...newCluster, km: e.target.value })}
-                placeholder="Ex: 310"
-                className="bg-white"
-              />
-            </div>
-            <Button
-              onClick={handleAddCluster}
-              className="bg-primary hover:bg-primary/90 text-white"
-            >
-              <Plus className="w-4 h-4 mr-2" /> Adicionar
-            </Button>
-          </div>
+          )}
 
           <Table>
             <TableHeader>
@@ -103,6 +113,7 @@ export function FinanceGeoTab({ calc }: { calc: ReturnType<typeof useFinanceCalc
                     <div className="flex items-center justify-center gap-2">
                       <Switch
                         checked={cluster.active}
+                        disabled={!canEdit}
                         onCheckedChange={() => toggleCluster(cluster.id)}
                         className="data-[state=checked]:bg-emerald-500"
                       />
@@ -127,6 +138,7 @@ export function FinanceGeoTab({ calc }: { calc: ReturnType<typeof useFinanceCalc
                     <Button
                       variant="ghost"
                       size="icon"
+                      disabled={!canEdit}
                       onClick={() => removeCluster(cluster.id)}
                       className="text-rose-500 hover:bg-rose-50"
                     >
@@ -154,6 +166,7 @@ export function FinanceGeoTab({ calc }: { calc: ReturnType<typeof useFinanceCalc
               </Label>
               <Switch
                 checked={calc.data.zmrc}
+                disabled={!canEdit}
                 onCheckedChange={(v) => calc.update({ zmrc: v })}
                 className="data-[state=checked]:bg-rose-500"
               />

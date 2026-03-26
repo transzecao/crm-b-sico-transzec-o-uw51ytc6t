@@ -11,8 +11,12 @@ import {
 import { FileText, CheckCircle2, AlertCircle } from 'lucide-react'
 import { useFinanceCalculator } from '@/hooks/useFinanceCalculator'
 import { cn } from '@/lib/utils'
+import useCrmStore from '@/stores/useCrmStore'
 
 export function FinanceFiscalTab({ calc }: { calc: ReturnType<typeof useFinanceCalculator> }) {
+  const { state } = useCrmStore()
+  const canEdit = ['Financeiro', 'Master'].includes(state.role)
+
   const fmt = (v: number) =>
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(isNaN(v) ? 0 : v)
 
@@ -33,6 +37,7 @@ export function FinanceFiscalTab({ calc }: { calc: ReturnType<typeof useFinanceC
               <div className="space-y-2">
                 <Label className="text-[11px] font-bold text-slate-500 uppercase">Estado</Label>
                 <Select
+                  disabled={!canEdit}
                   value={calc.data.originState}
                   onValueChange={(v) => calc.update({ originState: v })}
                 >
@@ -49,6 +54,7 @@ export function FinanceFiscalTab({ calc }: { calc: ReturnType<typeof useFinanceC
               <div className="space-y-2">
                 <Label className="text-[11px] font-bold text-slate-500 uppercase">Cidade</Label>
                 <Input
+                  disabled={!canEdit}
                   value={calc.data.originCity}
                   onChange={(e) => calc.update({ originCity: e.target.value })}
                   className="border-slate-200 focus-visible:ring-primary"
@@ -65,6 +71,7 @@ export function FinanceFiscalTab({ calc }: { calc: ReturnType<typeof useFinanceC
               <div className="space-y-2">
                 <Label className="text-[11px] font-bold text-slate-500 uppercase">Estado</Label>
                 <Select
+                  disabled={!canEdit}
                   value={calc.data.destState}
                   onValueChange={(v) => calc.update({ destState: v })}
                 >
@@ -81,6 +88,7 @@ export function FinanceFiscalTab({ calc }: { calc: ReturnType<typeof useFinanceC
               <div className="space-y-2">
                 <Label className="text-[11px] font-bold text-slate-500 uppercase">Cidade</Label>
                 <Input
+                  disabled={!canEdit}
                   value={calc.data.destCity}
                   onChange={(e) => calc.update({ destCity: e.target.value })}
                   className="border-slate-200 focus-visible:ring-primary"
@@ -96,6 +104,7 @@ export function FinanceFiscalTab({ calc }: { calc: ReturnType<typeof useFinanceC
               Código CIOT (12 Dígitos)
             </Label>
             <Input
+              disabled={!canEdit}
               value={calc.data.ciot}
               onChange={(e) => calc.update({ ciot: e.target.value })}
               className={cn(
@@ -119,6 +128,7 @@ export function FinanceFiscalTab({ calc }: { calc: ReturnType<typeof useFinanceC
               Registro RNTRC (8 Dígitos)
             </Label>
             <Input
+              disabled={!canEdit}
               value={calc.data.rntrc}
               onChange={(e) => calc.update({ rntrc: e.target.value })}
               className={cn(

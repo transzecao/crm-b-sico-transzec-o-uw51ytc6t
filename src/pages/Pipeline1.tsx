@@ -22,7 +22,7 @@ const COLUMNS = [
 const VALID_STAGES = [...COLUMNS, 'Perda']
 
 export default function Pipeline1() {
-  const { state, updateState } = useCrmStore()
+  const { state, updateState, logAccess } = useCrmStore()
   const { toast } = useToast()
   const location = useLocation()
   const hasAlerted = useRef(false)
@@ -37,6 +37,8 @@ export default function Pipeline1() {
     [state.leads],
   )
 
+  const canMove = ['Comercial', 'Master', 'Supervisor', 'Diretoria'].includes(state.role)
+
   useEffect(() => {
     if (location.pathname.includes('/pipeline/1')) {
       if (state.leads.length === 0 && !hasAlerted.current) {
@@ -50,6 +52,15 @@ export default function Pipeline1() {
   }, [location.pathname, state.leads.length, toast])
 
   const handleMove = (id: string, stage: string) => {
+    if (!canMove) {
+      toast({
+        title: 'Acesso Negado',
+        description: 'Você não tem permissão para mover leads na Prospecção.',
+        variant: 'destructive',
+      })
+      return
+    }
+
     const previousState = [...state.leads]
     try {
       if (!VALID_STAGES.includes(stage)) {
@@ -66,6 +77,7 @@ export default function Pipeline1() {
         updateState({
           leads: state.leads.map((l) => (l.id === id ? { ...l, stage, score: 'Hot' } : l)),
         })
+        logAccess(`Ganhou negócio: Lead ID ${id}`)
         toast({ title: 'Negócio Ganho!', description: 'Movido com sucesso.' })
         return
       }
@@ -91,6 +103,7 @@ export default function Pipeline1() {
             : l,
         ),
       })
+      logAccess(`Moveu Lead ID ${id} para ${stage} na Prospecção`)
     } catch (error) {
       updateState({ leads: previousState })
       toast({ variant: 'destructive', title: 'Erro', description: 'Revertido.' })
@@ -104,12 +117,17 @@ export default function Pipeline1() {
         l.id === pendingMove.id ? { ...l, stage: 'Perda', score: 'Cold' } : l,
       ),
     })
+    logAccess(`Registrou Perda: Lead ID ${pendingMove.id} - ${reason}`)
     toast({ title: 'Perda registrada', description: `Motivo: ${reason}`, variant: 'destructive' })
     setLossModalOpen(false)
     setPendingMove(null)
   }
 
   const simulateInactivity = () => {
+    if (!canMove) {
+      toast({ title: 'Acesso Negado', variant: 'destructive' })
+      return
+    }
     const updatedLeads = state.leads.map((lead) => {
       if (lead.pipeline === 'Prospection' && lead.stage !== 'Ganho' && lead.stage !== 'Perda') {
         // Automation: 1 business day inactivity -> Nutrição
@@ -118,6 +136,7 @@ export default function Pipeline1() {
       return lead
     })
     updateState({ leads: updatedLeads })
+    logAccess('Rodou Automação de Inatividade (Prospecção)')
     toast({
       title: 'Automação de Inatividade',
       description: 'Leads sem interação por 1 dia foram transferidos para Nutrição.',
@@ -151,6 +170,10 @@ export default function Pipeline1() {
           companies={state.companies}
           onMove={handleMove}
           onQuickAdd={(stage) => {
+            if (!canMove) {
+              toast({ title: 'Acesso Negado', variant: 'destructive' })
+              return
+            }
             setQuickAddStage(stage)
             setQuickAddOpen(true)
           }}
@@ -183,6 +206,7 @@ export default function Pipeline1() {
               },
             ],
           })
+          logAccess(`Criou Negócio Rápido: ${t}`)
           setQuickAddOpen(false)
         }}
         onCancel={() => setQuickAddOpen(false)}

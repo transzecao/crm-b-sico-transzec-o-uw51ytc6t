@@ -13,7 +13,7 @@ const COLUMNS = [
 ]
 
 export default function Pipeline2() {
-  const { state, updateState } = useCrmStore()
+  const { state, updateState, logAccess } = useCrmStore()
   const { toast } = useToast()
 
   const nutritionLeads = useMemo(
@@ -21,19 +21,37 @@ export default function Pipeline2() {
     [state.leads],
   )
 
+  const canMove = ['Comercial', 'Master', 'Marketing', 'Supervisor', 'Diretoria'].includes(
+    state.role,
+  )
+
   const handleMove = (id: string, stage: string) => {
+    if (!canMove) {
+      toast({
+        title: 'Acesso Negado',
+        description: 'Você não tem permissão para mover leads na Nutrição.',
+        variant: 'destructive',
+      })
+      return
+    }
     updateState({ leads: state.leads.map((l) => (l.id === id ? { ...l, stage } : l)) })
+    logAccess(`Moveu Lead ID ${id} para ${stage} na Nutrição`)
   }
 
   const handleReactivate = (
     id: string,
     stage: 'Negociação' | 'Qualificação' | 'Primeiro contato',
   ) => {
+    if (!canMove) {
+      toast({ title: 'Acesso Negado', variant: 'destructive' })
+      return
+    }
     updateState({
       leads: state.leads.map((l) =>
         l.id === id ? { ...l, pipeline: 'Prospection', stage, score: 'Hot' } : l,
       ),
     })
+    logAccess(`Reativou Lead ID ${id} para ${stage}`)
     toast({ title: `Automação Inbound`, description: `Movido para "${stage}" na Prospecção.` })
   }
 
