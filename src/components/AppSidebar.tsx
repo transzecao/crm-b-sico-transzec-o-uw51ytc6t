@@ -145,6 +145,7 @@ export function AppSidebar() {
                     <SidebarMenuButton
                       asChild
                       isActive={isActive}
+                      data-tour={`menu-${item.title}`}
                       className={cn(
                         'transition-all duration-200 font-bold mb-1 rounded-lg h-10 px-3',
                         isActive

@@ -13,7 +13,7 @@ const COLUMNS = [
 ]
 
 export default function Pipeline2() {
-  const { state, updateState, logAccess } = useCrmStore()
+  const { state, updateState, logAccess, logAction } = useCrmStore()
   const { toast } = useToast()
 
   const nutritionLeads = useMemo(
@@ -34,6 +34,11 @@ export default function Pipeline2() {
       })
       return
     }
+    const lead = state.leads.find((l) => l.id === id)
+    if (lead && lead.stage !== stage) {
+      logAction('Mudança de Etapa', lead.title, lead.stage, stage)
+    }
+
     updateState({ leads: state.leads.map((l) => (l.id === id ? { ...l, stage } : l)) })
     logAccess(`Moveu Lead ID ${id} para ${stage} na Nutrição`)
   }
@@ -42,6 +47,10 @@ export default function Pipeline2() {
     if (!canMove) {
       toast({ title: 'Acesso Negado', variant: 'destructive' })
       return
+    }
+    const lead = state.leads.find((l) => l.id === id)
+    if (lead) {
+      logAction('Transferência de Funil', lead.title, 'Nutrição', 'Prospecção (Qualificação)')
     }
     updateState({
       leads: state.leads.map((l) =>
@@ -62,6 +71,10 @@ export default function Pipeline2() {
     if (!canMove) {
       toast({ title: 'Acesso Negado', variant: 'destructive' })
       return
+    }
+    const lead = state.leads.find((l) => l.id === id)
+    if (lead) {
+      logAction('Reativação Inbound', lead.title, 'Nutrição', `Prospecção (${stage})`)
     }
     updateState({
       leads: state.leads.map((l) =>

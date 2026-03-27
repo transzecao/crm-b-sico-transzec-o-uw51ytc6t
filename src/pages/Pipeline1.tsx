@@ -22,7 +22,7 @@ const COLUMNS = [
 const VALID_STAGES = [...COLUMNS, 'Perda']
 
 export default function Pipeline1() {
-  const { state, updateState, logAccess } = useCrmStore()
+  const { state, updateState, logAccess, logAction } = useCrmStore()
   const { toast } = useToast()
   const location = useLocation()
   const hasAlerted = useRef(false)
@@ -75,8 +75,12 @@ export default function Pipeline1() {
         return
       }
 
+      const lead = state.leads.find((l) => l.id === id)
+      if (lead && lead.stage !== stage) {
+        logAction('Mudança de Etapa', lead.title, lead.stage, stage)
+      }
+
       if (stage === 'Ganho') {
-        const lead = state.leads.find((l) => l.id === id)
         const company = state.companies.find((c) => c.id === lead?.companyId)
 
         updateState({
@@ -139,6 +143,10 @@ export default function Pipeline1() {
       toast({ title: 'Acesso Negado', variant: 'destructive' })
       return
     }
+    const lead = state.leads.find((l) => l.id === id)
+    if (lead) {
+      logAction('Transferência de Funil', lead.title, 'Prospecção', 'Nutrição')
+    }
     updateState({
       leads: state.leads.map((l) =>
         l.id === id ? { ...l, pipeline: 'Nutrition', stage: 'Nutrição – Aquecimento' } : l,
@@ -153,6 +161,10 @@ export default function Pipeline1() {
 
   const confirmLoss = (reason: string, details?: string) => {
     if (!pendingMove) return
+    const lead = state.leads.find((l) => l.id === pendingMove.id)
+    if (lead) {
+      logAction('Perda de Lead', lead.title, lead.stage, `Perda (${reason})`)
+    }
     updateState({
       leads: state.leads.map((l) =>
         l.id === pendingMove.id ? { ...l, stage: 'Perda', score: 'Cold' } : l,
@@ -171,6 +183,7 @@ export default function Pipeline1() {
     }
     const updatedLeads = state.leads.map((lead) => {
       if (lead.pipeline === 'Prospection' && lead.stage !== 'Ganho' && lead.stage !== 'Perda') {
+        logAction('Automação Inatividade', lead.title, lead.stage, 'Nutrição')
         return { ...lead, pipeline: 'Nutrition' as const, stage: 'Nutrição – Aquecimento' }
       }
       return lead
@@ -230,6 +243,7 @@ export default function Pipeline1() {
         open={quickAddOpen}
         stage={quickAddStage}
         onConfirm={(t, v) => {
+          logAction('Criação Rápida de Lead', t, '-', stage)
           updateState({
             leads: [
               ...state.leads,

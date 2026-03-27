@@ -100,6 +100,16 @@ export type FreightOrder = {
   invoiceUrl?: string
 }
 
+export type AuditLog = {
+  id: string
+  timestamp: string
+  userName: string
+  actionType: string
+  targetEntity: string
+  prevValue: string
+  newValue: string
+}
+
 type CrmState = {
   role: Role
   currentUser: { name: string; avatar: string }
@@ -109,8 +119,10 @@ type CrmState = {
   interactions: Interaction[]
   userLogins: UserLogin[]
   accessLogs: { date: string; user: string; role: string; module: string }[]
+  auditLogs: AuditLog[]
   consultantGoals: ConsultantGoal[]
   freightOrders: FreightOrder[]
+  tourOpen: boolean
 }
 
 const mockCompanies: Company[] = [
@@ -145,6 +157,8 @@ const mockLeads: Lead[] = [
     updatedAt: new Date().toLocaleString(),
     createdAt: new Date().toLocaleDateString(),
     score: 'Warm',
+    isStalled: true,
+    stalledDays: 3,
   },
   {
     id: '2',
@@ -159,6 +173,8 @@ const mockLeads: Lead[] = [
     updatedAt: new Date().toLocaleString(),
     createdAt: new Date().toLocaleDateString(),
     score: 'Hot',
+    isStalled: false,
+    stalledDays: 1,
   },
   {
     id: '3',
@@ -167,12 +183,14 @@ const mockLeads: Lead[] = [
     pipeline: 'Nutrition',
     stage: 'Nutrição – Aquecimento',
     value: 8000,
-    owner: 'Admin',
-    ownerAvatar: 'https://img.usecurling.com/ppl/thumbnail?gender=female&seed=1',
-    updatedBy: 'Admin',
+    owner: 'João Comercial',
+    ownerAvatar: 'https://img.usecurling.com/ppl/thumbnail?gender=male&seed=2',
+    updatedBy: 'João Comercial',
     updatedAt: new Date().toLocaleString(),
     createdAt: new Date().toLocaleDateString(),
     score: 'Cold',
+    isStalled: true,
+    stalledDays: 5,
   },
 ]
 
@@ -229,6 +247,27 @@ const mockOrders: FreightOrder[] = [
   },
 ]
 
+const mockAuditLogs: AuditLog[] = [
+  {
+    id: 'a1',
+    timestamp: new Date(Date.now() - 3600000).toLocaleString('pt-BR'),
+    userName: 'Admin',
+    actionType: 'Mudança de Etapa',
+    targetEntity: 'Projeto Logística SP',
+    prevValue: 'Qualificação',
+    newValue: 'Negociação',
+  },
+  {
+    id: 'a2',
+    timestamp: new Date(Date.now() - 86400000).toLocaleString('pt-BR'),
+    userName: 'João Comercial',
+    actionType: 'Edição de Empresa',
+    targetEntity: 'Ind. SP',
+    prevValue: 'S/ Número',
+    newValue: 'Av. Paulista, 1000',
+  },
+]
+
 let globalState: CrmState = {
   role: 'Acesso Master',
   currentUser: {
@@ -241,8 +280,10 @@ let globalState: CrmState = {
   interactions: [],
   userLogins: [],
   accessLogs: [],
+  auditLogs: mockAuditLogs,
   consultantGoals: mockGoals,
   freightOrders: mockOrders,
+  tourOpen: false,
 }
 
 const listeners = new Set<(state: CrmState) => void>()
@@ -272,5 +313,23 @@ export default function useCrmStore() {
     updateState({ accessLogs: [newLog, ...globalState.accessLogs].slice(0, 100) })
   }
 
-  return { state, updateState, logAccess }
+  const logAction = (
+    actionType: string,
+    targetEntity: string,
+    prevValue: string,
+    newValue: string,
+  ) => {
+    const newLog: AuditLog = {
+      id: Math.random().toString(36).substring(7),
+      timestamp: new Date().toLocaleString('pt-BR'),
+      userName: globalState.currentUser.name,
+      actionType,
+      targetEntity,
+      prevValue,
+      newValue,
+    }
+    updateState({ auditLogs: [newLog, ...globalState.auditLogs].slice(0, 500) })
+  }
+
+  return { state, updateState, logAccess, logAction }
 }

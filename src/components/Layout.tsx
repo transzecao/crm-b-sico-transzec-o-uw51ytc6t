@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Shield, Settings } from 'lucide-react'
+import { GuidedTour } from './GuidedTour'
 
 export default function Layout() {
   const location = useLocation()
@@ -20,6 +21,14 @@ export default function Layout() {
   useEffect(() => {
     logAccess(location.pathname)
   }, [location.pathname])
+
+  useEffect(() => {
+    const hasSeenTour = localStorage.getItem('tour_seen_' + state.currentUser.name)
+    if (!hasSeenTour) {
+      updateState({ tourOpen: true })
+      localStorage.setItem('tour_seen_' + state.currentUser.name, 'true')
+    }
+  }, [state.currentUser.name, updateState])
 
   return (
     <SidebarProvider>
@@ -59,8 +68,8 @@ export default function Layout() {
             </div>
           </div>
 
-          <main className="flex-1 flex flex-col p-3 md:p-6 overflow-auto">
-            <div className="mx-auto w-full max-w-7xl animate-fade-in-up flex-1">
+          <main className="flex-1 flex flex-col p-3 md:p-6 overflow-auto relative">
+            <div className="mx-auto w-full max-w-7xl animate-fade-in-up flex-1 relative z-0">
               <Outlet />
             </div>
 
@@ -80,6 +89,7 @@ export default function Layout() {
           </main>
         </div>
       </div>
+      <GuidedTour />
     </SidebarProvider>
   )
 }

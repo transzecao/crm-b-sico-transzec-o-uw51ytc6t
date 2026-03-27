@@ -26,7 +26,7 @@ import { Badge } from '@/components/ui/badge'
 export default function EmpresaForm() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { state, updateState, logAccess } = useCrmStore()
+  const { state, updateState, logAccess, logAction } = useCrmStore()
   const { toast } = useToast()
 
   const existingCompany = id ? state.companies.find((c) => c.id === id) : undefined
@@ -153,6 +153,13 @@ export default function EmpresaForm() {
       })) as Contact[]
 
       if (existingCompany) {
+        logAction(
+          'Edição de Cadastro',
+          newCompany.nomeFantasia || newCompany.cnpj,
+          'Valores Anteriores',
+          'Novos Valores Salvos',
+        )
+
         updateState({
           companies: state.companies.map((c) => (c.id === companyId ? newCompany : c)),
           contacts: [...state.contacts.filter((c) => c.companyId !== companyId), ...finalContacts],
@@ -160,6 +167,13 @@ export default function EmpresaForm() {
         logAccess(`Editou Empresa: ${newCompany.nomeFantasia}`)
         toast({ title: 'Empresa atualizada!' })
       } else {
+        logAction(
+          'Criação de Cadastro',
+          newCompany.nomeFantasia || newCompany.cnpj,
+          '-',
+          'Cadastro Criado',
+        )
+
         const newLead: Lead = {
           id: Math.random().toString(36).substr(2, 9),
           companyId,

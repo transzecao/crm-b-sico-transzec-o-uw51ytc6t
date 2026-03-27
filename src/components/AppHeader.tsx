@@ -1,4 +1,4 @@
-import { Search, Bell, Plus, BarChart3 } from 'lucide-react'
+import { Search, Bell, Plus, BarChart3, HelpCircle } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { SidebarTrigger } from '@/components/ui/sidebar'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -115,6 +115,13 @@ export function AppHeader() {
         </div>
 
         <div className="flex items-center gap-1">
+          <button
+            onClick={() => updateState({ tourOpen: true })}
+            className="p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-full transition-colors"
+            title="Iniciar Tour Guiado"
+          >
+            <HelpCircle className="w-5 h-5" />
+          </button>
           <button className="p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-full transition-colors relative">
             <Bell className="w-5 h-5" />
             <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#0056B3] rounded-full border-2 border-[#800020]"></span>
