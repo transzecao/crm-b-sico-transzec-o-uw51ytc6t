@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import { KanbanBoard } from '@/components/KanbanBoard'
 import useCrmStore from '@/stores/useCrmStore'
 import { useToast } from '@/hooks/use-toast'
-import { Sprout, Mail, Reply, DollarSign } from 'lucide-react'
+import { Sprout, Reply, DollarSign } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 const COLUMNS = [
@@ -21,7 +21,7 @@ export default function Pipeline2() {
     [state.leads],
   )
 
-  const canMove = ['Comercial', 'Master', 'Marketing', 'Supervisor', 'Diretoria'].includes(
+  const canMove = ['Acesso Master', 'Supervisor Comercial', 'Funcionário Marketing'].includes(
     state.role,
   )
 
@@ -36,6 +36,23 @@ export default function Pipeline2() {
     }
     updateState({ leads: state.leads.map((l) => (l.id === id ? { ...l, stage } : l)) })
     logAccess(`Moveu Lead ID ${id} para ${stage} na Nutrição`)
+  }
+
+  const handleReturnToComercial = (id: string) => {
+    if (!canMove) {
+      toast({ title: 'Acesso Negado', variant: 'destructive' })
+      return
+    }
+    updateState({
+      leads: state.leads.map((l) =>
+        l.id === id ? { ...l, pipeline: 'Prospection', stage: 'Qualificação', score: 'Warm' } : l,
+      ),
+    })
+    logAccess(`Retornou Lead ID ${id} para Supervisor Comercial`)
+    toast({
+      title: 'Retorno Marketing',
+      description: 'Lead devolvido para a equipe Comercial na etapa de Qualificação.',
+    })
   }
 
   const handleReactivate = (
@@ -63,7 +80,7 @@ export default function Pipeline2() {
             <Sprout className="w-6 h-6 text-green-600" /> Pipeline de Nutrição
           </h1>
           <p className="text-slate-500 font-medium text-sm">
-            Respostas Inbound reativam o prospect automaticamente para a Prospecção.
+            Respostas Inbound ou retornos manuais reativam o prospect para a equipe Comercial.
           </p>
         </div>
         <div className="flex gap-2">
@@ -93,6 +110,7 @@ export default function Pipeline2() {
           companies={state.companies}
           onMove={handleMove}
           onReactivate={handleReactivate}
+          onReturnToComercial={handleReturnToComercial}
         />
       </div>
     </div>

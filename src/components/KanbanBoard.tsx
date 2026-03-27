@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Card } from '@/components/ui/card'
 import { Lead, Company } from '@/stores/useCrmStore'
-import { Plus, RefreshCw, BrainCircuit } from 'lucide-react'
+import { Plus, RefreshCw, BrainCircuit, ArrowRight, ArrowLeft } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
@@ -15,6 +15,8 @@ export function KanbanBoard({
   onMove,
   onReactivate,
   onQuickAdd,
+  onSendToMarketing,
+  onReturnToComercial,
 }: {
   columns: string[]
   leads: Lead[]
@@ -22,6 +24,8 @@ export function KanbanBoard({
   onMove: (leadId: string, toStage: string) => void
   onReactivate?: (leadId: string, toStage: 'Negociação' | 'Primeiro contato') => void
   onQuickAdd?: (stage: string) => void
+  onSendToMarketing?: (id: string) => void
+  onReturnToComercial?: (id: string) => void
 }) {
   const [draggedLead, setDraggedLead] = useState<string | null>(null)
   const { state } = useCrmStore()
@@ -122,6 +126,33 @@ export function KanbanBoard({
                         {company?.nomeFantasia || company?.razaoSocial}
                       </span>
                     </div>
+
+                    {onSendToMarketing &&
+                      lead.pipeline === 'Prospection' &&
+                      lead.stage !== 'Ganho' &&
+                      lead.stage !== 'Perda' && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            onSendToMarketing(lead.id)
+                          }}
+                          className="w-full bg-purple-100 hover:bg-purple-200 text-purple-700 text-[10px] font-bold py-1.5 rounded flex items-center justify-center gap-1 mt-3 transition-colors"
+                        >
+                          Enviar p/ Marketing <ArrowRight className="w-3 h-3" />
+                        </button>
+                      )}
+
+                    {onReturnToComercial && lead.pipeline === 'Nutrition' && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          onReturnToComercial(lead.id)
+                        }}
+                        className="w-full bg-blue-100 hover:bg-blue-200 text-blue-700 text-[10px] font-bold py-1.5 rounded flex items-center justify-center gap-1 mt-3 transition-colors"
+                      >
+                        <ArrowLeft className="w-3 h-3" /> Retornar p/ Comercial
+                      </button>
+                    )}
 
                     {onReactivate && (
                       <div className="mt-3 grid grid-cols-2 gap-1.5">

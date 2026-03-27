@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { RouteSidebar } from '@/components/roteirizacao/RouteSidebar'
 import { MapViewer } from '@/components/roteirizacao/MapViewer'
 import { useToast } from '@/hooks/use-toast'
+import useCrmStore from '@/stores/useCrmStore'
 
 export type Waypoint = {
   id: string
@@ -14,6 +15,7 @@ export type Waypoint = {
 }
 
 export default function Roteirizacao() {
+  const { state, logAccess } = useCrmStore()
   const { toast } = useToast()
   const [routeGenerated, setRouteGenerated] = useState(false)
   const [waypoints, setWaypoints] = useState<Waypoint[]>([
@@ -25,6 +27,14 @@ export default function Roteirizacao() {
   const handleGenerate = () => {
     setRouteGenerated(true)
     toast({ title: 'Rota Otimizada!' })
+  }
+
+  const handleSendToLeadFlow = () => {
+    toast({
+      title: 'Dados Enviados!',
+      description: 'As informações da coleta foram enviadas com sucesso para o Fluxo de Leads.',
+    })
+    logAccess('Enviou dados da Roteirização para o Fluxo de Leads')
   }
 
   return (
@@ -51,6 +61,8 @@ export default function Roteirizacao() {
             onGenerate={handleGenerate}
             routeGenerated={routeGenerated}
             diagnostics={diagnostics}
+            onSendToLeadFlow={handleSendToLeadFlow}
+            role={state.role}
           />
         </div>
         <div className="lg:col-span-8 flex flex-col gap-6">

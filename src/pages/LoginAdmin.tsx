@@ -25,11 +25,22 @@ import { cn } from '@/lib/utils'
 export default function LoginAdmin() {
   const { state } = useCrmStore()
   const { toast } = useToast()
-  const [filterSector, setFilterSector] = useState<string>('all')
 
   const copyToClipboard = (link: string) => {
     navigator.clipboard.writeText(link)
     toast({ title: 'Link Copiado', description: 'Link de acesso copiado.' })
+  }
+
+  if (state.role !== 'Acesso Master') {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[50vh] space-y-4">
+        <ShieldAlert className="w-16 h-16 text-rose-500" />
+        <h2 className="text-2xl font-bold text-slate-800">Acesso Restrito</h2>
+        <p className="text-slate-500">
+          Apenas o perfil "Acesso Master" pode visualizar esta página.
+        </p>
+      </div>
+    )
   }
 
   return (

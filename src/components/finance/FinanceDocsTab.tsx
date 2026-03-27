@@ -8,7 +8,7 @@ export function FinanceDocsTab() {
   const { state } = useCrmStore()
   const { toast } = useToast()
 
-  const canAccess = ['Financeiro', 'Master'].includes(state.role)
+  const canAccess = ['Acesso Master', 'Supervisor Financeiro'].includes(state.role)
 
   const docs = [
     { id: 1, name: 'Contrato_SLA_IndustrialSP.pdf', date: '10/10/2023', type: 'Fiscal' },

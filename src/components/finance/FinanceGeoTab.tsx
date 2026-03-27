@@ -19,7 +19,7 @@ import useCrmStore from '@/stores/useCrmStore'
 
 export function FinanceGeoTab({ calc }: { calc: ReturnType<typeof useFinanceCalculator> }) {
   const { state } = useCrmStore()
-  const canEdit = ['Financeiro', 'Master'].includes(state.role)
+  const canEdit = ['Acesso Master', 'Supervisor Financeiro'].includes(state.role)
 
   const [clusters, setClusters] = useState([
     { id: '1', name: 'Campinas e Região', km: 120, active: true },

@@ -14,7 +14,12 @@ import { Link } from 'react-router-dom'
 
 export default function Empresas() {
   const { state } = useCrmStore()
-  const canCreate = !['Diretoria', 'Financeiro', 'Coleta'].includes(state.role)
+  const canCreate = [
+    'Acesso Master',
+    'Supervisor Comercial',
+    'Funcionário Comercial',
+    'Funcionário Coleta',
+  ].includes(state.role)
 
   return (
     <div className="space-y-6">

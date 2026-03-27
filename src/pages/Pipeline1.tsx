@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect, useRef } from 'react'
 import { useLocation } from 'react-router-dom'
 import { KanbanBoard } from '@/components/KanbanBoard'
-import useCrmStore, { Lead } from '@/stores/useCrmStore'
+import useCrmStore from '@/stores/useCrmStore'
 import { LossReasonModal } from '@/components/LossReasonModal'
 import { QuickLeadModal } from '@/components/QuickLeadModal'
 import { useToast } from '@/hooks/use-toast'
@@ -37,7 +37,9 @@ export default function Pipeline1() {
     [state.leads],
   )
 
-  const canMove = ['Comercial', 'Master', 'Supervisor', 'Diretoria'].includes(state.role)
+  const canMove = ['Acesso Master', 'Supervisor Comercial', 'Funcionário Comercial'].includes(
+    state.role,
+  )
 
   useEffect(() => {
     if (location.pathname.includes('/pipeline/1')) {
@@ -99,7 +101,7 @@ export default function Pipeline1() {
             owner: lead?.owner,
             companyName: company?.nomeFantasia,
           }),
-        }).catch((e) => console.log('Webhook dispatched in background'))
+        }).catch(() => console.log('Webhook dispatched in background'))
 
         return
       }
@@ -132,6 +134,23 @@ export default function Pipeline1() {
     }
   }
 
+  const handleSendToMarketing = (id: string) => {
+    if (!canMove) {
+      toast({ title: 'Acesso Negado', variant: 'destructive' })
+      return
+    }
+    updateState({
+      leads: state.leads.map((l) =>
+        l.id === id ? { ...l, pipeline: 'Nutrition', stage: 'Nutrição – Aquecimento' } : l,
+      ),
+    })
+    logAccess(`Enviou Lead ID ${id} para Marketing (Pipeline 2)`)
+    toast({
+      title: 'Lead Qualificado!',
+      description: 'Enviado para o fluxo de Nutrição do Marketing.',
+    })
+  }
+
   const confirmLoss = (reason: string, details?: string) => {
     if (!pendingMove) return
     updateState({
@@ -152,7 +171,6 @@ export default function Pipeline1() {
     }
     const updatedLeads = state.leads.map((lead) => {
       if (lead.pipeline === 'Prospection' && lead.stage !== 'Ganho' && lead.stage !== 'Perda') {
-        // Automation: 1 business day inactivity -> Nutrição
         return { ...lead, pipeline: 'Nutrition' as const, stage: 'Nutrição – Aquecimento' }
       }
       return lead
@@ -191,6 +209,7 @@ export default function Pipeline1() {
           leads={prospectionLeads}
           companies={state.companies}
           onMove={handleMove}
+          onSendToMarketing={handleSendToMarketing}
           onQuickAdd={(stage) => {
             if (!canMove) {
               toast({ title: 'Acesso Negado', variant: 'destructive' })

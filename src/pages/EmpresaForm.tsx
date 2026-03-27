@@ -32,8 +32,12 @@ export default function EmpresaForm() {
   const existingCompany = id ? state.companies.find((c) => c.id === id) : undefined
   const existingContacts = id ? state.contacts.filter((c) => c.companyId === id) : []
 
-  const isReadOnly =
-    ['Diretoria', 'Financeiro', 'Coleta'].includes(state.role) && state.role !== 'Master'
+  const isReadOnly = ![
+    'Acesso Master',
+    'Supervisor Comercial',
+    'Funcionário Comercial',
+    'Funcionário Coleta',
+  ].includes(state.role)
 
   const [formData, setFormData] = useState<Partial<Company>>({
     cnpj: '',

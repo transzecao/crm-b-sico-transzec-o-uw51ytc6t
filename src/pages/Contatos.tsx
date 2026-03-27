@@ -10,7 +10,12 @@ export default function Contatos() {
   const [modalOpen, setModalOpen] = useState(false)
   const [selectedContact, setSelectedContact] = useState<Contact | undefined>()
 
-  const canEdit = !['Diretoria', 'Coleta', 'Financeiro'].includes(state.role)
+  const canEdit = [
+    'Acesso Master',
+    'Supervisor Comercial',
+    'Funcionário Comercial',
+    'Funcionário Coleta',
+  ].includes(state.role)
 
   return (
     <div className="space-y-6">

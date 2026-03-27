@@ -56,7 +56,14 @@ const timeData = [
 export default function Analytics() {
   const { state } = useCrmStore()
   const { toast } = useToast()
-  const isComercial = state.role === 'Comercial'
+
+  const isComercial = state.role === 'Funcionário Comercial'
+  const isSupervisor = [
+    'Acesso Master',
+    'Supervisor Financeiro',
+    'Supervisor Comercial',
+    'Supervisor Coleta',
+  ].includes(state.role)
 
   const currentConversion = conversionPerStageData[conversionPerStageData.length - 1].rate
   const isAlertActive = currentConversion < 25
@@ -83,17 +90,17 @@ export default function Analytics() {
             </p>
           </div>
         </div>
-        {!isComercial && (
+        {isSupervisor && (
           <Button
             onClick={handleSendReport}
             className="bg-primary hover:bg-primary/90 text-white font-bold shadow-sm"
           >
-            <Mail className="w-4 h-4 mr-2" /> Programar Report (Diretoria)
+            <Mail className="w-4 h-4 mr-2" /> Programar Report Automático
           </Button>
         )}
       </div>
 
-      {isAlertActive && !isComercial && (
+      {isAlertActive && isSupervisor && (
         <Alert variant="destructive" className="bg-rose-50 border-rose-200 text-rose-800 shadow-sm">
           <AlertTriangle className="h-4 w-4" />
           <AlertTitle className="font-bold">

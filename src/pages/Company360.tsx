@@ -26,11 +26,17 @@ export default function Company360() {
   const company = state.companies.find((c) => c.id === id) || state.companies[0]
   const interactions = state.interactions.filter((i) => i.companyId === company?.id)
 
+  const canSimulate = ['Acesso Master', 'Supervisor Comercial', 'Funcionário Comercial'].includes(
+    state.role,
+  )
+
   if (!company) {
     return <div className="p-8 text-center font-medium text-slate-500">Empresa não encontrada.</div>
   }
 
   const simulateObjection = () => {
+    if (!canSimulate) return toast({ title: 'Acesso Negado', variant: 'destructive' })
+
     const newInteraction: Interaction = {
       id: Math.random().toString(36).substring(7),
       companyId: company.id,
@@ -53,6 +59,8 @@ export default function Company360() {
   }
 
   const simulateInbound = (price: boolean) => {
+    if (!canSimulate) return toast({ title: 'Acesso Negado', variant: 'destructive' })
+
     const lead = state.leads.find((l) => l.companyId === company.id)
     if (lead) {
       updateState({
@@ -111,30 +119,34 @@ export default function Company360() {
           </div>
         </div>
         <div className="relative z-10 flex flex-wrap gap-2">
-          <Button
-            onClick={simulateObjection}
-            className="bg-rose-50 border border-rose-200 text-rose-700 hover:bg-rose-100 shadow-sm font-semibold"
-            variant="outline"
-            size="sm"
-          >
-            <MessageSquareWarning className="w-4 h-4 mr-1.5" /> Objeção "Parceiro"
-          </Button>
-          <Button
-            onClick={() => simulateInbound(false)}
-            className="bg-emerald-50 border border-emerald-200 text-emerald-700 hover:bg-emerald-100 shadow-sm font-semibold"
-            variant="outline"
-            size="sm"
-          >
-            <Reply className="w-4 h-4 mr-1.5" /> Inbound Comum
-          </Button>
-          <Button
-            onClick={() => simulateInbound(true)}
-            className="bg-secondary/10 border border-secondary/30 text-secondary hover:bg-secondary/20 shadow-sm font-semibold"
-            variant="outline"
-            size="sm"
-          >
-            <DollarSign className="w-4 h-4 mr-1.5" /> Inbound Preço
-          </Button>
+          {canSimulate && (
+            <>
+              <Button
+                onClick={simulateObjection}
+                className="bg-rose-50 border border-rose-200 text-rose-700 hover:bg-rose-100 shadow-sm font-semibold"
+                variant="outline"
+                size="sm"
+              >
+                <MessageSquareWarning className="w-4 h-4 mr-1.5" /> Objeção "Parceiro"
+              </Button>
+              <Button
+                onClick={() => simulateInbound(false)}
+                className="bg-emerald-50 border border-emerald-200 text-emerald-700 hover:bg-emerald-100 shadow-sm font-semibold"
+                variant="outline"
+                size="sm"
+              >
+                <Reply className="w-4 h-4 mr-1.5" /> Inbound Comum
+              </Button>
+              <Button
+                onClick={() => simulateInbound(true)}
+                className="bg-secondary/10 border border-secondary/30 text-secondary hover:bg-secondary/20 shadow-sm font-semibold"
+                variant="outline"
+                size="sm"
+              >
+                <DollarSign className="w-4 h-4 mr-1.5" /> Inbound Preço
+              </Button>
+            </>
+          )}
           <Button
             asChild
             className="bg-white border-primary/30 text-primary hover:bg-primary/5 shadow-sm font-bold"

@@ -7,7 +7,7 @@ import useCrmStore from '@/stores/useCrmStore'
 
 export function FinanceKpiTab({ calc }: { calc: ReturnType<typeof useFinanceCalculator> }) {
   const { state } = useCrmStore()
-  const canEdit = ['Financeiro', 'Master'].includes(state.role)
+  const canEdit = ['Acesso Master', 'Supervisor Financeiro'].includes(state.role)
 
   const otd =
     calc.data.totalDel > 0 ? ((calc.data.onTime / calc.data.totalDel) * 100).toFixed(1) : '0.0'

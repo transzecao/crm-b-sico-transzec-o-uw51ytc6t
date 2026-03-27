@@ -15,7 +15,12 @@ import useCrmStore from '@/stores/useCrmStore'
 
 export function FinanceFiscalTab({ calc }: { calc: ReturnType<typeof useFinanceCalculator> }) {
   const { state } = useCrmStore()
-  const canEdit = ['Financeiro', 'Master'].includes(state.role)
+  const canEdit = [
+    'Acesso Master',
+    'Supervisor Financeiro',
+    'Funcionário Comercial',
+    'Funcionário Coleta',
+  ].includes(state.role)
 
   const fmt = (v: number) =>
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(isNaN(v) ? 0 : v)

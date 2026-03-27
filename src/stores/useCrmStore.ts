@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react'
 
 export type Role =
-  | 'Master'
-  | 'Supervisor'
-  | 'Comercial'
-  | 'Financeiro'
-  | 'Coleta'
-  | 'Marketing'
-  | 'Diretoria'
+  | 'Acesso Master'
+  | 'Supervisor Financeiro'
+  | 'Supervisor Comercial'
+  | 'Supervisor Coleta'
+  | 'Funcionário Comercial'
+  | 'Funcionário Marketing'
+  | 'Funcionário Coleta'
 
 export type Lead = {
   id: string
@@ -160,6 +160,20 @@ const mockLeads: Lead[] = [
     createdAt: new Date().toLocaleDateString(),
     score: 'Hot',
   },
+  {
+    id: '3',
+    companyId: '1',
+    title: 'Campanha de Reativação',
+    pipeline: 'Nutrition',
+    stage: 'Nutrição – Aquecimento',
+    value: 8000,
+    owner: 'Admin',
+    ownerAvatar: 'https://img.usecurling.com/ppl/thumbnail?gender=female&seed=1',
+    updatedBy: 'Admin',
+    updatedAt: new Date().toLocaleString(),
+    createdAt: new Date().toLocaleDateString(),
+    score: 'Cold',
+  },
 ]
 
 const mockContacts: Contact[] = [
@@ -216,7 +230,7 @@ const mockOrders: FreightOrder[] = [
 ]
 
 let globalState: CrmState = {
-  role: 'Master',
+  role: 'Acesso Master',
   currentUser: {
     name: 'Admin',
     avatar: 'https://img.usecurling.com/ppl/thumbnail?gender=female&seed=1',

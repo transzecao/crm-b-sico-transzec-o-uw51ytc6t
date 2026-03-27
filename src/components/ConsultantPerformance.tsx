@@ -12,7 +12,12 @@ export function ConsultantPerformance() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editValue, setEditValue] = useState<string>('')
 
-  const isAdmin = ['Master', 'Supervisor', 'Diretoria'].includes(state.role)
+  const isAdmin = [
+    'Acesso Master',
+    'Supervisor Comercial',
+    'Supervisor Financeiro',
+    'Supervisor Coleta',
+  ].includes(state.role)
   const visibleGoals = isAdmin
     ? state.consultantGoals
     : state.consultantGoals.filter((g) => g.consultantName === state.currentUser.name)

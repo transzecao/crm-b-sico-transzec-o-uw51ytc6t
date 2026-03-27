@@ -34,24 +34,26 @@ export default function Layout() {
               <span className="font-bold text-slate-700">Governança (Simulador):</span>
             </div>
             <div className="flex items-center gap-4">
-              <Link
-                to="/admin/logins"
-                className="text-xs font-bold bg-primary/10 text-primary px-3 py-1.5 rounded-md hover:bg-primary/20 transition-colors flex items-center gap-1.5 shadow-sm"
-              >
-                <Settings className="w-3.5 h-3.5" /> Acessos
-              </Link>
+              {state.role === 'Acesso Master' && (
+                <Link
+                  to="/admin/logins"
+                  className="text-xs font-bold bg-primary/10 text-primary px-3 py-1.5 rounded-md hover:bg-primary/20 transition-colors flex items-center gap-1.5 shadow-sm"
+                >
+                  <Settings className="w-3.5 h-3.5" /> Acessos
+                </Link>
+              )}
               <Select value={state.role} onValueChange={(val: any) => updateState({ role: val })}>
-                <SelectTrigger className="w-[140px] h-8 text-xs bg-slate-50 border-slate-200 font-semibold focus:ring-primary">
+                <SelectTrigger className="w-[180px] h-8 text-xs bg-slate-50 border-slate-200 font-semibold focus:ring-primary">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Master">Master</SelectItem>
-                  <SelectItem value="Supervisor">Supervisor</SelectItem>
-                  <SelectItem value="Comercial">Comercial</SelectItem>
-                  <SelectItem value="Financeiro">Financeiro</SelectItem>
-                  <SelectItem value="Coleta">Coleta</SelectItem>
-                  <SelectItem value="Marketing">Marketing</SelectItem>
-                  <SelectItem value="Diretoria">Diretoria</SelectItem>
+                  <SelectItem value="Acesso Master">Acesso Master</SelectItem>
+                  <SelectItem value="Supervisor Financeiro">Supervisor Financeiro</SelectItem>
+                  <SelectItem value="Supervisor Comercial">Supervisor Comercial</SelectItem>
+                  <SelectItem value="Supervisor Coleta">Supervisor Coleta</SelectItem>
+                  <SelectItem value="Funcionário Comercial">Funcionário Comercial</SelectItem>
+                  <SelectItem value="Funcionário Marketing">Funcionário Marketing</SelectItem>
+                  <SelectItem value="Funcionário Coleta">Funcionário Coleta</SelectItem>
                 </SelectContent>
               </Select>
             </div>

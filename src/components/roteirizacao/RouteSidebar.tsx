@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Trash2, Plus, Route, AlertTriangle } from 'lucide-react'
+import { Trash2, Plus, Route, AlertTriangle, Send } from 'lucide-react'
 
 export function RouteSidebar({
   waypoints,
@@ -19,6 +19,8 @@ export function RouteSidebar({
   onGenerate,
   routeGenerated,
   diagnostics,
+  onSendToLeadFlow,
+  role,
 }: any) {
   const addWaypoint = () => {
     setWaypoints([
@@ -34,6 +36,8 @@ export function RouteSidebar({
   const updateWaypoint = (id: string, field: string, value: any) => {
     setWaypoints(waypoints.map((w: any) => (w.id === id ? { ...w, [field]: value } : w)))
   }
+
+  const canSendToFlow = ['Acesso Master', 'Funcionário Coleta'].includes(role)
 
   return (
     <Card className="border-slate-200 shadow-sm bg-white">
@@ -122,7 +126,17 @@ export function RouteSidebar({
           Calcular Rota Otimizada
         </Button>
 
-        {diagnostics.length > 0 && (
+        {routeGenerated && canSendToFlow && (
+          <Button
+            onClick={onSendToLeadFlow}
+            variant="secondary"
+            className="w-full bg-secondary hover:bg-secondary/90 text-white font-bold h-10 shadow-sm"
+          >
+            <Send className="w-4 h-4 mr-2" /> Enviar Coleta para Fluxo de Leads
+          </Button>
+        )}
+
+        {diagnostics?.length > 0 && (
           <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm font-medium text-amber-900 space-y-2 shadow-inner">
             <div className="flex items-center gap-1.5 text-amber-700 font-bold mb-2">
               <AlertTriangle className="w-4 h-4" /> Diagnóstico de Rota

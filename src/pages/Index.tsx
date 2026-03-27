@@ -8,6 +8,8 @@ import {
   Search,
   MoreHorizontal,
   BrainCircuit,
+  Bell,
+  Mail,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -27,18 +29,131 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
-import useCrmStore from '@/stores/useCrmStore'
+import { Button } from '@/components/ui/button'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { useToast } from '@/hooks/use-toast'
+import useCrmStore, { Role } from '@/stores/useCrmStore'
 import { Link } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import { ConsultantPerformance } from '@/components/ConsultantPerformance'
 import { calculateAIProbability } from '@/utils/aiPredict'
+
+function SupervisorNotificationCenter({ role }: { role: Role }) {
+  const isComercial = role === 'Supervisor Comercial' || role === 'Acesso Master'
+  const isFinanceiro = role === 'Supervisor Financeiro' || role === 'Acesso Master'
+  const isColeta = role === 'Supervisor Coleta' || role === 'Acesso Master'
+
+  if (!isComercial && !isFinanceiro && !isColeta) return null
+
+  return (
+    <div className="grid gap-4 md:grid-cols-3 mb-6">
+      {isComercial && (
+        <Alert className="bg-purple-50 border-purple-200">
+          <AlertTitle className="text-purple-800 font-bold flex items-center gap-2">
+            <Bell className="w-4 h-4" /> Comercial
+          </AlertTitle>
+          <AlertDescription className="text-purple-700 text-xs mt-2">
+            <strong>Saúde da Ferramenta:</strong> Pipeline 1 e 2 operando normalmente.
+            <br />
+            <strong>Atenção:</strong> 3 leads sem interação há mais de 2 dias.
+          </AlertDescription>
+        </Alert>
+      )}
+      {isFinanceiro && (
+        <Alert className="bg-blue-50 border-blue-200">
+          <AlertTitle className="text-blue-800 font-bold flex items-center gap-2">
+            <Bell className="w-4 h-4" /> Financeiro
+          </AlertTitle>
+          <AlertDescription className="text-blue-700 text-xs mt-2">
+            <strong>Saúde da Ferramenta:</strong> Cotação com API ANTT instável nas últimas 2h.
+            <br />
+            <strong>Atenção:</strong> 5 novas cotações geradas com margem abaixo do padrão.
+          </AlertDescription>
+        </Alert>
+      )}
+      {isColeta && (
+        <Alert className="bg-amber-50 border-amber-200">
+          <AlertTitle className="text-amber-800 font-bold flex items-center gap-2">
+            <Bell className="w-4 h-4" /> Coleta
+          </AlertTitle>
+          <AlertDescription className="text-amber-700 text-xs mt-2">
+            <strong>Saúde da Ferramenta:</strong> Roteirização e mapas OK.
+            <br />
+            <strong>Atenção:</strong> 2 rotas com desvio de percurso detectado hoje.
+          </AlertDescription>
+        </Alert>
+      )}
+    </div>
+  )
+}
+
+function LeadRecoveryAutomation() {
+  const { state, logAccess } = useCrmStore()
+  const { toast } = useToast()
+
+  const criticalLeads = state.leads.filter(
+    (l) =>
+      l.pipeline === 'Prospection' &&
+      l.stage !== 'Ganho' &&
+      l.stage !== 'Perda' &&
+      calculateAIProbability(l, state.interactions) < 40,
+  )
+
+  const triggerRecovery = (leadId: string) => {
+    toast({
+      title: 'Automação Disparada',
+      description: 'Mensagem gerada por IA enviada via E-mail/WhatsApp oferecendo "Teste Leve".',
+    })
+    logAccess(`Disparou recuperação automática para Lead ${leadId}`)
+  }
+
+  if (criticalLeads.length === 0) return null
+
+  return (
+    <Card className="mb-6 border-rose-200 shadow-sm">
+      <CardHeader className="bg-rose-50 border-b border-rose-100 pb-3">
+        <CardTitle className="text-rose-800 text-sm font-bold flex items-center gap-2">
+          <BrainCircuit className="w-4 h-4" /> Automação de Recuperação de Leads (Probabilidade
+          Crítica)
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="pt-4 space-y-3">
+        {criticalLeads.map((lead) => (
+          <div
+            key={lead.id}
+            className="flex items-center justify-between bg-white p-3 rounded border border-rose-100 shadow-sm"
+          >
+            <div>
+              <p className="font-bold text-slate-800 text-sm">{lead.title}</p>
+              <p className="text-xs text-rose-600 font-semibold">
+                Probabilidade IA: {calculateAIProbability(lead, state.interactions)}%
+              </p>
+            </div>
+            <Button
+              size="sm"
+              variant="outline"
+              className="text-rose-700 border-rose-200 hover:bg-rose-50"
+              onClick={() => triggerRecovery(lead.id)}
+            >
+              <Mail className="w-3.5 h-3.5 mr-1.5" /> Disparar Recuperação IA
+            </Button>
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+  )
+}
 
 export default function Index() {
   const { state } = useCrmStore()
   const [pipelineFilter, setPipelineFilter] = useState<string>('all')
   const [searchTerm, setSearchTerm] = useState('')
 
-  const isRestrictedView = ['Comercial'].includes(state.role)
+  const isRestrictedView = [
+    'Funcionário Comercial',
+    'Funcionário Marketing',
+    'Funcionário Coleta',
+  ].includes(state.role)
   const visibleLeads = isRestrictedView
     ? state.leads.filter((l) => l.owner === state.currentUser.name)
     : state.leads
@@ -71,11 +186,16 @@ export default function Index() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight text-slate-900">Dashboard Comercial</h1>
+        <h1 className="text-3xl font-bold tracking-tight text-slate-900">Dashboard</h1>
         <p className="text-slate-500 font-medium mt-1">
-          Acompanhamento central de prospecção e metas.
+          Visão central do sistema e status das operações.
         </p>
       </div>
+
+      <SupervisorNotificationCenter role={state.role} />
+      {['Acesso Master', 'Supervisor Comercial', 'Funcionário Comercial'].includes(state.role) && (
+        <LeadRecoveryAutomation />
+      )}
 
       <ConsultantPerformance />
 
