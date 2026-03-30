@@ -33,9 +33,9 @@ export function PortalHeader() {
           />
           <div className="flex flex-col">
             <span className="text-lg font-black tracking-tight text-[#800020] leading-none">
-              Transzecão
+              Transecão
             </span>
-            <span className="text-xs font-medium text-slate-500">{currentUser.name}</span>
+            <span className="text-xs font-medium text-slate-500">{currentUser.company || currentUser.name}</span>
           </div>
         </div>
       </div>

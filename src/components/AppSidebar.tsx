@@ -56,7 +56,7 @@ export function AppSidebar() {
       ],
     },
     {
-      title: 'Pipeline de Prospecção',
+      title: 'Pipeline',
       url: '/pipeline/1',
       icon: KanbanSquare,
       roles: ['Acesso Master', 'Supervisor Comercial', 'Funcionário Comercial'],

@@ -20,26 +20,26 @@ export function PortalDocs() {
     <div className="grid md:grid-cols-2 gap-6 animate-fade-in-up">
       <DocForm
         title="Download XML - PDF"
-        type="CTe"
-        fields={['Nota Fiscal', 'CNPJ', 'Email']}
+        type="CTE"
+        fields={['Número da Nota Fiscal', 'CNPJ', 'E-mail']}
         onSubmit={handleRequest}
       />
       <DocForm
         title="Download Ordem de Serviço"
         type="OS"
-        fields={['CNPJ Remetente', 'CNPJ Destinatário', 'Email']}
+        fields={['CNPJ Remetente', 'CNPJ Destino', 'E-mail']}
         onSubmit={handleRequest}
       />
       <DocForm
         title="Solicitar Fatura"
         type="Fatura"
-        fields={['CNPJ', 'Email']}
+        fields={['CNPJ', 'E-mail']}
         onSubmit={handleRequest}
       />
       <DocForm
         title="Solicitar Boleto"
         type="Boleto"
-        fields={['CNPJ', 'Email']}
+        fields={['CNPJ', 'E-mail']}
         onSubmit={handleRequest}
       />
     </div>

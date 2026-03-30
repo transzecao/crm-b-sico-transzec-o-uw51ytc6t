@@ -134,12 +134,13 @@ export function AppHeader() {
           </Select>
         </div>
 
-        <div className="relative hidden md:block">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/50" />
+        <div className="relative hidden md:block group">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/50 group-focus-within:text-white/80 transition-colors" />
           <input
             type="search"
-            placeholder="Buscar..."
-            className="bg-white/10 border border-white/20 text-white placeholder:text-white/50 rounded-full pl-9 pr-4 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-white/50 w-48 transition-all"
+            placeholder={`Buscar como ${state.role}...`}
+            className="bg-white/10 border border-white/20 text-white placeholder:text-white/50 rounded-full pl-9 pr-4 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-white/50 focus:w-64 w-48 transition-all"
+            title={`Buscar dados relevantes para ${state.role}`}
           />
         </div>
 
