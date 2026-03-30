@@ -18,33 +18,38 @@ import NotFound from './pages/NotFound'
 import IA from './pages/IA'
 import Roteirizacao from './pages/Roteirizacao'
 import PortalCliente from './pages/PortalCliente'
+import PortalAdmin from './pages/PortalAdmin'
+import { PortalProvider } from '@/stores/usePortalStore'
 
 const App = () => (
   <BrowserRouter future={{ v7_startTransition: false, v7_relativeSplatPath: false }}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <Routes>
-        <Route path="/portal" element={<PortalCliente />} />
+    <PortalProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <Routes>
+          <Route path="/portal" element={<PortalCliente />} />
 
-        <Route element={<Layout />}>
-          <Route path="/" element={<Index />} />
-          <Route path="/empresas" element={<Empresas />} />
-          <Route path="/empresa/nova" element={<EmpresaForm />} />
-          <Route path="/empresa/:id/editar" element={<EmpresaForm />} />
-          <Route path="/contatos" element={<Contatos />} />
-          <Route path="/pipeline/1" element={<Pipeline1 />} />
-          <Route path="/pipeline/2" element={<Pipeline2 />} />
-          <Route path="/empresa/:id/360" element={<Company360 />} />
-          <Route path="/financeiro" element={<Financeiro />} />
-          <Route path="/analytics" element={<Analytics />} />
-          <Route path="/admin/logins" element={<LoginAdmin />} />
-          <Route path="/ia" element={<IA />} />
-          <Route path="/roteirizacao" element={<Roteirizacao />} />
-        </Route>
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </TooltipProvider>
+          <Route element={<Layout />}>
+            <Route path="/" element={<Index />} />
+            <Route path="/empresas" element={<Empresas />} />
+            <Route path="/empresa/nova" element={<EmpresaForm />} />
+            <Route path="/empresa/:id/editar" element={<EmpresaForm />} />
+            <Route path="/contatos" element={<Contatos />} />
+            <Route path="/pipeline/1" element={<Pipeline1 />} />
+            <Route path="/pipeline/2" element={<Pipeline2 />} />
+            <Route path="/empresa/:id/360" element={<Company360 />} />
+            <Route path="/financeiro" element={<Financeiro />} />
+            <Route path="/analytics" element={<Analytics />} />
+            <Route path="/admin/logins" element={<LoginAdmin />} />
+            <Route path="/admin/portal" element={<PortalAdmin />} />
+            <Route path="/ia" element={<IA />} />
+            <Route path="/roteirizacao" element={<Roteirizacao />} />
+          </Route>
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </TooltipProvider>
+    </PortalProvider>
   </BrowserRouter>
 )
 

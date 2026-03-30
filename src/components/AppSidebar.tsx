@@ -112,6 +112,17 @@ export function AppSidebar() {
       roles: ['Acesso Master'],
     },
     {
+      title: 'Gestão do Portal',
+      url: '/admin/portal',
+      icon: Users,
+      roles: [
+        'Acesso Master',
+        'Supervisor Comercial',
+        'Supervisor Financeiro',
+        'Funcionário Coleta',
+      ],
+    },
+    {
       title: 'The Brain (Global)',
       url: '/ia',
       icon: BrainCircuit,
