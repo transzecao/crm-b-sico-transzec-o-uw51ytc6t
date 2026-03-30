@@ -102,7 +102,9 @@ export function PortalColeta() {
                 name="originCnpj"
                 placeholder="CNPJ Origem (14 dígitos)"
                 value={form.originCnpj}
-                onChange={handleChange}
+                onChange={(e) =>
+                  setForm({ ...form, originCnpj: e.target.value.replace(/\D/g, '').slice(0, 14) })
+                }
                 required
               />
               <Input
@@ -126,7 +128,9 @@ export function PortalColeta() {
                 name="destCnpj"
                 placeholder="CNPJ Destino (14 dígitos)"
                 value={form.destCnpj}
-                onChange={handleChange}
+                onChange={(e) =>
+                  setForm({ ...form, destCnpj: e.target.value.replace(/\D/g, '').slice(0, 14) })
+                }
                 required
               />
               <Input

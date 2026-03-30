@@ -108,7 +108,8 @@ export default function Analytics() {
           <div>
             <h1 className="text-3xl font-bold tracking-tight text-slate-900">Analytics & KPIs</h1>
             <p className="text-slate-500 font-medium">
-              {isComercial ? 'Seu desempenho pessoal' : 'Visão global de métricas e conversões.'}
+              {isComercial ? 'Seu desempenho pessoal' : 'Visão global de métricas e conversões.'}{' '}
+              Atualizado automaticamente toda Sexta-feira.
             </p>
           </div>
         </div>

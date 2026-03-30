@@ -192,7 +192,8 @@ export default function Pipeline1() {
     logAccess('Rodou Automação de Inatividade (Prospecção)')
     toast({
       title: 'Automação de Inatividade',
-      description: 'Leads sem interação por 1 dia foram transferidos para Nutrição.',
+      description:
+        'Leads sem interação por 1 dia útil foram transferidos automaticamente para Nutrição.',
     })
   }
 

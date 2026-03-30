@@ -156,7 +156,7 @@ export const PortalProvider = ({ children }: { children: ReactNode }) => {
       const dd = String(today.getDate()).padStart(2, '0')
       const mm = String(today.getMonth() + 1).padStart(2, '0')
       const dailyOrder = collections.filter((c) => c.date.startsWith(`${dd}/${mm}`)).length + 1
-      const displayId = `${dd}${mm}${String(dailyOrder).padStart(3, '0')}${colData.customerId}`
+      const displayId = `${dd}${mm}${dailyOrder}${colData.customerId}`
       setCollections((prev) => [
         ...prev,
         {

@@ -18,7 +18,7 @@ export function PortalCotacao() {
     e.preventDefault()
     const val = Number(form.weight) * 1.5 + 150
     const quoteCode = `${currentUser?.customerId}${form.invoiceNumber}`
-    setResult({ ...form, value: val, quoteCode })
+    setResult({ ...form, value: val, quoteCode, timestamp: new Date().toLocaleString() })
   }
 
   const handleSave = () => {
@@ -36,7 +36,9 @@ export function PortalCotacao() {
   }
 
   const handleDownload = () => {
-    toast({ title: `PDF gerado com sucesso! Incluído ID ${result.quoteCode}, Data e Hora.` })
+    toast({
+      title: `PDF gerado com sucesso! Incluído ID ${result.quoteCode}, Valor: R$ ${result.value.toFixed(2)}, Data e Hora: ${result.timestamp}.`,
+    })
   }
 
   return (

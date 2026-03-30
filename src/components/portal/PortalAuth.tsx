@@ -33,6 +33,11 @@ export function PortalAuth() {
   const handleRegister = (e: React.FormEvent) => {
     e.preventDefault()
     const passRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/
+    const digitsOnlyCnpj = cnpj.replace(/\D/g, '')
+    if (digitsOnlyCnpj.length !== 14) {
+      toast({ title: 'CNPJ deve conter exatamente 14 dígitos.', variant: 'destructive' })
+      return
+    }
     if (!passRegex.test(password)) {
       toast({
         title: 'A senha deve ter 8 caracteres, letras, números e caracteres especiais.',
@@ -44,7 +49,7 @@ export function PortalAuth() {
       toast({ title: 'As senhas não conferem.', variant: 'destructive' })
       return
     }
-    register({ cnpj, name, email, phone, password })
+    register({ cnpj: digitsOnlyCnpj, name, email, phone, password })
     toast({
       title: 'Estamos checando seus dados enviaremos um email de confirmaçao.',
       duration: 5000,
@@ -142,8 +147,13 @@ export function PortalAuth() {
             <form onSubmit={handleRegister} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>CNPJ</Label>
-                  <Input value={cnpj} onChange={(e) => setCnpj(e.target.value)} required />
+                  <Label>CNPJ (Apenas números)</Label>
+                  <Input
+                    value={cnpj}
+                    onChange={(e) => setCnpj(e.target.value.replace(/\D/g, ''))}
+                    maxLength={14}
+                    required
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label>Razão Social</Label>
