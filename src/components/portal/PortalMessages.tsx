@@ -11,6 +11,8 @@ import {
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { HelpCircle } from 'lucide-react'
 
 export function PortalMessages() {
   const { currentUser, addMessage, messages } = usePortalStore()
@@ -32,7 +34,20 @@ export function PortalMessages() {
     <div className="grid md:grid-cols-2 gap-6 animate-fade-in-up">
       <Card>
         <CardHeader>
-          <CardTitle>Enviar Mensagem</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            Enviar Mensagem
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <HelpCircle className="w-4 h-4 text-slate-400 hover:text-slate-600 cursor-help" />
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="max-w-xs font-normal">
+                  Envie mensagens diretas para os departamentos de Coleta ou Financeiro para tirar
+                  dúvidas ou resolver pendências.
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSend} className="space-y-4">

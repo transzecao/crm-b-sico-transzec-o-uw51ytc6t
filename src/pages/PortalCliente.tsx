@@ -8,6 +8,8 @@ import { PortalCotacao } from '@/components/portal/PortalCotacao'
 import { PortalCotacaoHist } from '@/components/portal/PortalCotacaoHist'
 import { PortalDocs } from '@/components/portal/PortalDocs'
 import { PortalMessages } from '@/components/portal/PortalMessages'
+import { PortalBlog } from '@/components/portal/PortalBlog'
+import { PortalTour } from '@/components/portal/PortalTour'
 import { Package } from 'lucide-react'
 
 export default function PortalCliente() {
@@ -42,8 +44,10 @@ export default function PortalCliente() {
           {activeTab === 'cotacao-hist' && <PortalCotacaoHist />}
           {activeTab === 'docs' && <PortalDocs />}
           {activeTab === 'messages' && <PortalMessages />}
+          {activeTab === 'blog' && <PortalBlog />}
         </main>
       </div>
+      <PortalTour />
     </div>
   )
 }

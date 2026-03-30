@@ -6,6 +6,7 @@ import {
   MessageSquare,
   LogOut,
   History,
+  Newspaper,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -17,6 +18,7 @@ export function PortalSidebar({ activeTab, setActiveTab, onLogout }: any) {
     { id: 'cotacao-hist', label: 'Histórico de Cotações', icon: History },
     { id: 'docs', label: 'Ver Documentos', icon: FileText },
     { id: 'messages', label: 'Mensagens', icon: MessageSquare },
+    { id: 'blog', label: 'Blog', icon: Newspaper },
   ]
 
   return (
@@ -25,6 +27,7 @@ export function PortalSidebar({ activeTab, setActiveTab, onLogout }: any) {
         {items.map((item) => (
           <button
             key={item.id}
+            data-tour={`menu-${item.id}`}
             onClick={() => setActiveTab(item.id)}
             className={cn(
               'w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors text-sm',

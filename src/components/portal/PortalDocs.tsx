@@ -4,6 +4,8 @@ import { useToast } from '@/hooks/use-toast'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { HelpCircle } from 'lucide-react'
 
 export function PortalDocs() {
   const { currentUser, addDocRequest } = usePortalStore()
@@ -50,7 +52,20 @@ function DocForm({ title, type, fields, onSubmit }: any) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg">{title}</CardTitle>
+        <CardTitle className="text-lg flex items-center justify-between">
+          {title}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <HelpCircle className="w-4 h-4 text-slate-400 hover:text-slate-600 cursor-help" />
+            </TooltipTrigger>
+            <TooltipContent>
+              <p className="max-w-xs font-normal">
+                Solicite a 2ª via ou os arquivos originais (XML/PDF) deste documento. O departamento
+                financeiro será notificado com prioridade urgente.
+              </p>
+            </TooltipContent>
+          </Tooltip>
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <form

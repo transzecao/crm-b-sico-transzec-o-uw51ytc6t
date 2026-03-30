@@ -66,6 +66,8 @@ export type PortalMessage = {
 }
 
 export interface PortalState {
+  hasSeenTour: boolean
+  setHasSeenTour: (val: boolean) => void
   users: PortalUser[]
   collections: PortalCollection[]
   quotes: PortalQuote[]
@@ -108,8 +110,11 @@ export const PortalProvider = ({ children }: { children: ReactNode }) => {
   const [docRequests, setDocRequests] = useState<PortalDocRequest[]>([])
   const [messages, setMessages] = useState<PortalMessage[]>([])
   const [currentUser, setCurrentUser] = useState<PortalUser | null>(null)
+  const [hasSeenTour, setHasSeenTour] = useState(false)
 
   const value: PortalState = {
+    hasSeenTour,
+    setHasSeenTour,
     users,
     collections,
     quotes,

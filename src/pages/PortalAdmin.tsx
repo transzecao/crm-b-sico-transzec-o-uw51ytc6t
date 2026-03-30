@@ -4,8 +4,18 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { useToast } from '@/hooks/use-toast'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { useState } from 'react'
 
 export default function PortalAdmin() {
+  const [adminRole, setAdminRole] = useState('Comercial')
+
   const {
     users,
     collections,
@@ -28,31 +38,44 @@ export default function PortalAdmin() {
 
   return (
     <div className="space-y-6 bg-slate-50 min-h-[calc(100vh-6rem)] p-2 md:p-6 rounded-xl animate-fade-in-up">
-      <div className="flex justify-between items-center bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-slate-900">
             Painel Administrativo do Portal
           </h1>
           <p className="text-slate-500 font-medium mt-1">
-            Visão segmentada por papéis: Comercial, Coleta e Financeiro.
+            Acesso segmentado por perfil e ownership de ferramentas.
           </p>
+        </div>
+        <div className="w-full md:w-64">
+          <p className="text-xs font-bold text-slate-500 uppercase mb-1">Simular Perfil Logado</p>
+          <Select value={adminRole} onValueChange={setAdminRole}>
+            <SelectTrigger>
+              <SelectValue placeholder="Selecione o Perfil" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Comercial">Supervisor Comercial</SelectItem>
+              <SelectItem value="Coleta">Supervisor Coleta</SelectItem>
+              <SelectItem value="Financeiro">Supervisor Financeiro</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
-      <Tabs defaultValue="comercial" className="w-full">
-        <TabsList className="bg-white p-1 rounded-xl shadow-sm border border-slate-200 mb-4 h-auto flex-wrap">
-          <TabsTrigger value="comercial" className="flex-1 py-2">
-            Comercial (Aprovações)
-          </TabsTrigger>
-          <TabsTrigger value="coleta" className="flex-1 py-2">
-            Operações (Coleta)
-          </TabsTrigger>
-          <TabsTrigger value="financeiro" className="flex-1 py-2">
-            Financeiro
-          </TabsTrigger>
+      <Tabs value={adminRole.toLowerCase()} className="w-full">
+        <TabsList className="bg-white p-1 rounded-xl shadow-sm border border-slate-200 mb-4 h-auto flex-wrap w-full hidden">
+          <TabsTrigger value="comercial">Comercial</TabsTrigger>
+          <TabsTrigger value="coleta">Coleta</TabsTrigger>
+          <TabsTrigger value="financeiro">Financeiro</TabsTrigger>
         </TabsList>
 
         <TabsContent value="comercial" className="space-y-4">
+          <div className="bg-blue-50 border border-blue-200 p-4 rounded-xl mb-4">
+            <h3 className="font-bold text-blue-800">Acesso Restrito - Supervisor Comercial</h3>
+            <p className="text-sm text-blue-600">
+              Você gerencia a base geral de clientes e a aprovação de novos cadastros no portal.
+            </p>
+          </div>
           <Card>
             <CardHeader>
               <CardTitle>Novos Cadastros (Supervisor Comercial)</CardTitle>
@@ -101,6 +124,12 @@ export default function PortalAdmin() {
         </TabsContent>
 
         <TabsContent value="coleta" className="space-y-4">
+          <div className="bg-emerald-50 border border-emerald-200 p-4 rounded-xl mb-4">
+            <h3 className="font-bold text-emerald-800">Acesso Restrito - Supervisor Coleta</h3>
+            <p className="text-sm text-emerald-600">
+              Gestão exclusiva das parametrizações e agendamentos da ferramenta de Coleta.
+            </p>
+          </div>
           <Card>
             <CardHeader>
               <CardTitle>Solicitações de Coleta (Funcionário / Supervisor Coleta)</CardTitle>
@@ -159,6 +188,12 @@ export default function PortalAdmin() {
         </TabsContent>
 
         <TabsContent value="financeiro" className="space-y-4">
+          <div className="bg-rose-50 border border-rose-200 p-4 rounded-xl mb-4">
+            <h3 className="font-bold text-rose-800">Acesso Restrito - Supervisor Financeiro</h3>
+            <p className="text-sm text-rose-600">
+              Gestão exclusiva das ferramentas de Cotação e Solicitação de Documentos Financeiros.
+            </p>
+          </div>
           <div className="grid md:grid-cols-2 gap-4">
             <Card>
               <CardHeader>
