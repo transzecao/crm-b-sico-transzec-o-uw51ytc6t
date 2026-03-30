@@ -3,7 +3,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { useToast } from '@/hooks/use-toast'
 import useCrmStore from '@/stores/useCrmStore'
-import { Calculator, AlertTriangle } from 'lucide-react'
+import { Calculator, AlertTriangle, Edit2, Check, X } from 'lucide-react'
 
 import { useFinanceCalculator } from '@/hooks/useFinanceCalculator'
 import { FinancePricingTab } from '@/components/finance/FinancePricingTab'
@@ -12,16 +12,21 @@ import { FinanceFiscalTab } from '@/components/finance/FinanceFiscalTab'
 import { FinanceIntegTab } from '@/components/finance/FinanceIntegTab'
 import { FinanceKpiTab } from '@/components/finance/FinanceKpiTab'
 import { FinanceDocsTab } from '@/components/finance/FinanceDocsTab'
+import { FinanceEngineTab } from '@/components/finance/FinanceEngineTab'
 
 export default function Financeiro() {
-  const { state, updateState } = useCrmStore()
+  const { state } = useCrmStore()
   const { toast } = useToast()
   const calc = useFinanceCalculator()
 
   const [tab, setTab] = useState('pricing')
+  const [isEditingFinalValue, setIsEditingFinalValue] = useState(false)
+  const [overrideValue, setOverrideValue] = useState('')
 
   const fmt = (v: number) =>
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(isNaN(v) ? 0 : v)
+
+  const canEditParams = ['Acesso Master', 'Supervisor Financeiro'].includes(state.role)
 
   useEffect(() => {
     if (calc.data.zmrc) {
@@ -34,7 +39,7 @@ export default function Financeiro() {
   }, [calc.data.zmrc])
 
   return (
-    <div className="space-y-6 bg-slate-50 min-h-[calc(100vh-6rem)] p-2 md:p-6 rounded-xl">
+    <div className="space-y-6 bg-slate-50 min-h-[calc(100vh-6rem)] p-2 md:p-6 rounded-xl animate-fade-in-up">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
         <div className="flex items-center gap-4">
           <div className="bg-primary/10 p-3 rounded-xl text-primary border border-primary/20">
@@ -45,7 +50,7 @@ export default function Financeiro() {
               Calculadora de Fretes
             </h1>
             <p className="text-slate-500 font-medium mt-1">
-              Módulo Logístico Financeiro (Fórmulas, Clusters e Documentos).
+              Módulo Logístico Financeiro (Fórmulas, Clusters e Engine).
             </p>
           </div>
         </div>
@@ -91,6 +96,14 @@ export default function Financeiro() {
               >
                 Documentos
               </TabsTrigger>
+              {canEditParams && (
+                <TabsTrigger
+                  value="engine"
+                  className="flex-1 py-2 text-sm font-semibold data-[state=active]:bg-rose-600 data-[state=active]:text-white text-rose-600"
+                >
+                  Motor (Engine)
+                </TabsTrigger>
+              )}
             </TabsList>
 
             <TabsContent value="pricing" className="mt-0">
@@ -111,6 +124,11 @@ export default function Financeiro() {
             <TabsContent value="docs" className="mt-0">
               <FinanceDocsTab />
             </TabsContent>
+            {canEditParams && (
+              <TabsContent value="engine" className="mt-0">
+                <FinanceEngineTab />
+              </TabsContent>
+            )}
           </Tabs>
         </div>
 
@@ -130,9 +148,48 @@ export default function Financeiro() {
                   <span>Peso Tarifável</span>
                   <span className="font-bold text-white">{calc.taxableWeight.toFixed(2)} kg</span>
                 </div>
-                <div className="flex justify-between items-center">
+                <div className="flex justify-between items-center h-8">
                   <span>Base da Fórmula</span>
-                  <span className="font-semibold">{fmt(calc.finalValue)}</span>
+                  {isEditingFinalValue ? (
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        className="w-24 h-6 px-1 text-right text-slate-900 rounded"
+                        value={overrideValue}
+                        onChange={(e) => setOverrideValue(e.target.value)}
+                        autoFocus
+                      />
+                      <Check
+                        className="w-4 h-4 cursor-pointer text-green-400 hover:text-green-300"
+                        onClick={() => {
+                          calc.update({ manualOverrideFinalValue: Number(overrideValue) })
+                          setIsEditingFinalValue(false)
+                        }}
+                      />
+                      <X
+                        className="w-4 h-4 cursor-pointer text-rose-400 hover:text-rose-300"
+                        onClick={() => setIsEditingFinalValue(false)}
+                      />
+                    </div>
+                  ) : (
+                    <span className="font-semibold flex items-center gap-2">
+                      {fmt(calc.finalValue)}
+                      {calc.data.manualOverrideFinalValue !== null && (
+                        <span className="text-[10px] bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded uppercase font-bold tracking-wider">
+                          Manual
+                        </span>
+                      )}
+                      {canEditParams && calc.isPublished && (
+                        <Edit2
+                          className="w-3 h-3 cursor-pointer text-slate-400 hover:text-white"
+                          onClick={() => {
+                            setOverrideValue(String(calc.finalValue))
+                            setIsEditingFinalValue(true)
+                          }}
+                        />
+                      )}
+                    </span>
+                  )}
                 </div>
                 <div className="flex justify-between items-center">
                   <span>Pedágios Rota</span>
