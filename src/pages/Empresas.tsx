@@ -9,19 +9,21 @@ import { Link, useNavigate } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 
 const SEGMENT_COLORS: Record<string, string> = {
-  'Indústria': 'border-l-blue-500',
-  'Comércio': 'border-l-green-500',
-  'Serviços': 'border-l-yellow-500',
-  'Tecnologia': 'border-l-purple-500',
-  'Saúde': 'border-l-red-500',
-  'Transporte': 'border-l-orange-500',
-  'Logística': 'border-l-teal-500',
-  'Varejo': 'border-l-pink-500',
+  Indústria: 'border-l-blue-500',
+  Comércio: 'border-l-green-500',
+  Serviços: 'border-l-yellow-500',
+  Tecnologia: 'border-l-purple-500',
+  Saúde: 'border-l-red-500',
+  Transporte: 'border-l-orange-500',
+  Logística: 'border-l-teal-500',
+  Varejo: 'border-l-pink-500',
 }
 
 function getSegmentColor(segment: string | undefined) {
   if (!segment) return 'border-l-slate-400'
-  const match = Object.keys(SEGMENT_COLORS).find(k => segment.toLowerCase().includes(k.toLowerCase()))
+  const match = Object.keys(SEGMENT_COLORS).find((k) =>
+    segment.toLowerCase().includes(k.toLowerCase()),
+  )
   return match ? SEGMENT_COLORS[match] : 'border-l-slate-400'
 }
 
@@ -41,12 +43,13 @@ export default function Empresas() {
   const filteredCompanies = useMemo(() => {
     if (!searchTerm) return state.companies
     const term = searchTerm.toLowerCase()
-    return state.companies.filter(c => 
-      c.nomeFantasia?.toLowerCase().includes(term) ||
-      c.razaoSocial?.toLowerCase().includes(term) ||
-      c.cnpj.includes(term) ||
-      c.segmento?.toLowerCase().includes(term) ||
-      c.cidade?.toLowerCase().includes(term)
+    return state.companies.filter(
+      (c) =>
+        c.nomeFantasia?.toLowerCase().includes(term) ||
+        c.razaoSocial?.toLowerCase().includes(term) ||
+        c.cnpj.includes(term) ||
+        c.segmento?.toLowerCase().includes(term) ||
+        c.cidade?.toLowerCase().includes(term),
     )
   }, [state.companies, searchTerm])
 
@@ -70,15 +73,18 @@ export default function Empresas() {
         <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
           <div className="relative w-full sm:w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-            <Input 
-              placeholder="Buscar empresas..." 
+            <Input
+              placeholder="Buscar empresas..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-9 bg-slate-50 border-slate-200 focus-visible:ring-primary/30"
             />
           </div>
           {canCreate && (
-            <Button asChild className="bg-primary hover:bg-primary/90 text-white shadow-md font-bold whitespace-nowrap">
+            <Button
+              asChild
+              className="bg-primary hover:bg-primary/90 text-white shadow-md font-bold whitespace-nowrap"
+            >
               <Link to="/empresa/nova">
                 <Plus className="w-4 h-4 mr-2" /> Nova Empresa
               </Link>
@@ -97,11 +103,11 @@ export default function Empresas() {
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {visibleCompanies.map((c) => (
-              <Card 
-                key={c.id} 
+              <Card
+                key={c.id}
                 className={cn(
-                  "overflow-hidden cursor-pointer hover:shadow-md transition-all hover:-translate-y-1 border-l-4",
-                  getSegmentColor(c.segmento)
+                  'overflow-hidden cursor-pointer hover:shadow-md transition-all hover:-translate-y-1 border-l-4',
+                  getSegmentColor(c.segmento),
                 )}
                 onClick={() => navigate(`/empresa/${c.id}/360`)}
               >
@@ -111,7 +117,7 @@ export default function Empresas() {
                       {c.nomeFantasia || c.razaoSocial}
                     </h3>
                   </div>
-                  
+
                   <div className="space-y-2 mb-4">
                     <div className="flex items-center text-sm text-slate-600">
                       <span className="font-medium text-slate-500 w-12">CNPJ:</span>
@@ -120,18 +126,24 @@ export default function Empresas() {
                     {c.cidade && (
                       <div className="flex items-center text-sm text-slate-600">
                         <MapPin className="w-3.5 h-3.5 mr-1.5 text-slate-400" />
-                        {c.cidade}{c.estado ? ` - ${c.estado}` : ''}
+                        {c.cidade}
+                        {c.estado ? ` - ${c.estado}` : ''}
                       </div>
                     )}
                   </div>
 
                   <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-100">
-                    <Badge variant="secondary" className="bg-slate-100 text-slate-700 hover:bg-slate-200 font-semibold truncate max-w-[120px]">
+                    <Badge
+                      variant="secondary"
+                      className="bg-slate-100 text-slate-700 hover:bg-slate-200 font-semibold truncate max-w-[120px]"
+                    >
                       {c.segmento || 'Não definido'}
                     </Badge>
                     <div className="flex items-center text-xs text-slate-400 font-medium">
                       <Calendar className="w-3 h-3 mr-1" />
-                      {new Date(Date.now() - Math.random() * 10000000000).toLocaleDateString('pt-BR')}
+                      {new Date(Date.now() - Math.random() * 10000000000).toLocaleDateString(
+                        'pt-BR',
+                      )}
                     </div>
                   </div>
                 </CardContent>
@@ -141,9 +153,9 @@ export default function Empresas() {
 
           {hasMore && (
             <div className="flex justify-center mt-8">
-              <Button 
-                variant="outline" 
-                onClick={() => setVisibleCount(v => v + 15)}
+              <Button
+                variant="outline"
+                onClick={() => setVisibleCount((v) => v + 15)}
                 className="bg-white border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-primary font-bold shadow-sm"
               >
                 <Plus className="w-4 h-4 mr-2" />

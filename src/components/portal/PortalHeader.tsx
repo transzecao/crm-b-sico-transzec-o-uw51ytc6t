@@ -35,7 +35,9 @@ export function PortalHeader() {
             <span className="text-lg font-black tracking-tight text-[#800020] leading-none">
               Transecão
             </span>
-            <span className="text-xs font-medium text-slate-500">{currentUser.company || currentUser.name}</span>
+            <span className="text-xs font-medium text-slate-500">
+              {currentUser.company || currentUser.name}
+            </span>
           </div>
         </div>
       </div>
