@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
-import { useEngineStore } from '@/stores/useEngineStore'
+import { useEngineStore, StackableRule } from '@/stores/useEngineStore'
 
 export function useFinanceCalculator() {
-  const { published, variables, rules } = useEngineStore()
+  const { published, stackableRules } = useEngineStore()
 
   const [data, setData] = useState(() => {
     return {
@@ -32,12 +32,13 @@ export function useFinanceCalculator() {
       zipCode: '01000-000',
 
       manualOverrideFinalValue: null as number | null,
+      manualOverrideReason: '' as string,
       baseCost: 1000,
     }
   })
 
   useEffect(() => {
-    // Kept to not break the linter or any other legacy hooks running
+    // Kept to not break the linter
   }, [published])
 
   const update = (updates: Partial<typeof data>) => setData((prev) => ({ ...prev, ...updates }))
@@ -51,36 +52,46 @@ export function useFinanceCalculator() {
   let tasFee = 0
   let zmrcFee = 0
 
-  let fixedSum = 0
-  let percentageSum = 0
-  const activeVars = variables.filter((v) => v.isActive)
-
-  activeVars.forEach((v) => {
-    if (v.type === 'fixed') {
-      fixedSum += v.value
-    } else if (v.type === 'percentage') {
-      percentageSum += (data.baseCost * v.value) / 100
-    }
-  })
-
   let rulesSum = 0
-  const activeRules = rules.filter((r) => {
-    if (!r.isActive) return false
-    const nfVal = data.nfValue
-    const minMatch = nfVal >= r.minNfValue
-    const maxMatch = r.maxNfValue === null || nfVal <= r.maxNfValue
-    return minMatch && maxMatch
-  })
+  const appliedRules: Array<StackableRule & { calculatedValue: number }> = []
+  const ignoredRules: Array<StackableRule & { reason: string }> = []
 
-  activeRules.forEach((r) => {
-    if (r.type === 'fixed') {
-      rulesSum += r.value
-    } else if (r.type === 'percentage') {
-      rulesSum += (data.nfValue * r.value) / 100
+  stackableRules.forEach((r) => {
+    if (!r.isActive) {
+      ignoredRules.push({ ...r, reason: 'Regra Desativada' })
+      return
     }
+
+    const triggerValue =
+      r.trigger === 'nfValue' ? data.nfValue : r.trigger === 'weight' ? data.weight : 0
+
+    if (r.trigger !== 'fixed') {
+      const minMatch = triggerValue >= r.minRange
+      const maxMatch = r.maxRange === null || triggerValue <= r.maxRange
+      if (!minMatch || !maxMatch) {
+        ignoredRules.push({ ...r, reason: 'Fora da Faixa de Atuação' })
+        return
+      }
+    }
+
+    let calculatedValue = 0
+    if (r.type === 'fixed') {
+      calculatedValue = r.value
+    } else if (r.type === 'percentage') {
+      const baseVal =
+        r.trigger === 'nfValue'
+          ? data.nfValue
+          : r.trigger === 'weight'
+            ? data.weight
+            : data.baseCost
+      calculatedValue = (baseVal * r.value) / 100
+    }
+
+    rulesSum += calculatedValue
+    appliedRules.push({ ...r, calculatedValue })
   })
 
-  const calculatedFinalValue = data.baseCost + fixedSum + percentageSum + rulesSum
+  const calculatedFinalValue = data.baseCost + rulesSum
 
   const finalValue =
     data.manualOverrideFinalValue !== null ? data.manualOverrideFinalValue : calculatedFinalValue
@@ -134,10 +145,14 @@ export function useFinanceCalculator() {
     transitTime,
     isCiotValid,
     isRntrcValid,
-    fixedSum,
-    percentageSum,
-    activeVars,
     rulesSum,
-    activeRules,
+    appliedRules,
+    ignoredRules,
+
+    // Legacy fallbacks for old tabs that might depend on them
+    activeVars: [],
+    activeRules: [],
+    fixedSum: 0,
+    percentageSum: 0,
   }
 }

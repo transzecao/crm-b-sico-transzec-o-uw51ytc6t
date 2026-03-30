@@ -10,39 +10,21 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { useEngineStore } from '@/stores/useEngineStore'
-import { Plus, Trash2, Settings, Save, Calculator, ListTree } from 'lucide-react'
+import { Plus, Trash2, Settings, Save, ListTree, Copy } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 
 export function FinanceEngineTab() {
-  const {
-    variables,
-    addVariable,
-    updateVariable,
-    deleteVariable,
-    rules,
-    addRule,
-    updateRule,
-    deleteRule,
-  } = useEngineStore()
+  const { stackableRules, addRule, updateRule, deleteRule, duplicateRule } = useEngineStore()
   const { toast } = useToast()
-
-  const handleAddVariable = () => {
-    addVariable({
-      id: `var-${Date.now()}`,
-      name: 'Nova Variável',
-      type: 'fixed',
-      value: 0,
-      isActive: true,
-    })
-  }
 
   const handleAddRule = () => {
     addRule({
       id: `rule-${Date.now()}`,
-      name: 'Nova Regra',
+      name: 'Nova Regra de Frete',
       isActive: true,
-      minNfValue: 0,
-      maxNfValue: null,
+      trigger: 'nfValue',
+      minRange: 0,
+      maxRange: null,
       type: 'percentage',
       value: 0,
       logic: '',
@@ -51,9 +33,8 @@ export function FinanceEngineTab() {
 
   const handleSave = () => {
     toast({
-      title: 'Configurações Salvas',
-      description:
-        'As variáveis e regras de cálculo foram atualizadas com sucesso e já estão ativas.',
+      title: 'Motor de Cálculo Atualizado',
+      description: 'As regras foram salvas e aplicadas em tempo real no simulador.',
     })
   }
 
@@ -62,14 +43,14 @@ export function FinanceEngineTab() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
         <div>
           <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-            <Settings className="w-5 h-5 text-primary" /> Configuração do Motor de Cálculo
+            <Settings className="w-5 h-5 text-primary" /> Motor de Cálculo por Pilhas
           </h2>
           <p className="text-sm text-slate-500 mt-1">
-            Configure as variáveis base e as regras condicionais (gatilhos) do frete.
+            Crie, edite e gerencie o DNA das regras e taxas aplicadas ao frete (Stackable Engine).
           </p>
         </div>
         <Button onClick={handleSave} className="bg-primary gap-2 w-full md:w-auto">
-          <Save className="w-4 h-4" /> Salvar Configurações
+          <Save className="w-4 h-4" /> Salvar Regras
         </Button>
       </div>
 
@@ -77,38 +58,40 @@ export function FinanceEngineTab() {
         <CardHeader className="bg-slate-50 border-b border-slate-100 py-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div>
             <CardTitle className="text-base font-bold text-slate-700 flex items-center gap-2">
-              <ListTree className="w-4 h-4" /> Tabela de Parâmetros (Gatilhos por NF)
+              <ListTree className="w-4 h-4" /> Tabela de Regras e Parâmetros Acumulativos
             </CardTitle>
             <CardDescription className="text-xs mt-1 text-slate-500">
-              Regras condicionadas ao Valor da Nota Fiscal (NF).
+              Cada regra ativa será testada e empilhada no custo final se o cenário (Gatilho)
+              corresponder à faixa determinada.
             </CardDescription>
           </div>
           <Button size="sm" variant="default" onClick={handleAddRule} className="gap-2">
-            <Plus className="w-4 h-4" /> [NEW] Adicionar Nova
+            <Plus className="w-4 h-4" /> [NEW] Criar Regra
           </Button>
         </CardHeader>
         <CardContent className="p-0 overflow-x-auto">
           <table className="w-full text-sm text-left whitespace-nowrap">
             <thead className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200 text-xs uppercase tracking-wider">
               <tr>
-                <th className="px-4 py-3 text-center w-20">Status</th>
-                <th className="px-4 py-3">Regra (Nome)</th>
-                <th className="px-4 py-3">Gatilho (De - Até) R$</th>
-                <th className="px-4 py-3 w-40">Tipo</th>
-                <th className="px-4 py-3 w-32">Valor/Fator</th>
-                <th className="px-4 py-3 min-w-[200px]">Lógica Descritiva</th>
-                <th className="px-4 py-3 w-16 text-center">Ações</th>
+                <th className="px-4 py-3 text-center w-16">Status</th>
+                <th className="px-4 py-3">Rótulo (Variável)</th>
+                <th className="px-4 py-3 min-w-[150px]">Base (Gatilho)</th>
+                <th className="px-4 py-3">Faixa (De - Até)</th>
+                <th className="px-4 py-3 w-40">Operação</th>
+                <th className="px-4 py-3 w-32">Fator / Valor</th>
+                <th className="px-4 py-3 min-w-[200px]">Memorial Descritivo</th>
+                <th className="px-4 py-3 w-20 text-center">Ações</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {rules.length === 0 && (
+              {stackableRules.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="px-4 py-8 text-center text-slate-500 italic">
-                    Nenhuma regra configurada.
+                  <td colSpan={8} className="px-4 py-8 text-center text-slate-500 italic">
+                    O motor está limpo. Adicione uma regra para começar a empilhar custos.
                   </td>
                 </tr>
               )}
-              {rules.map((rule) => (
+              {stackableRules.map((rule) => (
                 <tr key={rule.id} className="hover:bg-slate-50/50 transition-colors">
                   <td className="px-4 py-3 text-center">
                     <Switch
@@ -120,34 +103,57 @@ export function FinanceEngineTab() {
                     <Input
                       value={rule.name}
                       onChange={(e) => updateRule(rule.id, { name: e.target.value })}
-                      className="h-9 font-medium min-w-[150px] bg-white"
-                      placeholder="Nome da Regra"
+                      className="h-9 font-medium min-w-[160px] bg-white border-slate-300"
+                      placeholder="Ex: GRIS, Ad Valorem..."
                     />
                   </td>
                   <td className="px-4 py-3">
-                    <div className="flex items-center gap-2">
-                      <Input
-                        type="number"
-                        value={rule.minNfValue}
-                        onChange={(e) =>
-                          updateRule(rule.id, { minNfValue: Number(e.target.value) })
-                        }
-                        className="h-9 w-24 text-right bg-white"
-                        placeholder="Mín."
-                      />
-                      <span className="text-slate-400">-</span>
-                      <Input
-                        type="number"
-                        value={rule.maxNfValue ?? ''}
-                        onChange={(e) =>
-                          updateRule(rule.id, {
-                            maxNfValue: e.target.value ? Number(e.target.value) : null,
-                          })
-                        }
-                        className="h-9 w-24 text-right bg-white"
-                        placeholder="Máx (vazio=inf)"
-                      />
-                    </div>
+                    <Select
+                      value={rule.trigger}
+                      onValueChange={(val: 'fixed' | 'nfValue' | 'weight') =>
+                        updateRule(rule.id, { trigger: val })
+                      }
+                    >
+                      <SelectTrigger className="h-9 bg-white border-slate-300">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="nfValue">Valor NF (R$)</SelectItem>
+                        <SelectItem value="weight">Peso Bruto (Kg)</SelectItem>
+                        <SelectItem value="fixed">Sempre Fixo</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </td>
+                  <td className="px-4 py-3">
+                    {rule.trigger !== 'fixed' ? (
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="number"
+                          value={rule.minRange}
+                          onChange={(e) =>
+                            updateRule(rule.id, { minRange: Number(e.target.value) })
+                          }
+                          className="h-9 w-20 text-right bg-white border-slate-300"
+                          placeholder="Mín"
+                        />
+                        <span className="text-slate-400 font-bold">-</span>
+                        <Input
+                          type="number"
+                          value={rule.maxRange ?? ''}
+                          onChange={(e) =>
+                            updateRule(rule.id, {
+                              maxRange: e.target.value ? Number(e.target.value) : null,
+                            })
+                          }
+                          className="h-9 w-20 text-right bg-white border-slate-300"
+                          placeholder="Máx/Livre"
+                        />
+                      </div>
+                    ) : (
+                      <span className="text-slate-400 text-xs italic block text-center">
+                        Incondicional
+                      </span>
+                    )}
                   </td>
                   <td className="px-4 py-3">
                     <Select
@@ -156,12 +162,12 @@ export function FinanceEngineTab() {
                         updateRule(rule.id, { type: val })
                       }
                     >
-                      <SelectTrigger className="h-9 bg-white">
+                      <SelectTrigger className="h-9 bg-white border-slate-300">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="fixed">Fixo (R$)</SelectItem>
-                        <SelectItem value="percentage">Percentual (%)</SelectItem>
+                        <SelectItem value="fixed">Soma Fixo (R$)</SelectItem>
+                        <SelectItem value="percentage">Multiplica (%)</SelectItem>
                       </SelectContent>
                     </Select>
                   </td>
@@ -175,7 +181,7 @@ export function FinanceEngineTab() {
                         step="0.01"
                         value={rule.value}
                         onChange={(e) => updateRule(rule.id, { value: Number(e.target.value) })}
-                        className="h-9 w-full pl-8 pr-3 text-right bg-white"
+                        className="h-9 w-full pl-8 pr-3 text-right bg-white border-slate-300 font-bold text-slate-700"
                       />
                     </div>
                   </td>
@@ -183,105 +189,37 @@ export function FinanceEngineTab() {
                     <Input
                       value={rule.logic}
                       onChange={(e) => updateRule(rule.id, { logic: e.target.value })}
-                      className="h-9 min-w-[200px] bg-white"
-                      placeholder="Ex: Aplicar taxa de seguro mínima..."
+                      className="h-9 min-w-[220px] bg-white border-slate-300"
+                      placeholder="Ex: Justificativa para faturamento..."
+                      title={rule.logic}
                     />
                   </td>
                   <td className="px-4 py-3 text-center">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => deleteRule(rule.id)}
-                      className="text-rose-400 hover:text-rose-600 h-8 w-8"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                    <div className="flex items-center justify-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => duplicateRule(rule.id)}
+                        className="text-slate-500 hover:text-primary hover:bg-primary/10 h-8 w-8 transition-colors"
+                        title="Duplicar regra"
+                      >
+                        <Copy className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => deleteRule(rule.id)}
+                        className="text-rose-400 hover:text-rose-600 hover:bg-rose-50 h-8 w-8 transition-colors"
+                        title="Deletar regra"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
-        </CardContent>
-      </Card>
-
-      <Card className="shadow-sm border-slate-200">
-        <CardHeader className="bg-slate-50 border-b border-slate-100 py-3 flex flex-row items-center justify-between">
-          <div>
-            <CardTitle className="text-base font-bold text-slate-700 flex items-center gap-2">
-              <Calculator className="w-4 h-4" /> Variáveis Base (Cálculo Fixo e Percentual s/ Base)
-            </CardTitle>
-          </div>
-          <Button size="sm" variant="outline" onClick={handleAddVariable}>
-            <Plus className="w-4 h-4 mr-1" /> Nova Variável
-          </Button>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="divide-y divide-slate-100">
-            {variables.length === 0 && (
-              <div className="p-8 text-center text-slate-500 text-sm">
-                Nenhuma variável configurada. O cálculo considerará apenas o Custo Base e Regras de
-                NF.
-              </div>
-            )}
-            {variables.map((v) => (
-              <div
-                key={v.id}
-                className="p-4 flex flex-wrap gap-4 items-center hover:bg-slate-50 transition-colors"
-              >
-                <div className="flex items-center gap-3 w-full md:w-auto md:flex-1">
-                  <Switch
-                    checked={v.isActive}
-                    onCheckedChange={(checked) => updateVariable(v.id, { isActive: checked })}
-                  />
-                  <Input
-                    value={v.name}
-                    onChange={(e) => updateVariable(v.id, { name: e.target.value })}
-                    className="h-9 font-medium bg-white flex-1 min-w-[200px]"
-                    placeholder="Nome da Variável"
-                  />
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <Select
-                    value={v.type}
-                    onValueChange={(val: 'fixed' | 'percentage') =>
-                      updateVariable(v.id, { type: val })
-                    }
-                  >
-                    <SelectTrigger className="h-9 w-[150px] bg-white">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="fixed">Valor Fixo (R$)</SelectItem>
-                      <SelectItem value="percentage">Percentual (%)</SelectItem>
-                    </SelectContent>
-                  </Select>
-
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-medium">
-                      {v.type === 'fixed' ? 'R$' : '%'}
-                    </span>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      value={v.value}
-                      onChange={(e) => updateVariable(v.id, { value: Number(e.target.value) })}
-                      className="h-9 w-28 pl-8 pr-3 text-right bg-white"
-                    />
-                  </div>
-
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => deleteVariable(v.id)}
-                    className="text-rose-400 hover:text-rose-600 ml-2 shrink-0 h-8 w-8"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
         </CardContent>
       </Card>
     </div>

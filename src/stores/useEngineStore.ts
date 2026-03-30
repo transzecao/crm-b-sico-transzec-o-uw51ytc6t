@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 
-// LEGACY TYPES (Kept for compatibility with other files)
+// LEGACY TYPES
 export type FieldType = 'currency' | 'percentage' | 'number'
 export type DynamicField = {
   id: string
@@ -45,27 +45,6 @@ const defaultFields: DynamicField[] = [
     moduleId: 'frete-peso',
     defaultValue: 1.5,
   },
-  {
-    id: 'frete-valor-taxa',
-    name: 'Frete Valor (Taxa %)',
-    type: 'percentage',
-    moduleId: 'frete-valor',
-    defaultValue: 0.5,
-  },
-  {
-    id: 'gris-taxa',
-    name: 'GRIS (Taxa %)',
-    type: 'percentage',
-    moduleId: 'gris',
-    defaultValue: 0.3,
-  },
-  {
-    id: 'taxa-despacho',
-    name: 'Taxa Despacho (R$)',
-    type: 'currency',
-    moduleId: 'despacho',
-    defaultValue: 66.08,
-  },
 ]
 const initialConfig: EngineConfig = {
   modules: defaultModules,
@@ -73,21 +52,14 @@ const initialConfig: EngineConfig = {
   rules: [],
 }
 
-// NEW TYPES FOR DYNAMIC ENGINE
-export type ShippingVariable = {
-  id: string
-  name: string
-  type: 'fixed' | 'percentage'
-  value: number
-  isActive: boolean
-}
-
-export type ShippingRule = {
+// STACKABLE ENGINE TYPES
+export type StackableRule = {
   id: string
   name: string
   isActive: boolean
-  minNfValue: number
-  maxNfValue: number | null
+  trigger: 'nfValue' | 'weight' | 'fixed'
+  minRange: number
+  maxRange: number | null
   type: 'fixed' | 'percentage'
   value: number
   logic: string
@@ -98,45 +70,53 @@ let globalEngineState = {
   published: JSON.parse(JSON.stringify(initialConfig)) as EngineConfig | null,
   isDraftDirty: true,
 
-  // NEW STATE
-  variables: [
-    { id: 'v1', name: 'Taxa de Despacho', type: 'fixed', value: 66.08, isActive: true },
-    { id: 'v2', name: 'GRIS', type: 'percentage', value: 0.3, isActive: true },
-    { id: 'v3', name: 'Pedágio Fixo', type: 'fixed', value: 15.0, isActive: false },
-  ] as ShippingVariable[],
-
-  rules: [
+  stackableRules: [
     {
       id: 'r1',
-      name: 'Faixa NF Baixa',
+      name: 'Taxa de Despacho',
       isActive: true,
-      minNfValue: 0,
-      maxNfValue: 3000,
-      type: 'percentage',
-      value: 1.5,
-      logic: 'Aplicar taxa de seguro mínima para notas de baixo valor.',
+      trigger: 'fixed',
+      minRange: 0,
+      maxRange: null,
+      type: 'fixed',
+      value: 66.08,
+      logic: 'Taxa fixa administrativa aplicada a todos os envios de forma incondicional.',
     },
     {
       id: 'r2',
-      name: 'Faixa NF Média',
+      name: 'GRIS (Baixo Risco)',
       isActive: true,
-      minNfValue: 3000.01,
-      maxNfValue: 5000,
+      trigger: 'nfValue',
+      minRange: 0,
+      maxRange: 3000,
       type: 'percentage',
-      value: 1.2,
-      logic: 'Reduzir % para incentivar envios de maior valor.',
+      value: 0.3,
+      logic: 'Taxa de gerenciamento de risco para mercadorias de até R$ 3.000,00.',
     },
     {
       id: 'r3',
-      name: 'Taxa Emergencial',
+      name: 'Ad Valorem',
+      isActive: true,
+      trigger: 'nfValue',
+      minRange: 3000.01,
+      maxRange: null,
+      type: 'percentage',
+      value: 0.5,
+      logic:
+        'Taxa de proteção sobre o valor da mercadoria (seguro extra) para notas acima de R$ 3k.',
+    },
+    {
+      id: 'r4',
+      name: 'Excesso de Peso',
       isActive: false,
-      minNfValue: 0,
-      maxNfValue: null,
+      trigger: 'weight',
+      minRange: 100,
+      maxRange: null,
       type: 'fixed',
       value: 50,
-      logic: 'Taxa extra para coletas no mesmo dia (Desativada).',
+      logic: 'Taxa extra (R$ 50 fixo) aplicada quando a carga bruta ultrapassa os 100 Kg.',
     },
-  ] as ShippingRule[],
+  ] as StackableRule[],
 }
 
 const listeners = new Set<(state: typeof globalEngineState) => void>()
@@ -156,7 +136,7 @@ export function useEngineStore() {
     listeners.forEach((l) => l(globalEngineState))
   }
 
-  // LEGACY METHODS
+  // LEGACY
   const updateDraft = (draftUpdate: Partial<EngineConfig>) => {
     updateGlobal({ draft: { ...globalEngineState.draft, ...draftUpdate }, isDraftDirty: true })
   }
@@ -173,41 +153,48 @@ export function useEngineStore() {
     })
   }
 
-  // NEW DYNAMIC ENGINE METHODS
-  const addVariable = (v: ShippingVariable) => {
-    updateGlobal({ variables: [...globalEngineState.variables, v] })
+  // STACKABLE ENGINE
+  const addRule = (r: StackableRule) => {
+    updateGlobal({ stackableRules: [...globalEngineState.stackableRules, r] })
   }
-  const updateVariable = (id: string, updates: Partial<ShippingVariable>) => {
+  const updateRule = (id: string, updates: Partial<StackableRule>) => {
     updateGlobal({
-      variables: globalEngineState.variables.map((v) => (v.id === id ? { ...v, ...updates } : v)),
-    })
-  }
-  const deleteVariable = (id: string) => {
-    updateGlobal({ variables: globalEngineState.variables.filter((v) => v.id !== id) })
-  }
-
-  const addRule = (r: ShippingRule) => {
-    updateGlobal({ rules: [...globalEngineState.rules, r] })
-  }
-  const updateRule = (id: string, updates: Partial<ShippingRule>) => {
-    updateGlobal({
-      rules: globalEngineState.rules.map((r) => (r.id === id ? { ...r, ...updates } : r)),
+      stackableRules: globalEngineState.stackableRules.map((r) =>
+        r.id === id ? { ...r, ...updates } : r,
+      ),
     })
   }
   const deleteRule = (id: string) => {
-    updateGlobal({ rules: globalEngineState.rules.filter((r) => r.id !== id) })
+    updateGlobal({ stackableRules: globalEngineState.stackableRules.filter((r) => r.id !== id) })
   }
+  const duplicateRule = (id: string) => {
+    const rule = globalEngineState.stackableRules.find((r) => r.id === id)
+    if (rule) {
+      addRule({ ...rule, id: `rule-${Date.now()}`, name: `${rule.name} (Cópia)` })
+    }
+  }
+
+  // Legacy fallbacks
+  const variables: any[] = []
+  const rules: any[] = []
+  const addVariable = () => {}
+  const updateVariable = () => {}
+  const deleteVariable = () => {}
 
   return {
     ...state,
     updateDraft,
     publishDraft,
     discardDraft,
-    addVariable,
-    updateVariable,
-    deleteVariable,
+    stackableRules: state.stackableRules,
     addRule,
     updateRule,
     deleteRule,
+    duplicateRule,
+    variables,
+    rules,
+    addVariable,
+    updateVariable,
+    deleteVariable,
   }
 }
