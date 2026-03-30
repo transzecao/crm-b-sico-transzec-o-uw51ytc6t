@@ -3,7 +3,9 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { useToast } from '@/hooks/use-toast'
 import useCrmStore from '@/stores/useCrmStore'
-import { Calculator, AlertTriangle, Edit2, Check, X } from 'lucide-react'
+import { Calculator, Edit2, Check, X, Info } from 'lucide-react'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
 
 import { useFinanceCalculator } from '@/hooks/useFinanceCalculator'
 import { FinancePricingTab } from '@/components/finance/FinancePricingTab'
@@ -36,7 +38,7 @@ export default function Financeiro() {
         variant: 'destructive',
       })
     }
-  }, [calc.data.zmrc])
+  }, [calc.data.zmrc, toast])
 
   return (
     <div className="space-y-6 bg-slate-50 min-h-[calc(100vh-6rem)] p-2 md:p-6 rounded-xl animate-fade-in-up">
@@ -101,7 +103,7 @@ export default function Financeiro() {
                   value="engine"
                   className="flex-1 py-2 text-sm font-semibold data-[state=active]:bg-rose-600 data-[state=active]:text-white text-rose-600"
                 >
-                  Motor (Engine)
+                  Configurar Engine
                 </TabsTrigger>
               )}
             </TabsList>
@@ -139,89 +141,143 @@ export default function Financeiro() {
                 <Calculator className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h3 className="font-bold text-lg leading-tight tracking-wide">Resumo do Cálculo</h3>
+                <h3 className="font-bold text-lg leading-tight tracking-wide">
+                  Resumo Operacional
+                </h3>
               </div>
             </div>
+
             <CardContent className="p-6 space-y-5">
-              <div className="space-y-3 text-sm text-slate-300">
-                <div className="flex justify-between items-center pb-2 border-b border-slate-700">
-                  <span>Peso Tarifável</span>
-                  <span className="font-bold text-white">{calc.taxableWeight.toFixed(2)} kg</span>
+              <div className="space-y-4 text-sm text-slate-300">
+                <div className="flex flex-col gap-2 pb-4 border-b border-slate-700">
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                    Custo Base (R$)
+                  </label>
+                  <Input
+                    type="number"
+                    value={calc.data.baseCost}
+                    onChange={(e) => calc.update({ baseCost: Number(e.target.value) })}
+                    className="bg-slate-800 border-slate-600 text-white font-semibold text-lg h-11"
+                  />
                 </div>
-                <div className="flex justify-between items-center h-8">
-                  <span>Base da Fórmula</span>
-                  {isEditingFinalValue ? (
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="number"
-                        className="w-24 h-6 px-1 text-right text-slate-900 rounded"
-                        value={overrideValue}
-                        onChange={(e) => setOverrideValue(e.target.value)}
-                        autoFocus
-                      />
-                      <Check
-                        className="w-4 h-4 cursor-pointer text-green-400 hover:text-green-300"
-                        onClick={() => {
-                          calc.update({ manualOverrideFinalValue: Number(overrideValue) })
-                          setIsEditingFinalValue(false)
-                        }}
-                      />
-                      <X
-                        className="w-4 h-4 cursor-pointer text-rose-400 hover:text-rose-300"
-                        onClick={() => setIsEditingFinalValue(false)}
-                      />
+
+                <div className="space-y-2">
+                  <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1">
+                    <Info className="w-3 h-3" /> Breakdown de Variáveis Ativas
+                  </div>
+                  {calc.activeVars.length === 0 && (
+                    <div className="text-slate-500 italic text-xs">
+                      Nenhuma variável ativa no motor.
                     </div>
-                  ) : (
-                    <span className="font-semibold flex items-center gap-2">
-                      {fmt(calc.finalValue)}
-                      {calc.data.manualOverrideFinalValue !== null && (
-                        <span className="text-[10px] bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded uppercase font-bold tracking-wider">
-                          Manual
-                        </span>
-                      )}
-                      {canEditParams && calc.isPublished && (
-                        <Edit2
-                          className="w-3 h-3 cursor-pointer text-slate-400 hover:text-white"
-                          onClick={() => {
-                            setOverrideValue(String(calc.finalValue))
-                            setIsEditingFinalValue(true)
-                          }}
-                        />
-                      )}
+                  )}
+                  {calc.activeVars.map((v) => (
+                    <div key={v.id} className="flex justify-between items-center text-xs">
+                      <span>
+                        {v.name} {v.type === 'percentage' && `(${v.value}%)`}
+                      </span>
+                      <span className="text-slate-100 font-medium">
+                        {v.type === 'fixed'
+                          ? fmt(v.value)
+                          : fmt((calc.data.baseCost * v.value) / 100)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="pt-3 border-t border-slate-700 space-y-2">
+                  <div className="flex justify-between items-center text-slate-400">
+                    <span>Soma Fixos</span>
+                    <span>{fmt(calc.fixedSum)}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-slate-400">
+                    <span>Soma Percentuais</span>
+                    <span>{fmt(calc.percentageSum)}</span>
+                  </div>
+                </div>
+
+                <div className="flex justify-between items-center h-8 pt-2">
+                  <span className="font-semibold text-white">Total Calculado</span>
+                  <span className="font-bold text-white">{fmt(calc.calculatedFinalValue)}</span>
+                </div>
+              </div>
+
+              <div className="bg-slate-800 p-4 rounded-xl border border-slate-700 mt-4">
+                <div className="flex justify-between items-start mb-1">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">
+                    Valor Final do Frete
+                  </span>
+                  {calc.data.manualOverrideFinalValue !== null && (
+                    <span className="text-[10px] bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded uppercase font-bold tracking-wider">
+                      Alterado Manualmente
                     </span>
                   )}
                 </div>
-                <div className="flex justify-between items-center">
-                  <span>Pedágios Rota</span>
-                  <span className="font-semibold">{fmt(calc.tollTotal)}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span>TAS</span>
-                  <span className="font-semibold">{fmt(calc.tasFee)}</span>
-                </div>
-                {calc.zmrcFee > 0 && (
-                  <div className="flex justify-between items-center text-rose-400">
-                    <span>Agravo ZMRC</span>
-                    <span className="font-semibold">{fmt(calc.zmrcFee)}</span>
+
+                {isEditingFinalValue ? (
+                  <div className="flex items-center gap-2 mt-2">
+                    <Input
+                      type="number"
+                      className="h-10 text-right text-slate-900 rounded font-bold text-lg flex-1"
+                      value={overrideValue}
+                      onChange={(e) => setOverrideValue(e.target.value)}
+                      autoFocus
+                    />
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="bg-green-500/20 text-green-400 hover:bg-green-500/30 hover:text-green-300 shrink-0"
+                      onClick={() => {
+                        calc.update({ manualOverrideFinalValue: Number(overrideValue) })
+                        setIsEditingFinalValue(false)
+                      }}
+                    >
+                      <Check className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="bg-rose-500/20 text-rose-400 hover:bg-rose-500/30 hover:text-rose-300 shrink-0"
+                      onClick={() => {
+                        if (calc.data.manualOverrideFinalValue === null) {
+                          setOverrideValue(String(calc.calculatedFinalValue))
+                        }
+                        setIsEditingFinalValue(false)
+                      }}
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between mt-1">
+                    <span className="text-3xl font-black text-primary-foreground tracking-tight">
+                      {fmt(calc.finalValue)}
+                    </span>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="text-slate-400 hover:text-white hover:bg-slate-700 h-8 w-8"
+                      onClick={() => {
+                        setOverrideValue(String(calc.finalValue))
+                        setIsEditingFinalValue(true)
+                      }}
+                    >
+                      <Edit2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                )}
+
+                {calc.data.manualOverrideFinalValue !== null && !isEditingFinalValue && (
+                  <div className="mt-3 flex justify-end">
+                    <Button
+                      variant="link"
+                      className="h-auto p-0 text-slate-400 hover:text-white text-xs"
+                      onClick={() => calc.update({ manualOverrideFinalValue: null })}
+                    >
+                      Restaurar valor calculado original
+                    </Button>
                   </div>
                 )}
               </div>
-
-              <div className="bg-slate-800 p-4 rounded-xl border border-slate-700">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">
-                  Valor Final do Frete
-                </span>
-                <span className="text-3xl font-black text-primary-foreground tracking-tight">
-                  {fmt(calc.totalFracionado)}
-                </span>
-              </div>
-
-              {calc.isLotacaoBetter && (
-                <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg text-amber-200 text-xs font-medium">
-                  <AlertTriangle className="w-4 h-4 inline mr-1 mb-0.5 text-amber-400" />
-                  Custo via lotação dedicada seria mais vantajoso ({fmt(calc.lotacaoCost)}).
-                </div>
-              )}
             </CardContent>
           </Card>
         </div>

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 
+// LEGACY TYPES (Kept for compatibility with other files)
 export type FieldType = 'currency' | 'percentage' | 'number'
-
 export type DynamicField = {
   id: string
   name: string
@@ -9,7 +9,6 @@ export type DynamicField = {
   moduleId: string
   defaultValue: number
 }
-
 export type TieredRule = {
   id: string
   moduleId: string
@@ -19,14 +18,12 @@ export type TieredRule = {
   value: number
   isPercentage: boolean
 }
-
 export type EngineModule = {
   id: string
   name: string
   isActive: boolean
   isBuiltIn: boolean
 }
-
 export type EngineConfig = {
   modules: EngineModule[]
   fields: DynamicField[]
@@ -40,7 +37,6 @@ const defaultModules: EngineModule[] = [
   { id: 'despacho', name: 'Despacho', isActive: true, isBuiltIn: true },
   { id: 'zmrc', name: 'ZMRC', isActive: true, isBuiltIn: true },
 ]
-
 const defaultFields: DynamicField[] = [
   {
     id: 'peso-base',
@@ -71,17 +67,32 @@ const defaultFields: DynamicField[] = [
     defaultValue: 66.08,
   },
 ]
-
 const initialConfig: EngineConfig = {
   modules: defaultModules,
   fields: defaultFields,
   rules: [],
 }
 
+// NEW TYPES FOR DYNAMIC ENGINE
+export type ShippingVariable = {
+  id: string
+  name: string
+  type: 'fixed' | 'percentage'
+  value: number
+  isActive: boolean
+}
+
 let globalEngineState = {
   draft: JSON.parse(JSON.stringify(initialConfig)),
-  published: null as EngineConfig | null,
+  published: JSON.parse(JSON.stringify(initialConfig)) as EngineConfig | null,
   isDraftDirty: true,
+
+  // NEW STATE
+  variables: [
+    { id: 'v1', name: 'Taxa de Despacho', type: 'fixed', value: 66.08, isActive: true },
+    { id: 'v2', name: 'GRIS', type: 'percentage', value: 0.3, isActive: true },
+    { id: 'v3', name: 'Pedágio Fixo', type: 'fixed', value: 15.0, isActive: false },
+  ] as ShippingVariable[],
 }
 
 const listeners = new Set<(state: typeof globalEngineState) => void>()
@@ -101,20 +112,16 @@ export function useEngineStore() {
     listeners.forEach((l) => l(globalEngineState))
   }
 
+  // LEGACY METHODS
   const updateDraft = (draftUpdate: Partial<EngineConfig>) => {
-    updateGlobal({
-      draft: { ...globalEngineState.draft, ...draftUpdate },
-      isDraftDirty: true,
-    })
+    updateGlobal({ draft: { ...globalEngineState.draft, ...draftUpdate }, isDraftDirty: true })
   }
-
   const publishDraft = () => {
     updateGlobal({
       published: JSON.parse(JSON.stringify(globalEngineState.draft)),
       isDraftDirty: false,
     })
   }
-
   const discardDraft = () => {
     updateGlobal({
       draft: JSON.parse(JSON.stringify(globalEngineState.published || initialConfig)),
@@ -122,5 +129,26 @@ export function useEngineStore() {
     })
   }
 
-  return { ...state, updateDraft, publishDraft, discardDraft }
+  // NEW DYNAMIC ENGINE METHODS
+  const addVariable = (v: ShippingVariable) => {
+    updateGlobal({ variables: [...globalEngineState.variables, v] })
+  }
+  const updateVariable = (id: string, updates: Partial<ShippingVariable>) => {
+    updateGlobal({
+      variables: globalEngineState.variables.map((v) => (v.id === id ? { ...v, ...updates } : v)),
+    })
+  }
+  const deleteVariable = (id: string) => {
+    updateGlobal({ variables: globalEngineState.variables.filter((v) => v.id !== id) })
+  }
+
+  return {
+    ...state,
+    updateDraft,
+    publishDraft,
+    discardDraft,
+    addVariable,
+    updateVariable,
+    deleteVariable,
+  }
 }
