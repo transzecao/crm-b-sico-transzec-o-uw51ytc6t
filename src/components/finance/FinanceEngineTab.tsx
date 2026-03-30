@@ -10,11 +10,21 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { useEngineStore } from '@/stores/useEngineStore'
-import { Plus, Trash2, Settings, Save, ListTree, Copy } from 'lucide-react'
+import { Plus, Trash2, Settings, Save, ListTree, Copy, ShieldAlert } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
+import useCrmStore from '@/stores/useCrmStore'
 
 export function FinanceEngineTab() {
-  const { stackableRules, addRule, updateRule, deleteRule, duplicateRule } = useEngineStore()
+  const { state: crmState } = useCrmStore()
+  const {
+    stackableRules,
+    addRule,
+    updateRule,
+    deleteRule,
+    duplicateRule,
+    maxDiscountMargin,
+    updateMaxDiscountMargin,
+  } = useEngineStore()
   const { toast } = useToast()
 
   const handleAddRule = () => {
@@ -31,6 +41,8 @@ export function FinanceEngineTab() {
     })
   }
 
+  const canEditMargin = ['Acesso Master', 'Supervisor Financeiro'].includes(crmState.role)
+
   const handleSave = () => {
     toast({
       title: 'Motor de Cálculo Atualizado',
@@ -40,6 +52,35 @@ export function FinanceEngineTab() {
 
   return (
     <div className="space-y-6 animate-fade-in-up">
+      {canEditMargin && (
+        <Card className="shadow-sm border-amber-200 bg-amber-50/50">
+          <CardHeader className="py-4">
+            <CardTitle className="text-sm font-bold text-amber-800 flex items-center gap-2">
+              <ShieldAlert className="w-4 h-4" /> Controle de Margem de Desconto
+            </CardTitle>
+            <CardDescription className="text-xs text-amber-700">
+              Defina o limite máximo de desconto que os funcionários podem aplicar nas cotações
+              internas.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="pb-4">
+            <div className="flex items-center gap-4 max-w-sm">
+              <div className="relative flex-1">
+                <Input
+                  type="number"
+                  value={maxDiscountMargin}
+                  onChange={(e) => updateMaxDiscountMargin(Number(e.target.value))}
+                  className="pl-8 bg-white border-amber-300 font-bold"
+                />
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-amber-600 font-bold">
+                  %
+                </span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
         <div>
           <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">

@@ -34,6 +34,8 @@ export function useFinanceCalculator() {
       manualOverrideFinalValue: null as number | null,
       manualOverrideReason: '' as string,
       baseCost: 1000,
+      customerCnpj: '',
+      discountPercentage: 0,
     }
   })
 
@@ -91,7 +93,9 @@ export function useFinanceCalculator() {
     appliedRules.push({ ...r, calculatedValue })
   })
 
-  const calculatedFinalValue = data.baseCost + rulesSum
+  const calculatedOriginalValue = data.baseCost + rulesSum
+  const discountValue = (calculatedOriginalValue * data.discountPercentage) / 100
+  const calculatedFinalValue = calculatedOriginalValue - discountValue
 
   const finalValue =
     data.manualOverrideFinalValue !== null ? data.manualOverrideFinalValue : calculatedFinalValue
@@ -127,6 +131,8 @@ export function useFinanceCalculator() {
     update,
     cubedWeight,
     taxableWeight,
+    calculatedOriginalValue,
+    discountValue,
     calculatedFinalValue,
     finalValue,
     tollTotal,

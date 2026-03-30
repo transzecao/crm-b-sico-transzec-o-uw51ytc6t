@@ -16,11 +16,16 @@ import { FinanceIntegTab } from '@/components/finance/FinanceIntegTab'
 import { FinanceKpiTab } from '@/components/finance/FinanceKpiTab'
 import { FinanceDocsTab } from '@/components/finance/FinanceDocsTab'
 import { FinanceEngineTab } from '@/components/finance/FinanceEngineTab'
+import { FinanceQuotesTab } from '@/components/finance/FinanceQuotesTab'
+import { useEngineStore } from '@/stores/useEngineStore'
+import { FileText, Download } from 'lucide-react'
+import { formatCnpj } from '@/utils/formatters'
 
 export default function Financeiro() {
   const { state } = useCrmStore()
   const { toast } = useToast()
   const calc = useFinanceCalculator()
+  const { maxDiscountMargin, addInternalQuote } = useEngineStore()
 
   const [tab, setTab] = useState('engine')
   const [isEditingFinalValue, setIsEditingFinalValue] = useState(false)
@@ -102,6 +107,12 @@ export default function Financeiro() {
               >
                 KPIs
               </TabsTrigger>
+              <TabsTrigger
+                value="quotes"
+                className="flex-1 py-2 text-sm font-semibold data-[state=active]:bg-primary data-[state=active]:text-white"
+              >
+                Cotações Geradas
+              </TabsTrigger>
             </TabsList>
 
             {canEditParams && (
@@ -123,6 +134,9 @@ export default function Financeiro() {
             </TabsContent>
             <TabsContent value="kpi" className="mt-0">
               <FinanceKpiTab calc={calc} />
+            </TabsContent>
+            <TabsContent value="quotes" className="mt-0">
+              <FinanceQuotesTab />
             </TabsContent>
             <TabsContent value="docs" className="mt-0">
               <FinanceDocsTab />
@@ -149,6 +163,18 @@ export default function Financeiro() {
             <CardContent className="p-6 space-y-5">
               <div className="space-y-4 text-sm text-slate-300">
                 <div className="grid grid-cols-2 gap-4 pb-4 border-b border-slate-700">
+                  <div className="flex flex-col gap-2 col-span-2">
+                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                      CNPJ do Cliente (Para Cotação)
+                    </label>
+                    <Input
+                      placeholder="00.000.000/0000-00"
+                      value={calc.data.customerCnpj}
+                      onChange={(e) => calc.update({ customerCnpj: formatCnpj(e.target.value) })}
+                      className="bg-slate-800 border-slate-600 text-white font-mono h-10"
+                      maxLength={18}
+                    />
+                  </div>
                   <div className="flex flex-col gap-2">
                     <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">
                       Valor NF Teste (R$)
@@ -172,15 +198,38 @@ export default function Financeiro() {
                     />
                   </div>
                   <div className="flex flex-col gap-2 col-span-2">
-                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                      Custo Base Operacional (R$)
-                    </label>
-                    <Input
-                      type="number"
-                      value={calc.data.baseCost}
-                      onChange={(e) => calc.update({ baseCost: Number(e.target.value) })}
-                      className="bg-slate-800 border-slate-600 text-white font-semibold h-10"
-                    />
+                    <div className="flex justify-between items-center">
+                      <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                        Custo Base (R$)
+                      </label>
+                      <label className="text-xs font-bold text-amber-400 uppercase tracking-wider">
+                        Desconto (Máx {maxDiscountMargin}%)
+                      </label>
+                    </div>
+                    <div className="flex gap-4">
+                      <Input
+                        type="number"
+                        value={calc.data.baseCost}
+                        onChange={(e) => calc.update({ baseCost: Number(e.target.value) })}
+                        className="bg-slate-800 border-slate-600 text-white font-semibold h-10 flex-1"
+                      />
+                      <div className="relative flex-1">
+                        <Input
+                          type="number"
+                          value={calc.data.discountPercentage || ''}
+                          onChange={(e) => {
+                            let val = Number(e.target.value)
+                            if (val > maxDiscountMargin) val = maxDiscountMargin
+                            if (val < 0) val = 0
+                            calc.update({ discountPercentage: val })
+                          }}
+                          className="bg-amber-950/30 border-amber-600/50 text-amber-400 font-bold h-10 pl-8"
+                        />
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-amber-500 font-bold">
+                          %
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -244,9 +293,25 @@ export default function Financeiro() {
                   ))}
                 </div>
 
-                <div className="pt-4 border-t border-slate-700">
-                  <div className="flex justify-between items-center h-8">
-                    <span className="font-semibold text-slate-300">Total Simulado</span>
+                <div className="pt-4 border-t border-slate-700 space-y-2">
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="font-medium text-slate-400">Valor Original</span>
+                    <span className="font-medium text-slate-300">
+                      {fmt(calc.calculatedOriginalValue)}
+                    </span>
+                  </div>
+                  {calc.discountValue > 0 && (
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="font-medium text-amber-400">
+                        Desconto Aplicado ({calc.data.discountPercentage}%)
+                      </span>
+                      <span className="font-medium text-amber-400">
+                        - {fmt(calc.discountValue)}
+                      </span>
+                    </div>
+                  )}
+                  <div className="flex justify-between items-center pt-2 border-t border-slate-700/50">
+                    <span className="font-bold text-slate-200">Total Simulado</span>
                     <span className="font-bold text-white text-base">
                       {fmt(calc.calculatedFinalValue)}
                     </span>
@@ -351,6 +416,44 @@ export default function Financeiro() {
                     </Button>
                   </div>
                 )}
+
+                <div className="mt-6 pt-4 border-t border-slate-700 flex flex-col gap-3">
+                  <Button
+                    onClick={() => {
+                      if (!calc.data.customerCnpj || calc.data.customerCnpj.length < 14) {
+                        toast({
+                          title: 'Atenção',
+                          description: 'Informe um CNPJ válido para gerar a cotação.',
+                          variant: 'destructive',
+                        })
+                        return
+                      }
+                      const quoteId = `COT-${Math.floor(1000 + Math.random() * 9000)}`
+                      const now = new Date()
+                      addInternalQuote({
+                        id: quoteId,
+                        date: now.toLocaleDateString('pt-BR'),
+                        time: now.toLocaleTimeString('pt-BR'),
+                        customerCnpj: calc.data.customerCnpj,
+                        employeeName: state.user,
+                        department: state.role,
+                        originalValue: calc.calculatedOriginalValue,
+                        discountValue: calc.discountValue,
+                        finalValue: calc.finalValue,
+                      })
+                      toast({
+                        title: 'Cotação Gerada e Salva',
+                        description: `Cotação ${quoteId} salva no histórico com sucesso. Gerando PDF...`,
+                      })
+                      if (tab !== 'quotes') {
+                        setTab('quotes')
+                      }
+                    }}
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold gap-2"
+                  >
+                    <Download className="w-4 h-4" /> Gerar Cotação & PDF
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>

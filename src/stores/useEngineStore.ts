@@ -53,6 +53,18 @@ const initialConfig: EngineConfig = {
 }
 
 // STACKABLE ENGINE TYPES
+export type InternalQuote = {
+  id: string
+  date: string
+  time: string
+  customerCnpj: string
+  employeeName: string
+  department: string
+  originalValue: number
+  discountValue: number
+  finalValue: number
+}
+
 export type StackableRule = {
   id: string
   name: string
@@ -69,6 +81,8 @@ let globalEngineState = {
   draft: JSON.parse(JSON.stringify(initialConfig)),
   published: JSON.parse(JSON.stringify(initialConfig)) as EngineConfig | null,
   isDraftDirty: true,
+  maxDiscountMargin: 10,
+  internalQuotes: [] as InternalQuote[],
 
   stackableRules: [
     {
@@ -116,6 +130,17 @@ let globalEngineState = {
       value: 50,
       logic: 'Taxa extra (R$ 50 fixo) aplicada quando a carga bruta ultrapassa os 100 Kg.',
     },
+    {
+      id: 'r5',
+      name: 'TDE (Taxa de Dificuldade de Entrega)',
+      isActive: true,
+      trigger: 'nfValue',
+      minRange: 0,
+      maxRange: null,
+      type: 'percentage',
+      value: 0.5,
+      logic: 'Taxa aplicada para locais de difícil acesso (TDE).',
+    },
   ] as StackableRule[],
 }
 
@@ -153,6 +178,14 @@ export function useEngineStore() {
     })
   }
 
+  const updateMaxDiscountMargin = (margin: number) => {
+    updateGlobal({ maxDiscountMargin: margin })
+  }
+
+  const addInternalQuote = (quote: InternalQuote) => {
+    updateGlobal({ internalQuotes: [quote, ...globalEngineState.internalQuotes] })
+  }
+
   // STACKABLE ENGINE
   const addRule = (r: StackableRule) => {
     updateGlobal({ stackableRules: [...globalEngineState.stackableRules, r] })
@@ -183,6 +216,8 @@ export function useEngineStore() {
 
   return {
     ...state,
+    updateMaxDiscountMargin,
+    addInternalQuote,
     updateDraft,
     publishDraft,
     discardDraft,
