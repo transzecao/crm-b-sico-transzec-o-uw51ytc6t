@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useEngineStore } from '@/stores/useEngineStore'
 
 export function useFinanceCalculator() {
-  const { published, variables } = useEngineStore()
+  const { published, variables, rules } = useEngineStore()
 
   const [data, setData] = useState(() => {
     return {
@@ -63,7 +63,24 @@ export function useFinanceCalculator() {
     }
   })
 
-  const calculatedFinalValue = data.baseCost + fixedSum + percentageSum
+  let rulesSum = 0
+  const activeRules = rules.filter((r) => {
+    if (!r.isActive) return false
+    const nfVal = data.nfValue
+    const minMatch = nfVal >= r.minNfValue
+    const maxMatch = r.maxNfValue === null || nfVal <= r.maxNfValue
+    return minMatch && maxMatch
+  })
+
+  activeRules.forEach((r) => {
+    if (r.type === 'fixed') {
+      rulesSum += r.value
+    } else if (r.type === 'percentage') {
+      rulesSum += (data.nfValue * r.value) / 100
+    }
+  })
+
+  const calculatedFinalValue = data.baseCost + fixedSum + percentageSum + rulesSum
 
   const finalValue =
     data.manualOverrideFinalValue !== null ? data.manualOverrideFinalValue : calculatedFinalValue
@@ -120,5 +137,7 @@ export function useFinanceCalculator() {
     fixedSum,
     percentageSum,
     activeVars,
+    rulesSum,
+    activeRules,
   }
 }

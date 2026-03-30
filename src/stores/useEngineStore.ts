@@ -82,6 +82,17 @@ export type ShippingVariable = {
   isActive: boolean
 }
 
+export type ShippingRule = {
+  id: string
+  name: string
+  isActive: boolean
+  minNfValue: number
+  maxNfValue: number | null
+  type: 'fixed' | 'percentage'
+  value: number
+  logic: string
+}
+
 let globalEngineState = {
   draft: JSON.parse(JSON.stringify(initialConfig)),
   published: JSON.parse(JSON.stringify(initialConfig)) as EngineConfig | null,
@@ -93,6 +104,39 @@ let globalEngineState = {
     { id: 'v2', name: 'GRIS', type: 'percentage', value: 0.3, isActive: true },
     { id: 'v3', name: 'Pedágio Fixo', type: 'fixed', value: 15.0, isActive: false },
   ] as ShippingVariable[],
+
+  rules: [
+    {
+      id: 'r1',
+      name: 'Faixa NF Baixa',
+      isActive: true,
+      minNfValue: 0,
+      maxNfValue: 3000,
+      type: 'percentage',
+      value: 1.5,
+      logic: 'Aplicar taxa de seguro mínima para notas de baixo valor.',
+    },
+    {
+      id: 'r2',
+      name: 'Faixa NF Média',
+      isActive: true,
+      minNfValue: 3000.01,
+      maxNfValue: 5000,
+      type: 'percentage',
+      value: 1.2,
+      logic: 'Reduzir % para incentivar envios de maior valor.',
+    },
+    {
+      id: 'r3',
+      name: 'Taxa Emergencial',
+      isActive: false,
+      minNfValue: 0,
+      maxNfValue: null,
+      type: 'fixed',
+      value: 50,
+      logic: 'Taxa extra para coletas no mesmo dia (Desativada).',
+    },
+  ] as ShippingRule[],
 }
 
 const listeners = new Set<(state: typeof globalEngineState) => void>()
@@ -142,6 +186,18 @@ export function useEngineStore() {
     updateGlobal({ variables: globalEngineState.variables.filter((v) => v.id !== id) })
   }
 
+  const addRule = (r: ShippingRule) => {
+    updateGlobal({ rules: [...globalEngineState.rules, r] })
+  }
+  const updateRule = (id: string, updates: Partial<ShippingRule>) => {
+    updateGlobal({
+      rules: globalEngineState.rules.map((r) => (r.id === id ? { ...r, ...updates } : r)),
+    })
+  }
+  const deleteRule = (id: string) => {
+    updateGlobal({ rules: globalEngineState.rules.filter((r) => r.id !== id) })
+  }
+
   return {
     ...state,
     updateDraft,
@@ -150,5 +206,8 @@ export function useEngineStore() {
     addVariable,
     updateVariable,
     deleteVariable,
+    addRule,
+    updateRule,
+    deleteRule,
   }
 }

@@ -149,36 +149,64 @@ export default function Financeiro() {
 
             <CardContent className="p-6 space-y-5">
               <div className="space-y-4 text-sm text-slate-300">
-                <div className="flex flex-col gap-2 pb-4 border-b border-slate-700">
-                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                    Custo Base (R$)
-                  </label>
-                  <Input
-                    type="number"
-                    value={calc.data.baseCost}
-                    onChange={(e) => calc.update({ baseCost: Number(e.target.value) })}
-                    className="bg-slate-800 border-slate-600 text-white font-semibold text-lg h-11"
-                  />
+                <div className="grid grid-cols-2 gap-4 pb-4 border-b border-slate-700">
+                  <div className="flex flex-col gap-2">
+                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                      Custo Base (R$)
+                    </label>
+                    <Input
+                      type="number"
+                      value={calc.data.baseCost}
+                      onChange={(e) => calc.update({ baseCost: Number(e.target.value) })}
+                      className="bg-slate-800 border-slate-600 text-white font-semibold h-11"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                      Valor NF (R$)
+                    </label>
+                    <Input
+                      type="number"
+                      value={calc.data.nfValue}
+                      onChange={(e) => calc.update({ nfValue: Number(e.target.value) })}
+                      className="bg-slate-800 border-slate-600 text-white font-semibold h-11"
+                    />
+                  </div>
                 </div>
 
                 <div className="space-y-2">
                   <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1">
                     <Info className="w-3 h-3" /> Breakdown de Variáveis Ativas
                   </div>
-                  {calc.activeVars.length === 0 && (
+                  {calc.activeVars.length === 0 && calc.activeRules.length === 0 && (
                     <div className="text-slate-500 italic text-xs">
-                      Nenhuma variável ativa no motor.
+                      Nenhuma variável/regra ativa no motor.
                     </div>
                   )}
                   {calc.activeVars.map((v) => (
                     <div key={v.id} className="flex justify-between items-center text-xs">
-                      <span>
-                        {v.name} {v.type === 'percentage' && `(${v.value}%)`}
+                      <span className="truncate pr-2">
+                        {v.name} {v.type === 'percentage' && `(${v.value}% s/ Base)`}
                       </span>
-                      <span className="text-slate-100 font-medium">
+                      <span className="text-slate-100 font-medium shrink-0">
                         {v.type === 'fixed'
                           ? fmt(v.value)
                           : fmt((calc.data.baseCost * v.value) / 100)}
+                      </span>
+                    </div>
+                  ))}
+                  {calc.activeRules.map((r) => (
+                    <div
+                      key={r.id}
+                      className="flex justify-between items-center text-xs text-amber-200/90"
+                    >
+                      <span className="truncate pr-2">
+                        {r.name} {r.type === 'percentage' && `(${r.value}% s/ NF)`}
+                      </span>
+                      <span className="font-medium shrink-0">
+                        {r.type === 'fixed'
+                          ? fmt(r.value)
+                          : fmt((calc.data.nfValue * r.value) / 100)}
                       </span>
                     </div>
                   ))}
@@ -190,8 +218,12 @@ export default function Financeiro() {
                     <span>{fmt(calc.fixedSum)}</span>
                   </div>
                   <div className="flex justify-between items-center text-slate-400">
-                    <span>Soma Percentuais</span>
+                    <span>Soma % (s/ Base)</span>
                     <span>{fmt(calc.percentageSum)}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-slate-400">
+                    <span>Soma Regras NF</span>
+                    <span>{fmt(calc.rulesSum)}</span>
                   </div>
                 </div>
 
