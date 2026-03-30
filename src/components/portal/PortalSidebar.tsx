@@ -7,8 +7,10 @@ import {
   LogOut,
   History,
   Newspaper,
+  Menu,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet'
 
 export function PortalSidebar({ activeTab, setActiveTab, onLogout }: any) {
   const items = [
@@ -16,14 +18,14 @@ export function PortalSidebar({ activeTab, setActiveTab, onLogout }: any) {
     { id: 'coleta', label: 'Agendar Coleta', icon: Truck },
     { id: 'cotacao', label: 'Cotação', icon: Calculator },
     { id: 'cotacao-hist', label: 'Histórico de Cotações', icon: History },
-    { id: 'docs', label: 'Ver Documentos', icon: FileText },
+    { id: 'docs', label: 'Documentos', icon: FileText },
     { id: 'messages', label: 'Mensagens', icon: MessageSquare },
     { id: 'blog', label: 'Blog', icon: Newspaper },
   ]
 
-  return (
-    <aside className="w-64 bg-white border-r border-slate-200 flex flex-col">
-      <div className="p-4 flex-1 space-y-1">
+  const SidebarContent = () => (
+    <>
+      <div className="p-4 flex-1 space-y-1 overflow-y-auto">
         {items.map((item) => (
           <button
             key={item.id}
@@ -41,7 +43,7 @@ export function PortalSidebar({ activeTab, setActiveTab, onLogout }: any) {
           </button>
         ))}
       </div>
-      <div className="p-4 border-t border-slate-200">
+      <div className="p-4 border-t border-slate-200 mt-auto">
         <button
           onClick={onLogout}
           className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-slate-600 hover:bg-rose-50 hover:text-rose-600 transition-colors text-sm"
@@ -50,6 +52,28 @@ export function PortalSidebar({ activeTab, setActiveTab, onLogout }: any) {
           Sair do Portal
         </button>
       </div>
-    </aside>
+    </>
+  )
+
+  return (
+    <>
+      <aside className="hidden md:flex w-64 bg-white border-r border-slate-200 flex-col h-full">
+        <SidebarContent />
+      </aside>
+
+      <div className="md:hidden fixed bottom-6 right-6 z-50">
+        <Sheet>
+          <SheetTrigger asChild>
+            <button className="bg-[#800020] text-white p-4 rounded-full shadow-xl hover:bg-[#600018] transition-colors">
+              <Menu className="w-6 h-6" />
+            </button>
+          </SheetTrigger>
+          <SheetContent side="left" className="w-64 p-0 flex flex-col bg-white">
+            <SheetTitle className="sr-only">Menu de Navegação</SheetTitle>
+            <SidebarContent />
+          </SheetContent>
+        </Sheet>
+      </div>
+    </>
   )
 }

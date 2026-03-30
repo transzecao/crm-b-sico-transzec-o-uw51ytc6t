@@ -90,7 +90,7 @@ function DocForm({ title, type, fields, onSubmit }: any) {
             variant="outline"
             className="w-full text-[#800020] border-[#800020] hover:bg-[#800020]/10"
           >
-            Ver Documentos
+            Download {type}
           </Button>
         </form>
       </CardContent>

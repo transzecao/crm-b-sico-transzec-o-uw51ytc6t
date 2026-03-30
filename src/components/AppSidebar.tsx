@@ -1,11 +1,12 @@
 import { Link, useLocation } from 'react-router-dom'
 import {
-  LayoutDashboard,
+  CheckSquare,
+  Inbox,
   Building2,
   Users,
   KanbanSquare,
   Sprout,
-  DollarSign,
+  FileText,
   BarChart3,
   BrainCircuit,
   KeyRound,
@@ -30,9 +31,9 @@ export function AppSidebar() {
 
   const items = [
     {
-      title: 'Dashboard',
+      title: 'Tarefas',
       url: '/',
-      icon: LayoutDashboard,
+      icon: CheckSquare,
       roles: [
         'Acesso Master',
         'Supervisor Financeiro',
@@ -41,6 +42,46 @@ export function AppSidebar() {
         'Funcionário Comercial',
         'Funcionário Marketing',
         'Funcionário Coleta',
+      ],
+    },
+    {
+      title: 'Lead Novo',
+      url: '/empresa/nova',
+      icon: Inbox,
+      roles: [
+        'Acesso Master',
+        'Supervisor Comercial',
+        'Funcionário Comercial',
+        'Funcionário Marketing',
+      ],
+    },
+    {
+      title: 'Pipeline de Prospecção',
+      url: '/pipeline/1',
+      icon: KanbanSquare,
+      roles: ['Acesso Master', 'Supervisor Comercial', 'Funcionário Comercial'],
+    },
+    {
+      title: 'Propostas',
+      url: '/financeiro',
+      icon: FileText,
+      roles: [
+        'Acesso Master',
+        'Supervisor Financeiro',
+        'Supervisor Comercial',
+        'Funcionário Comercial',
+        'Funcionário Coleta',
+      ],
+    },
+    {
+      title: 'Relatórios',
+      url: '/analytics',
+      icon: BarChart3,
+      roles: [
+        'Acesso Master',
+        'Supervisor Financeiro',
+        'Supervisor Comercial',
+        'Supervisor Coleta',
       ],
     },
     {
@@ -55,23 +96,6 @@ export function AppSidebar() {
       ],
     },
     {
-      title: 'Contatos',
-      url: '/contatos',
-      icon: Users,
-      roles: [
-        'Acesso Master',
-        'Supervisor Comercial',
-        'Funcionário Comercial',
-        'Funcionário Coleta',
-      ],
-    },
-    {
-      title: 'Prospecção',
-      url: '/pipeline/1',
-      icon: KanbanSquare,
-      roles: ['Acesso Master', 'Supervisor Comercial', 'Funcionário Comercial'],
-    },
-    {
       title: 'Nutrição',
       url: '/pipeline/2',
       icon: Sprout,
@@ -84,25 +108,14 @@ export function AppSidebar() {
       roles: ['Acesso Master', 'Supervisor Coleta', 'Funcionário Coleta'],
     },
     {
-      title: 'Cotação',
-      url: '/financeiro',
-      icon: DollarSign,
+      title: 'Contatos',
+      url: '/contatos',
+      icon: Users,
       roles: [
         'Acesso Master',
-        'Supervisor Financeiro',
+        'Supervisor Comercial',
         'Funcionário Comercial',
         'Funcionário Coleta',
-      ],
-    },
-    {
-      title: 'Analytics',
-      url: '/analytics',
-      icon: BarChart3,
-      roles: [
-        'Acesso Master',
-        'Supervisor Financeiro',
-        'Supervisor Comercial',
-        'Supervisor Coleta',
       ],
     },
     {
@@ -110,17 +123,6 @@ export function AppSidebar() {
       url: '/admin/logins',
       icon: KeyRound,
       roles: ['Acesso Master'],
-    },
-    {
-      title: 'Gestão do Portal',
-      url: '/admin/portal',
-      icon: Users,
-      roles: [
-        'Acesso Master',
-        'Supervisor Comercial',
-        'Supervisor Financeiro',
-        'Funcionário Coleta',
-      ],
     },
     {
       title: 'The Brain (Global)',
@@ -149,7 +151,10 @@ export function AppSidebar() {
               {visibleItems.map((item) => {
                 const isActive =
                   location.pathname === item.url ||
-                  (location.pathname.startsWith('/empresa/') && item.url === '/empresas')
+                  (location.pathname.startsWith('/empresa/') &&
+                    item.url === '/empresas' &&
+                    item.title !== 'Lead Novo') ||
+                  (location.pathname === '/empresa/nova' && item.title === 'Lead Novo')
 
                 return (
                   <SidebarMenuItem key={item.title}>

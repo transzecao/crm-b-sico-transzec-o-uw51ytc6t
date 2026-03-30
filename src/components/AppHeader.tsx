@@ -1,4 +1,14 @@
-import { Search, Bell, Plus, BarChart3, HelpCircle } from 'lucide-react'
+import {
+  Search,
+  Bell,
+  Plus,
+  BarChart3,
+  HelpCircle,
+  Kanban,
+  User,
+  Settings,
+  LogOut,
+} from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { SidebarTrigger } from '@/components/ui/sidebar'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -10,6 +20,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import useCrmStore, { Role } from '@/stores/useCrmStore'
 
 export function AppHeader() {
@@ -68,6 +86,17 @@ export function AppHeader() {
               </Link>
             </Button>
           )}
+          <Button
+            variant="outline"
+            size="sm"
+            asChild
+            className="text-white border-white/30 hover:bg-white/10 hover:text-white h-8 px-3 bg-transparent"
+          >
+            <Link to="/pipeline/1">
+              <Kanban className="w-3.5 h-3.5 mr-1" />
+              Pipeline
+            </Link>
+          </Button>
           {canSeeAnalytics && (
             <Button
               variant="outline"
@@ -122,18 +151,65 @@ export function AppHeader() {
           >
             <HelpCircle className="w-5 h-5" />
           </button>
-          <button className="p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-full transition-colors relative">
-            <Bell className="w-5 h-5" />
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#0056B3] rounded-full border-2 border-[#800020]"></span>
-          </button>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-full transition-colors relative">
+                <Bell className="w-5 h-5" />
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#0056B3] rounded-full border-2 border-[#800020]"></span>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-72">
+              <DropdownMenuLabel>Notificações</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem className="cursor-pointer">
+                <div className="flex flex-col">
+                  <span className="font-medium text-sm">Novo lead capturado</span>
+                  <span className="text-xs text-slate-500">Empresa XYZ preencheu o formulário</span>
+                </div>
+              </DropdownMenuItem>
+              <DropdownMenuItem className="cursor-pointer">
+                <div className="flex flex-col">
+                  <span className="font-medium text-sm">Tarefa pendente</span>
+                  <span className="text-xs text-slate-500">
+                    Ligar para Industrial SP Metalurgia
+                  </span>
+                </div>
+              </DropdownMenuItem>
+              <DropdownMenuItem className="cursor-pointer">
+                <div className="flex flex-col">
+                  <span className="font-medium text-sm">Aviso do Setor</span>
+                  <span className="text-xs text-slate-500">Reunião de alinhamento às 14h</span>
+                </div>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         <div className="flex items-center gap-3 pl-2 sm:pl-4 border-l border-white/20">
-          <Avatar className="w-8 h-8 cursor-pointer ring-2 ring-white/20 hover:ring-white/50 transition-all shadow-sm">
-            <AvatarFallback className="bg-white text-[#800020] text-[10px] font-bold">
-              {state.role.substring(0, 2).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Avatar className="w-8 h-8 cursor-pointer ring-2 ring-white/20 hover:ring-white/50 transition-all shadow-sm">
+                <AvatarFallback className="bg-white text-[#800020] text-[10px] font-bold">
+                  {state.role.substring(0, 2).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem className="cursor-pointer">
+                <User className="w-4 h-4 mr-2" /> Perfil
+              </DropdownMenuItem>
+              <DropdownMenuItem className="cursor-pointer">
+                <Settings className="w-4 h-4 mr-2" /> Redefinir Senha
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem className="text-red-600 cursor-pointer">
+                <LogOut className="w-4 h-4 mr-2" /> Sair
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </header>
