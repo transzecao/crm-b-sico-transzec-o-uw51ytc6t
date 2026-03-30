@@ -34,7 +34,7 @@ export function PortalCotacao() {
   }
 
   const handleDownload = () => {
-    toast({ title: 'PDF gerado e baixado com sucesso!' })
+    toast({ title: `PDF gerado com sucesso! Incluído ID ${result.quoteCode}, Data e Hora.` })
   }
 
   return (

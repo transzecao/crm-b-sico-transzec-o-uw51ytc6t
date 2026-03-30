@@ -44,9 +44,15 @@ export function PortalAuth() {
     }
     register({ cnpj, name, email, phone, password })
     toast({
-      title: 'Estamos checando seus dados, enviaremos um e-mail de confirmação.',
+      title: 'Estamos checando seus dados enviaremos um email de confirmaçao.',
       duration: 5000,
     })
+    setTimeout(() => {
+      toast({
+        title: 'Aviso de novo cliente cadastrado.',
+        description: 'Alerta gerado para o Supervisor Comercial.',
+      })
+    }, 1500)
     setView('login')
   }
 

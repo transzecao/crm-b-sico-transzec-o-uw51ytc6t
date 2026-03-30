@@ -33,7 +33,7 @@ export function PortalCotacaoHist() {
               <Button
                 size="sm"
                 variant="outline"
-                onClick={() => toast({ title: 'Download Iniciado.' })}
+                onClick={() => toast({ title: `Download do PDF ${q.quoteCode} Iniciado.` })}
               >
                 Baixar PDF
               </Button>

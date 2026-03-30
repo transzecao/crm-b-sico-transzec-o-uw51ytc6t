@@ -29,7 +29,7 @@ export type PortalCollection = {
   weight: number
   invoiceValue: number
   quantity: number
-  status: 'pending' | 'confirmed' | 'routed'
+  status: 'pending' | 'requested_confirmation' | 'confirmed' | 'routed'
   slot?: string
   displayId?: string
 }
@@ -82,6 +82,7 @@ export interface PortalState {
     col: Omit<PortalCollection, 'id' | 'status' | 'dailyOrder' | 'date' | 'displayId'>,
   ) => void
   updateCollectionSlot: (id: string, slot: string) => void
+  requestConfirmation: (id: string) => void
   addQuote: (quote: Omit<PortalQuote, 'id' | 'date' | 'quoteCode'>) => void
   addDocRequest: (req: Omit<PortalDocRequest, 'id' | 'status' | 'date'>) => void
   addMessage: (msg: Omit<PortalMessage, 'id' | 'date' | 'replies'>) => void
@@ -166,6 +167,10 @@ export const PortalProvider = ({ children }: { children: ReactNode }) => {
     updateCollectionSlot: (id, slot) =>
       setCollections((prev) =>
         prev.map((c) => (c.id === id ? { ...c, slot, status: 'confirmed' } : c)),
+      ),
+    requestConfirmation: (id) =>
+      setCollections((prev) =>
+        prev.map((c) => (c.id === id ? { ...c, status: 'requested_confirmation' } : c)),
       ),
     addQuote: (data) =>
       setQuotes((prev) => [

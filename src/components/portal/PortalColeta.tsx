@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/select'
 
 export function PortalColeta() {
-  const { currentUser, addCollection, collections } = usePortalStore()
+  const { currentUser, addCollection, collections, requestConfirmation } = usePortalStore()
   const { toast } = useToast()
 
   const [form, setForm] = useState({
@@ -222,7 +222,13 @@ export function PortalColeta() {
                     De: {c.originName} Para: {c.destName}
                   </p>
                   <p className="text-xs mt-1 font-medium bg-slate-100 inline-block px-2 py-0.5 rounded">
-                    Status: {c.status} {c.slot && `| Janela: ${c.slot}`}
+                    Status:{' '}
+                    {c.status === 'pending'
+                      ? 'Pendente (Em até 48h)'
+                      : c.status === 'requested_confirmation'
+                        ? 'Aguardando Confirmação'
+                        : c.status}{' '}
+                    {c.slot && `| Janela: ${c.slot}`}
                   </p>
                 </div>
                 {c.status === 'pending' && (
@@ -230,10 +236,11 @@ export function PortalColeta() {
                     size="sm"
                     variant="outline"
                     onClick={() => {
+                      requestConfirmation(c.id)
                       toast({ title: 'Solicitação de confirmação enviada para a equipe.' })
                     }}
                   >
-                    Solicitar Confirmação
+                    Pedir Confirmação
                   </Button>
                 )}
               </div>

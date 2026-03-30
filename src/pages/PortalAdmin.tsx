@@ -6,44 +6,53 @@ import { Badge } from '@/components/ui/badge'
 import { useToast } from '@/hooks/use-toast'
 
 export default function PortalAdmin() {
-  const { users, collections, quotes, docRequests, approveUser, rejectUser, updateCollectionSlot } =
-    usePortalStore()
+  const {
+    users,
+    collections,
+    quotes,
+    docRequests,
+    messages,
+    approveUser,
+    rejectUser,
+    updateCollectionSlot,
+  } = usePortalStore()
   const { toast } = useToast()
 
   const pendingUsers = users.filter((u) => u.status === 'pending')
   const urgentDocs = docRequests.filter((d) => d.status === 'urgent')
-  const pendingCols = collections.filter((c) => c.status === 'pending')
+  const pendingCols = collections.filter(
+    (c) => c.status === 'pending' || c.status === 'requested_confirmation',
+  )
+  const financeMsgs = messages.filter((m) => m.department === 'Financeiro')
+  const coletaMsgs = messages.filter((m) => m.department === 'Coleta')
 
   return (
     <div className="space-y-6 bg-slate-50 min-h-[calc(100vh-6rem)] p-2 md:p-6 rounded-xl animate-fade-in-up">
       <div className="flex justify-between items-center bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-slate-900">
-            Gestão do Portal do Cliente
+            Painel Administrativo do Portal
           </h1>
           <p className="text-slate-500 font-medium mt-1">
-            Gerencie acessos, solicitações e configurações do portal.
+            Visão segmentada por papéis: Comercial, Coleta e Financeiro.
           </p>
         </div>
       </div>
 
-      <Tabs defaultValue="approvals" className="w-full">
+      <Tabs defaultValue="comercial" className="w-full">
         <TabsList className="bg-white p-1 rounded-xl shadow-sm border border-slate-200 mb-4 h-auto flex-wrap">
-          <TabsTrigger value="approvals" className="flex-1 py-2">
-            Aprovações ({pendingUsers.length})
+          <TabsTrigger value="comercial" className="flex-1 py-2">
+            Comercial (Aprovações)
           </TabsTrigger>
-          <TabsTrigger value="coletas" className="flex-1 py-2">
-            Coletas ({pendingCols.length})
+          <TabsTrigger value="coleta" className="flex-1 py-2">
+            Operações (Coleta)
           </TabsTrigger>
-          <TabsTrigger value="docs" className="flex-1 py-2">
-            Docs Urgentes ({urgentDocs.length})
-          </TabsTrigger>
-          <TabsTrigger value="quotes" className="flex-1 py-2">
-            Cotações
+          <TabsTrigger value="financeiro" className="flex-1 py-2">
+            Financeiro
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="approvals">
+        <TabsContent value="comercial" className="space-y-4">
           <Card>
             <CardHeader>
               <CardTitle>Novos Cadastros (Supervisor Comercial)</CardTitle>
@@ -52,7 +61,7 @@ export default function PortalAdmin() {
               {pendingUsers.map((u) => (
                 <div
                   key={u.id}
-                  className="p-4 border rounded-xl flex justify-between items-center bg-white mb-2"
+                  className="p-4 border rounded-xl flex justify-between items-center bg-white mb-2 shadow-sm"
                 >
                   <div>
                     <p className="font-bold">
@@ -91,32 +100,37 @@ export default function PortalAdmin() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="coletas">
+        <TabsContent value="coleta" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Solicitações de Coleta (Funcionário Coleta)</CardTitle>
+              <CardTitle>Solicitações de Coleta (Funcionário / Supervisor Coleta)</CardTitle>
             </CardHeader>
             <CardContent>
               {pendingCols.map((c) => (
                 <div
                   key={c.id}
-                  className="p-4 border rounded-xl flex justify-between items-center bg-white mb-2"
+                  className="p-4 border rounded-xl flex justify-between items-center bg-white mb-2 shadow-sm"
                 >
                   <div>
-                    <p className="font-bold">
-                      ID: {c.displayId} - {c.originName} ➔ {c.destName}
-                    </p>
+                    <div className="flex items-center gap-2 mb-1">
+                      <p className="font-bold">
+                        ID: {c.displayId} - {c.originName} ➔ {c.destName}
+                      </p>
+                      {c.status === 'requested_confirmation' && (
+                        <Badge className="bg-amber-500">Confirmação Solicitada</Badge>
+                      )}
+                    </div>
                     <p className="text-sm text-slate-500">
                       NFe: {c.invoiceNumber} | Peso: {c.weight}kg | {c.freightType}
                     </p>
                   </div>
                   <Button
                     onClick={() => {
-                      updateCollectionSlot(c.id, 'Amanhã - Manhã')
-                      toast({ title: 'Janela confirmada.' })
+                      updateCollectionSlot(c.id, '25 de Março - Manhã')
+                      toast({ title: 'Janela confirmada e cliente notificado.' })
                     }}
                   >
-                    Definir Janela
+                    Confirmar Data/Período
                   </Button>
                 </div>
               ))}
@@ -125,53 +139,88 @@ export default function PortalAdmin() {
               )}
             </CardContent>
           </Card>
-        </TabsContent>
 
-        <TabsContent value="docs">
           <Card>
             <CardHeader>
-              <CardTitle>Solicitações de Documentos (Supervisor Financeiro)</CardTitle>
+              <CardTitle>Mensagens da Coleta</CardTitle>
             </CardHeader>
             <CardContent>
-              {urgentDocs.map((d) => (
-                <div
-                  key={d.id}
-                  className="p-4 border rounded-xl flex justify-between items-center bg-rose-50 mb-2"
-                >
-                  <div>
-                    <Badge variant="destructive" className="mb-2">
-                      URGENTE
-                    </Badge>
-                    <p className="font-bold">
-                      Tipo: {d.type} - Cliente {d.customerId}
-                    </p>
-                    <p className="text-sm text-slate-600">{JSON.stringify(d.data)}</p>
-                  </div>
-                  <Button
-                    variant="outline"
-                    onClick={() => toast({ title: 'Enviado para o cliente!' })}
-                  >
-                    Marcar como Resolvido
-                  </Button>
+              {coletaMsgs.map((m) => (
+                <div key={m.id} className="p-3 bg-slate-50 rounded-xl border mb-2">
+                  <p className="text-xs font-bold text-slate-500 mb-1">
+                    Cliente ID: {m.customerId} - {m.date}
+                  </p>
+                  <p className="text-sm">{m.message}</p>
                 </div>
               ))}
-              {urgentDocs.length === 0 && (
-                <p className="text-slate-500">Nenhuma solicitação urgente.</p>
-              )}
+              {coletaMsgs.length === 0 && <p className="text-slate-500">Nenhuma mensagem.</p>}
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="quotes">
+        <TabsContent value="financeiro" className="space-y-4">
+          <div className="grid md:grid-cols-2 gap-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Documentos Urgentes (Supervisor Financeiro)</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {urgentDocs.map((d) => (
+                  <div
+                    key={d.id}
+                    className="p-4 border rounded-xl flex flex-col items-start bg-rose-50 mb-2 shadow-sm gap-2"
+                  >
+                    <div>
+                      <Badge variant="destructive" className="mb-2">
+                        URGENTE
+                      </Badge>
+                      <p className="font-bold">
+                        Tipo: {d.type} - Cliente {d.customerId}
+                      </p>
+                      <p className="text-sm text-slate-600">{JSON.stringify(d.data)}</p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => toast({ title: 'Enviado para o cliente!' })}
+                    >
+                      Marcar como Resolvido
+                    </Button>
+                  </div>
+                ))}
+                {urgentDocs.length === 0 && (
+                  <p className="text-slate-500">Nenhuma solicitação urgente.</p>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Mensagens Financeiro</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {financeMsgs.map((m) => (
+                  <div key={m.id} className="p-3 bg-slate-50 rounded-xl border mb-2">
+                    <p className="text-xs font-bold text-slate-500 mb-1">
+                      Cliente ID: {m.customerId} - {m.date}
+                    </p>
+                    <p className="text-sm">{m.message}</p>
+                  </div>
+                ))}
+                {financeMsgs.length === 0 && <p className="text-slate-500">Nenhuma mensagem.</p>}
+              </CardContent>
+            </Card>
+          </div>
+
           <Card>
             <CardHeader>
-              <CardTitle>Histórico de Cotações dos Clientes (Financeiro)</CardTitle>
+              <CardTitle>Histórico de Cotações (Financeiro)</CardTitle>
             </CardHeader>
             <CardContent>
               {quotes.map((q) => (
                 <div
                   key={q.id}
-                  className="p-4 border rounded-xl flex justify-between items-center bg-white mb-2"
+                  className="p-4 border rounded-xl flex justify-between items-center bg-white mb-2 shadow-sm"
                 >
                   <div>
                     <p className="font-bold">

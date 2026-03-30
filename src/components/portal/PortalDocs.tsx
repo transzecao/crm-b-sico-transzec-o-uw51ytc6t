@@ -17,13 +17,13 @@ export function PortalDocs() {
   return (
     <div className="grid md:grid-cols-2 gap-6 animate-fade-in-up">
       <DocForm
-        title="Download CTe (XML/PDF)"
+        title="Download XML - PDF"
         type="CTe"
         fields={['Nota Fiscal', 'CNPJ', 'Email']}
         onSubmit={handleRequest}
       />
       <DocForm
-        title="Download O.S. (Minuta)"
+        title="Download Ordem de Serviço"
         type="OS"
         fields={['CNPJ Remetente', 'CNPJ Destinatário', 'Email']}
         onSubmit={handleRequest}
