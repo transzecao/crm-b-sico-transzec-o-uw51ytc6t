@@ -8,7 +8,9 @@ import {
   User,
   Settings,
   LogOut,
+  Bot,
 } from 'lucide-react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { SidebarTrigger } from '@/components/ui/sidebar'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -30,8 +32,39 @@ import {
 } from '@/components/ui/dropdown-menu'
 import useCrmStore, { Role } from '@/stores/useCrmStore'
 
+import { useRealtime } from '@/hooks/use-realtime'
+
 export function AppHeader() {
   const { state, updateState } = useCrmStore()
+  const [notifications, setNotifications] = useState<
+    { id: string; title: string; text: string; icon?: React.ReactNode }[]
+  >([
+    { id: '1', title: 'Novo lead capturado', text: 'Empresa XYZ preencheu o formulário' },
+    { id: '2', title: 'Tarefa pendente', text: 'Ligar para Industrial SP Metalurgia' },
+    { id: '3', title: 'Aviso do Setor', text: 'Reunião de alinhamento às 14h' },
+  ])
+
+  useRealtime('leads', (e) => {
+    if (e.action === 'update' && e.record.ai_diagnosis) {
+      setNotifications((prev) => {
+        if (
+          prev.length > 0 &&
+          prev[0].title === 'Novo Diagnóstico IA' &&
+          Date.now() - parseInt(prev[0].id) < 2000
+        )
+          return prev
+        return [
+          {
+            id: Date.now().toString(),
+            title: 'Novo Diagnóstico IA',
+            text: `Análise atualizada para o lead ${e.record.name}`,
+            icon: <Bot className="w-4 h-4 text-[#0056B3]" />,
+          },
+          ...prev,
+        ]
+      })
+    }
+  })
 
   const handleRoleChange = (role: string) => {
     updateState({ role: role as Role })
@@ -157,32 +190,25 @@ export function AppHeader() {
             <DropdownMenuTrigger asChild>
               <button className="p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-full transition-colors relative">
                 <Bell className="w-5 h-5" />
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#0056B3] rounded-full border-2 border-[#800020]"></span>
+                {notifications.length > 0 && (
+                  <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#0056B3] rounded-full border-2 border-[#800020]"></span>
+                )}
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-72">
+            <DropdownMenuContent align="end" className="w-72 max-h-96 overflow-y-auto">
               <DropdownMenuLabel>Notificações</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="cursor-pointer">
-                <div className="flex flex-col">
-                  <span className="font-medium text-sm">Novo lead capturado</span>
-                  <span className="text-xs text-slate-500">Empresa XYZ preencheu o formulário</span>
-                </div>
-              </DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer">
-                <div className="flex flex-col">
-                  <span className="font-medium text-sm">Tarefa pendente</span>
-                  <span className="text-xs text-slate-500">
-                    Ligar para Industrial SP Metalurgia
-                  </span>
-                </div>
-              </DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer">
-                <div className="flex flex-col">
-                  <span className="font-medium text-sm">Aviso do Setor</span>
-                  <span className="text-xs text-slate-500">Reunião de alinhamento às 14h</span>
-                </div>
-              </DropdownMenuItem>
+              {notifications.map((n) => (
+                <DropdownMenuItem key={n.id} className="cursor-pointer">
+                  <div className="flex items-start gap-2 w-full">
+                    {n.icon && <div className="mt-0.5">{n.icon}</div>}
+                    <div className="flex flex-col flex-1">
+                      <span className="font-medium text-sm">{n.title}</span>
+                      <span className="text-xs text-slate-500 line-clamp-2">{n.text}</span>
+                    </div>
+                  </div>
+                </DropdownMenuItem>
+              ))}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

@@ -14,6 +14,7 @@ import {
 import useCrmStore, { Interaction } from '@/stores/useCrmStore'
 import { InteractionsTimeline } from '@/components/InteractionsTimeline'
 import { BrainAnalysis } from '@/components/BrainAnalysis'
+import { WhatsAppIntegration } from '@/components/WhatsAppIntegration'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { useToast } from '@/hooks/use-toast'
@@ -161,6 +162,8 @@ export default function Company360() {
       <div className="grid lg:grid-cols-12 gap-6">
         <div className="lg:col-span-8 space-y-6">
           <BrainAnalysis interactions={interactions} company={company} />
+
+          <WhatsAppIntegration company={company} />
 
           <Card className="border-slate-200 shadow-sm bg-white overflow-hidden">
             <CardHeader className="pb-3 border-b border-slate-100 bg-slate-50">
