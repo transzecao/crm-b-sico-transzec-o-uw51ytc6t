@@ -22,9 +22,21 @@ import {
   ComposedChart,
 } from 'recharts'
 import { Button } from '@/components/ui/button'
-import { Trash2, FileJson, Camera, AlertCircle } from 'lucide-react'
+import {
+  Trash2,
+  FileJson,
+  Camera,
+  AlertCircle,
+  Download,
+  FileText,
+  FileSpreadsheet,
+  Image as ImageIcon,
+  Database,
+  FileBarChart,
+} from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { format } from 'date-fns'
+import { createAuditLog } from '@/services/audit_logs'
 
 export function FleetDashboard() {
   const { toast } = useToast()
@@ -102,6 +114,253 @@ export function FleetDashboard() {
   }
 
   const latest = history.length > 0 ? history[history.length - 1] : null
+
+  const handleExportPDF = async (type: 'completo' | 'resumido' | 'graficos') => {
+    if (!latest) {
+      alert('⚠️ Nenhum cálculo realizado. Realize um cálculo antes de exportar.')
+      return
+    }
+
+    try {
+      toast({ title: 'Gerando PDF...', description: 'Aguarde um momento.' })
+
+      const html2canvas = (await import('https://esm.sh/html2canvas@1.4.1')).default
+      const { jsPDF } = await import('https://esm.sh/jspdf@2.5.1')
+
+      let targetId = ''
+      let filename = ''
+      let orientation: 'p' | 'l' = 'p'
+
+      if (type === 'completo') {
+        targetId = 'relatorioExportacao'
+        filename = `CPK_Relatorio_Completo_${new Date().toISOString().split('T')[0]}.pdf`
+      } else if (type === 'resumido') {
+        targetId = 'resultadosSection'
+        filename = `CPK_Resultados_Resumido_${new Date().toISOString().split('T')[0]}.pdf`
+      } else if (type === 'graficos') {
+        targetId = 'chart-container-section'
+        filename = `CPK_Graficos_${new Date().toISOString().split('T')[0]}.pdf`
+        orientation = 'l'
+      }
+
+      const element = document.getElementById(targetId)
+      if (!element) {
+        throw new Error(
+          `Elemento ${targetId} não encontrado no DOM. Certifique-se de estar na aba correta.`,
+        )
+      }
+
+      const wasHidden = element.style.display === 'none'
+      if (wasHidden) element.style.display = 'block'
+
+      const canvas = await html2canvas(element, { scale: 2, useCORS: true, logging: false })
+
+      if (wasHidden) element.style.display = 'none'
+
+      const imgData = canvas.toDataURL('image/png')
+      const pdf = new jsPDF({ orientation, unit: 'px', format: [canvas.width, canvas.height] })
+
+      pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height)
+      pdf.save(filename)
+
+      await createAuditLog({
+        parameter: 'EXPORTACAO_PDF',
+        old_value: 'N/A',
+        new_value: filename,
+        impact: `Relatório PDF ${type} exportado com sucesso`,
+      })
+
+      toast({ title: 'Sucesso', description: 'PDF exportado com sucesso!' })
+    } catch (error) {
+      console.error(error)
+      toast({ title: 'Erro', description: 'Falha ao exportar PDF.', variant: 'destructive' })
+    }
+  }
+
+  const handleExportExcel = async () => {
+    if (!latest) {
+      alert('⚠️ Nenhum cálculo realizado. Realize um cálculo antes de exportar.')
+      return
+    }
+
+    try {
+      toast({ title: 'Gerando Excel...', description: 'Aguarde um momento.' })
+
+      const XLSX = await import('https://esm.sh/xlsx@0.18.5')
+
+      const wb = XLSX.utils.book_new()
+      const dateStr = new Date().toISOString().split('T')[0]
+
+      // 1. Resumo
+      const resumoData = [
+        ['Indicador', 'Valor'],
+        ['CPK (R$/km)', latest.cpk],
+        [
+          'Custo Total (R$)',
+          latest.finalTotalCost ||
+            latest.costs.drivers +
+              latest.costs.hq +
+              latest.costs.structuralTaxes +
+              latest.dasCost +
+              latest.costs.depreciation +
+              latest.costs.insurance +
+              latest.costs.diesel +
+              latest.costs.tires +
+              latest.costs.otherVariable,
+        ],
+        ['Faturamento Estimado (R$)', latest.faturamento],
+        ['Margem Líquida (%)', latest.margin],
+        ['Custo DAS (R$)', latest.dasCost],
+        [],
+        ['Categoria', 'Custo (R$)'],
+        ['Motoristas', latest.costs.drivers],
+        [
+          'Veículos',
+          (latest.costs.depreciation || 0) +
+            (latest.costs.insurance || 0) +
+            (latest.costs.diesel || 0) +
+            (latest.costs.tires || 0) +
+            (latest.costs.otherVariable || 0),
+        ],
+        ['Sede (Rateio)', latest.costs.hq],
+        ['Impostos/Taxas', (latest.costs.structuralTaxes || 0) + (latest.dasCost || 0)],
+      ]
+      const wsResumo = XLSX.utils.aoa_to_sheet(resumoData)
+      wsResumo['!cols'] = [{ wch: 30 }, { wch: 20 }]
+      XLSX.utils.book_append_sheet(wb, wsResumo, 'Resumo')
+
+      // 2. Motoristas
+      let driversData = [
+        [
+          'ID',
+          'Nome',
+          'CPF',
+          'Salário Base',
+          'Periculosidade',
+          'VR',
+          'Cesta Básica',
+          'Seguro',
+          'RAT',
+          'Custo Total Estimado',
+        ],
+      ]
+      if (latest.fullState?.drivers) {
+        driversData = [
+          ...driversData,
+          ...latest.fullState.drivers.map((d: any) => [
+            d.id,
+            d.name,
+            d.cpf,
+            d.baseSalary,
+            d.periculosidade ? 'Sim' : 'Não',
+            d.vrDaily,
+            d.cestaBasica,
+            d.seguroVida,
+            d.rat,
+            d.baseSalary * 1.5,
+          ]),
+        ]
+      }
+      const wsMotoristas = XLSX.utils.aoa_to_sheet(driversData)
+      wsMotoristas['!cols'] = [
+        { wch: 15 },
+        { wch: 25 },
+        { wch: 15 },
+        { wch: 15 },
+        { wch: 15 },
+        { wch: 15 },
+        { wch: 15 },
+        { wch: 15 },
+        { wch: 15 },
+        { wch: 20 },
+      ]
+      XLSX.utils.book_append_sheet(wb, wsMotoristas, 'Motoristas')
+
+      // 3. Veículos
+      let vehiclesData = [
+        [
+          'ID',
+          'Placa',
+          'Tipo',
+          'Valor Compra',
+          'Valor Revenda',
+          'Consumo',
+          'Preço Diesel',
+          'Seguro Casco',
+        ],
+      ]
+      if (latest.fullState?.vehicles) {
+        vehiclesData = [
+          ...vehiclesData,
+          ...latest.fullState.vehicles.map((v: any) => [
+            v.id,
+            v.plate,
+            v.type,
+            v.purchaseValue,
+            v.resaleValue,
+            v.consumo,
+            v.dieselPrice,
+            v.seguroCasco,
+          ]),
+        ]
+      }
+      const wsVeiculos = XLSX.utils.aoa_to_sheet(vehiclesData)
+      wsVeiculos['!cols'] = [
+        { wch: 15 },
+        { wch: 15 },
+        { wch: 15 },
+        { wch: 15 },
+        { wch: 15 },
+        { wch: 10 },
+        { wch: 15 },
+        { wch: 15 },
+      ]
+      XLSX.utils.book_append_sheet(wb, wsVeiculos, 'Veículos')
+
+      // 4. Histórico
+      const wsHistorico = XLSX.utils.json_to_sheet(
+        history.slice(-10).map((h: any) => ({
+          Data: new Date(h.date).toLocaleString(),
+          CPK: h.cpk,
+          Margem: h.margin,
+          Faturamento: h.faturamento,
+        })),
+      )
+      wsHistorico['!cols'] = [{ wch: 25 }, { wch: 15 }, { wch: 15 }, { wch: 15 }]
+      XLSX.utils.book_append_sheet(wb, wsHistorico, 'Histórico')
+
+      // 5. Configuração
+      let configData = [['Parâmetro', 'Valor']]
+      if (latest.fullState?.settings) {
+        configData = [
+          ...configData,
+          ['Dias Úteis', latest.fullState.settings.workingDays],
+          ['Max CPK', latest.fullState.settings.maxCpk],
+          ['Min Margem', latest.fullState.settings.minMargin],
+          ['Max DAS', latest.fullState.settings.maxDas],
+          ['Alíquota DAS', latest.fullState.taxes?.dasRate || 0],
+        ]
+      }
+      const wsConfig = XLSX.utils.aoa_to_sheet(configData)
+      wsConfig['!cols'] = [{ wch: 20 }, { wch: 15 }]
+      XLSX.utils.book_append_sheet(wb, wsConfig, 'Configuração')
+
+      const filename = `CPK_Relatorio_Completo_${dateStr}.xlsx`
+      XLSX.writeFile(wb, filename)
+
+      await createAuditLog({
+        parameter: 'EXPORTACAO_EXCEL',
+        old_value: 'N/A',
+        new_value: filename,
+        impact: 'Relatório Excel completo exportado com sucesso',
+      })
+
+      toast({ title: 'Sucesso', description: 'Excel exportado com sucesso!' })
+    } catch (error) {
+      console.error(error)
+      toast({ title: 'Erro', description: 'Falha ao exportar Excel.', variant: 'destructive' })
+    }
+  }
 
   const pieData =
     latest && latest.costs
@@ -192,32 +451,61 @@ export function FleetDashboard() {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in pb-12">
-      <div className="flex flex-wrap gap-3 justify-end bg-white p-4 rounded-xl border shadow-sm print:hidden">
-        <Button
-          variant="outline"
-          onClick={exportAllPNGs}
-          className="border-blue-200 text-blue-700 hover:bg-blue-50"
-        >
-          <Camera className="w-4 h-4 mr-2" /> Exportar PNGs
-        </Button>
-        <Button
-          variant="outline"
-          onClick={exportJSON}
-          className="border-slate-200 text-slate-700 hover:bg-slate-50"
-        >
-          <FileJson className="w-4 h-4 mr-2" /> Exportar JSON
-        </Button>
-        <Button
-          variant="outline"
-          onClick={clearHistory}
-          className="border-red-200 text-red-700 hover:bg-red-50"
-        >
-          <Trash2 className="w-4 h-4 mr-2" /> Limpar Histórico
-        </Button>
+    <div className="space-y-6 animate-fade-in pb-12" id="resultadosSection">
+      <div className="bg-[#e9f7ef] border-l-4 border-[#28a745] p-5 rounded-r-xl shadow-sm print:hidden mb-6">
+        <h3 className="text-[#155724] font-semibold text-lg mb-4 flex items-center gap-2">
+          <Download className="w-5 h-5" /> Exportar Relatórios e Dados
+        </h3>
+        <div className="flex flex-col md:flex-row flex-wrap gap-3">
+          <Button
+            onClick={() => handleExportPDF('completo')}
+            className="bg-[#28a745] hover:bg-[#218838] text-white"
+          >
+            <FileText className="w-4 h-4 mr-2" /> PDF Completo
+          </Button>
+          <Button
+            onClick={() => handleExportPDF('resumido')}
+            className="bg-[#28a745] hover:bg-[#218838] text-white"
+          >
+            <FileText className="w-4 h-4 mr-2" /> PDF Resumido
+          </Button>
+          <Button
+            onClick={() => handleExportPDF('graficos')}
+            className="bg-[#28a745] hover:bg-[#218838] text-white"
+          >
+            <FileBarChart className="w-4 h-4 mr-2" /> Gráficos PDF
+          </Button>
+          <Button
+            onClick={handleExportExcel}
+            className="bg-[#17a2b8] hover:bg-[#138496] text-white"
+          >
+            <FileSpreadsheet className="w-4 h-4 mr-2" /> Excel Completo
+          </Button>
+          <Button
+            variant="outline"
+            className="border-yellow-400 text-yellow-700 hover:bg-yellow-50 bg-white"
+            onClick={exportAllPNGs}
+          >
+            <ImageIcon className="w-4 h-4 mr-2" /> Imagens PNG
+          </Button>
+          <Button
+            variant="secondary"
+            className="bg-[#6c757d] hover:bg-[#5a6268] text-white"
+            onClick={exportJSON}
+          >
+            <Database className="w-4 h-4 mr-2" /> Dados Gráficos (JSON)
+          </Button>
+          <Button
+            variant="outline"
+            className="border-red-200 text-red-700 hover:bg-red-50 bg-white ml-auto"
+            onClick={clearHistory}
+          >
+            <Trash2 className="w-4 h-4 mr-2" /> Limpar Histórico
+          </Button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6" id="chart-container-section">
         <Card>
           <CardHeader>
             <CardTitle>Composição de Custos</CardTitle>
@@ -390,6 +678,164 @@ export function FleetDashboard() {
             </ChartContainer>
           </CardContent>
         </Card>
+      </div>
+
+      <div
+        id="relatorioExportacao"
+        style={{
+          display: 'none',
+          padding: '40px',
+          fontFamily: 'Arial, sans-serif',
+          width: '900px',
+          backgroundColor: 'white',
+          color: '#333',
+        }}
+      >
+        <h1
+          style={{
+            fontSize: '28px',
+            borderBottom: '3px solid #28a745',
+            paddingBottom: '15px',
+            marginBottom: '20px',
+            color: '#155724',
+          }}
+        >
+          Relatório Executivo CPK - Transzecão
+        </h1>
+        <p style={{ fontSize: '14px', color: '#666', marginBottom: '30px' }}>
+          <strong>Data de Emissão:</strong> {new Date().toLocaleDateString()}
+        </p>
+
+        {latest && (
+          <>
+            <div style={{ marginBottom: '30px' }}>
+              <h2 style={{ fontSize: '20px', color: '#2c3e50', marginBottom: '15px' }}>
+                Resumo de Indicadores
+              </h2>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '15px' }}>
+                <tbody>
+                  <tr style={{ backgroundColor: '#f8f9fa' }}>
+                    <td
+                      style={{ border: '1px solid #dee2e6', padding: '12px', fontWeight: 'bold' }}
+                    >
+                      CPK Atual:
+                    </td>
+                    <td
+                      style={{
+                        border: '1px solid #dee2e6',
+                        padding: '12px',
+                        color: '#0056b3',
+                        fontWeight: 'bold',
+                      }}
+                    >
+                      R$ {latest.cpk.toFixed(2)} / km
+                    </td>
+                  </tr>
+                  <tr>
+                    <td
+                      style={{ border: '1px solid #dee2e6', padding: '12px', fontWeight: 'bold' }}
+                    >
+                      Margem Líquida:
+                    </td>
+                    <td style={{ border: '1px solid #dee2e6', padding: '12px' }}>
+                      {latest.margin.toFixed(2)}%
+                    </td>
+                  </tr>
+                  <tr style={{ backgroundColor: '#f8f9fa' }}>
+                    <td
+                      style={{ border: '1px solid #dee2e6', padding: '12px', fontWeight: 'bold' }}
+                    >
+                      Faturamento Estimado:
+                    </td>
+                    <td style={{ border: '1px solid #dee2e6', padding: '12px' }}>
+                      R$ {latest.faturamento?.toFixed(2) || 0}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div style={{ marginBottom: '30px' }}>
+              <h2 style={{ fontSize: '20px', color: '#2c3e50', marginBottom: '15px' }}>
+                Detalhamento de Custos
+              </h2>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '15px' }}>
+                <thead>
+                  <tr style={{ backgroundColor: '#28a745', color: 'white' }}>
+                    <th style={{ border: '1px solid #dee2e6', padding: '12px', textAlign: 'left' }}>
+                      Categoria
+                    </th>
+                    <th
+                      style={{ border: '1px solid #dee2e6', padding: '12px', textAlign: 'right' }}
+                    >
+                      Valor (R$)
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td style={{ border: '1px solid #dee2e6', padding: '12px' }}>Motoristas</td>
+                    <td
+                      style={{ border: '1px solid #dee2e6', padding: '12px', textAlign: 'right' }}
+                    >
+                      {latest.costs?.drivers?.toFixed(2) || 0}
+                    </td>
+                  </tr>
+                  <tr style={{ backgroundColor: '#f8f9fa' }}>
+                    <td style={{ border: '1px solid #dee2e6', padding: '12px' }}>
+                      Veículos (Depreciação, Combustível, Manutenção, etc)
+                    </td>
+                    <td
+                      style={{ border: '1px solid #dee2e6', padding: '12px', textAlign: 'right' }}
+                    >
+                      {(
+                        (latest.costs?.depreciation || 0) +
+                        (latest.costs?.insurance || 0) +
+                        (latest.costs?.diesel || 0) +
+                        (latest.costs?.tires || 0) +
+                        (latest.costs?.otherVariable || 0)
+                      ).toFixed(2)}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style={{ border: '1px solid #dee2e6', padding: '12px' }}>
+                      Sede (Rateio Fixo)
+                    </td>
+                    <td
+                      style={{ border: '1px solid #dee2e6', padding: '12px', textAlign: 'right' }}
+                    >
+                      {latest.costs?.hq?.toFixed(2) || 0}
+                    </td>
+                  </tr>
+                  <tr style={{ backgroundColor: '#f8f9fa' }}>
+                    <td style={{ border: '1px solid #dee2e6', padding: '12px' }}>
+                      Impostos e Taxas Estruturais
+                    </td>
+                    <td
+                      style={{ border: '1px solid #dee2e6', padding: '12px', textAlign: 'right' }}
+                    >
+                      {((latest.costs?.structuralTaxes || 0) + (latest.dasCost || 0)).toFixed(2)}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div
+              style={{
+                padding: '15px',
+                backgroundColor: '#fff3cd',
+                borderLeft: '5px solid #ffc107',
+                borderRadius: '4px',
+              }}
+            >
+              <p style={{ margin: 0, color: '#856404', fontSize: '14px' }}>
+                Este documento é confidencial e gerado automaticamente pelo sistema de cálculo
+                Transzecão.
+              </p>
+            </div>
+          </>
+        )}
       </div>
     </div>
   )

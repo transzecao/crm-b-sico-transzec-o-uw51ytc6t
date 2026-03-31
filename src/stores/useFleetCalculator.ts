@@ -209,8 +209,14 @@ const validarDadosCompletos = (s: FleetState): string[] => {
   return errors
 }
 
+const driverCache = new Map<string, number>()
+const vehicleCache = new Map<string, any>()
+
 // AC 2: Driver Cost Logic
 const calcularCustoMotorista = (d: Driver, workingDays: number): number => {
+  const hash = JSON.stringify({ ...d, workingDays })
+  if (driverCache.has(hash)) return driverCache.get(hash)!
+
   const base = d.baseSalary + (d.periculosidade ? d.baseSalary * 0.3 : 0)
   const fgts = base * 0.08
   const decimoTerceiro = base / 12
@@ -220,7 +226,7 @@ const calcularCustoMotorista = (d: Driver, workingDays: number): number => {
   const vrTotal = d.vrDaily * workingDays
   const toxAnualMensal = d.toxAnual / 12
 
-  return (
+  const result =
     base +
     fgts +
     decimoTerceiro +
@@ -232,11 +238,15 @@ const calcularCustoMotorista = (d: Driver, workingDays: number): number => {
     d.cestaBasica +
     d.seguroVida +
     toxAnualMensal
-  )
+  driverCache.set(hash, result)
+  return result
 }
 
 // AC 3: Vehicle Cost Logic
 const calcularCustoVeiculo = (v: Vehicle, km: number) => {
+  const hash = JSON.stringify({ ...v, km })
+  if (vehicleCache.has(hash)) return vehicleCache.get(hash)!
+
   const dep = (v.purchaseValue - v.resaleValue) / 60
   const fixed = (v.ipva + v.licenciamento + v.seguroCasco + v.rctrc + v.rcfdc) / 12
   const insurance = (v.seguroCasco + v.rctrc + v.rcfdc) / 12
@@ -248,7 +258,9 @@ const calcularCustoVeiculo = (v: Vehicle, km: number) => {
   const variable = diesel + arla + pneus + monthlyOps
   const total = dep + fixed + variable
 
-  return { total, variable, dep, fixed, insurance, diesel, pneus, monthlyOps }
+  const result = { total, variable, dep, fixed, insurance, diesel, pneus, monthlyOps }
+  vehicleCache.set(hash, result)
+  return result
 }
 
 // AC 4: Headquarters Cost Logic
@@ -439,6 +451,12 @@ const calcularCPK = (s: FleetState) => {
         deadKm: deadKmCost,
         otherVariable:
           totalVariableCosts - vehicleDieselTotal - vehicleTiresTotal - vehicleInsuranceTotal,
+      },
+      fullState: {
+        drivers: s.drivers,
+        vehicles: s.vehicles,
+        settings: s.settings,
+        taxes: s.taxes,
       },
     }
 
