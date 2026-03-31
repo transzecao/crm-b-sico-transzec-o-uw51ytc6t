@@ -43,7 +43,9 @@ export function FleetVehicles() {
       getMaintenanceLogs()
         .then(setLogs)
         .catch(() => {})
-    } catch (e) {}
+    } catch (e) {
+      console.error(e)
+    }
   }
 
   const handleSave = async () => {
