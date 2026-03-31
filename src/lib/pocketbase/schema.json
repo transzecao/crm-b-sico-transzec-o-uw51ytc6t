@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-31T15:18:49.047Z",
+  "generatedAt": "2026-03-31T15:58:11.156Z",
   "collections": [
     {
       "name": "transzecao",
@@ -258,6 +258,131 @@
         {
           "name": "km_final",
           "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "vehicle_id",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "vehicles"
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "name": "vehicles",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": "@request.auth.id != ''",
+        "update": "@request.auth.id != ''",
+        "delete": "@request.auth.id != ''"
+      },
+      "fields": [
+        {
+          "name": "plate",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "model",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "km_critical_limit",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "maintenance_frequency_months",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "last_maintenance_date",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "next_maintenance_date",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "status",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["active", "maintenance", "inactive"]
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": ["CREATE UNIQUE INDEX idx_vehicles_plate ON vehicles (plate)"]
+    },
+    {
+      "name": "maintenance_logs",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": "@request.auth.id != ''",
+        "update": "@request.auth.id != ''",
+        "delete": "@request.auth.id != ''"
+      },
+      "fields": [
+        {
+          "name": "vehicle_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "vehicles"
+        },
+        {
+          "name": "alert_type",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "message_sent",
+          "type": "text",
           "required": false,
           "system": false
         },

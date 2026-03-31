@@ -1,7 +1,9 @@
 import pb from '@/lib/pocketbase/client'
 
 export interface FleetCostData {
+  id?: string
   user_id: string
+  vehicle_id?: string
   month_year: string
   fixed_salary_driver: number
   fixed_salary_helper: number
@@ -17,6 +19,12 @@ export interface FleetCostData {
   var_washing: number
   km_initial: number
   km_final: number
+  expand?: {
+    vehicle_id?: {
+      plate: string
+      model: string
+    }
+  }
 }
 
 export const createFleetCost = (data: FleetCostData) => {
@@ -24,5 +32,7 @@ export const createFleetCost = (data: FleetCostData) => {
 }
 
 export const getFleetCosts = () => {
-  return pb.collection('fleet_costs').getFullList({ sort: '-created' })
+  return pb
+    .collection('fleet_costs')
+    .getFullList<FleetCostData>({ sort: '-created', expand: 'vehicle_id' })
 }
