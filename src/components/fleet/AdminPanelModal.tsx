@@ -417,6 +417,58 @@ export function AdminPanelModal({
                     />
                   </div>
                 </div>
+
+                <div className="border-t pt-6 mt-6">
+                  <h4 className="font-semibold text-slate-800 mb-4">
+                    Encargos Trabalhistas Padrão (%)
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div className="space-y-2">
+                      <Label>FGTS</Label>
+                      <Input
+                        type="number"
+                        step="0.1"
+                        value={settings.default_fgts || 8}
+                        onChange={(e) =>
+                          setSettings({ ...settings, default_fgts: Number(e.target.value) })
+                        }
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>13º Salário</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={settings.default_decimo || 8.33}
+                        onChange={(e) =>
+                          setSettings({ ...settings, default_decimo: Number(e.target.value) })
+                        }
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Férias</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={settings.default_ferias || 11.11}
+                        onChange={(e) =>
+                          setSettings({ ...settings, default_ferias: Number(e.target.value) })
+                        }
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>PIS</Label>
+                      <Input
+                        type="number"
+                        step="0.1"
+                        value={settings.default_pis || 1}
+                        onChange={(e) =>
+                          setSettings({ ...settings, default_pis: Number(e.target.value) })
+                        }
+                      />
+                    </div>
+                  </div>
+                </div>
               </TabsContent>
 
               <TabsContent value="audit" className="mt-0 animate-fade-in">

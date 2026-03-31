@@ -25,6 +25,12 @@ export interface Driver {
   encargos: DriverEncargos
 }
 
+export interface VehicleBreakdownOverrides {
+  depreciation?: number
+  diesel?: number
+  tires?: number
+}
+
 export interface Vehicle {
   id: string
   plate: string
@@ -48,6 +54,8 @@ export interface Vehicle {
   averbacao: number
   consulta: number
   satelite: number
+  estimatedKm: number
+  overrides: VehicleBreakdownOverrides
 }
 
 export interface Link {
@@ -87,6 +95,10 @@ export interface Settings {
   yellowMargin: number
   maxDas: number
   varCostMaxPercent?: number
+  defaultFgts: number
+  defaultDecimo: number
+  defaultFerias: number
+  defaultPis: number
 }
 
 export interface AlertData {
@@ -105,26 +117,38 @@ export interface FleetState {
   settings: Settings
 }
 
-export const createDriver = (): Driver => ({
-  id: `MOT-${Math.random().toString(36).substr(2, 6).toUpperCase()}`,
-  name: '',
-  cpf: '',
-  cnh: 'D',
-  baseSalary: 2500,
-  periculosidade: false,
-  vrDaily: 30,
-  vtMensal: 0,
-  cestaBasica: 150,
-  seguroVida: 50,
-  toxAnual: 120,
-  rat: 1,
-  encargos: {
-    fgts: 8,
-    ferias: 11.11,
-    decimo: 8.33,
-    pis: 1,
-  },
-})
+export const createDriver = (settings?: Settings): Driver => {
+  const baseSalary = 2500
+  const s =
+    settings ||
+    ({
+      defaultFgts: 8,
+      defaultDecimo: 8.33,
+      defaultFerias: 11.11,
+      defaultPis: 1,
+    } as Settings)
+
+  return {
+    id: `MOT-${Math.random().toString(36).substr(2, 6).toUpperCase()}`,
+    name: '',
+    cpf: '',
+    cnh: 'D',
+    baseSalary,
+    periculosidade: false,
+    vrDaily: 30,
+    vtMensal: 0,
+    cestaBasica: 150,
+    seguroVida: 50,
+    toxAnual: 120,
+    rat: 1,
+    encargos: {
+      fgts: baseSalary * ((s.defaultFgts || 8) / 100),
+      ferias: baseSalary * ((s.defaultFerias || 11.11) / 100),
+      decimo: baseSalary * ((s.defaultDecimo || 8.33) / 100),
+      pis: baseSalary * ((s.defaultPis || 1) / 100),
+    },
+  }
+}
 
 export const createVehicle = (): Vehicle => ({
   id: `VEI-${Math.random().toString(36).substr(2, 6).toUpperCase()}`,
@@ -149,11 +173,13 @@ export const createVehicle = (): Vehicle => ({
   averbacao: 300,
   consulta: 100,
   satelite: 150,
+  estimatedKm: 10000,
+  overrides: {},
 })
 
 const defaultInitialState: FleetState = {
-  drivers: [createDriver()],
-  vehicles: [createVehicle()],
+  drivers: [],
+  vehicles: [],
   links: [],
   hq: {
     iptu: 6000,
@@ -182,6 +208,10 @@ const defaultInitialState: FleetState = {
     minMargin: 15,
     yellowMargin: 25,
     maxDas: 20,
+    defaultFgts: 8,
+    defaultDecimo: 8.33,
+    defaultFerias: 11.11,
+    defaultPis: 1,
   },
 }
 
@@ -194,14 +224,30 @@ if (typeof window !== 'undefined') {
     if (saved) {
       const parsed = JSON.parse(saved)
       globalState = { ...defaultInitialState, ...parsed }
-      // Ensure complex objects like encargos exist on old saves
-      globalState.drivers = globalState.drivers.map((d) => ({
-        ...d,
-        encargos: d.encargos || { fgts: 8, ferias: 11.11, decimo: 8.33, pis: 1 },
+
+      globalState.drivers = globalState.drivers.map((d) => {
+        const e = d.encargos || { fgts: 8, ferias: 11.11, decimo: 8.33, pis: 1 }
+        let newE = { ...e }
+        if (newE.fgts <= 20) newE.fgts = (d.baseSalary || 2500) * (e.fgts / 100)
+        if (newE.ferias <= 20) newE.ferias = (d.baseSalary || 2500) * (e.ferias / 100)
+        if (newE.decimo <= 20) newE.decimo = (d.baseSalary || 2500) * (e.decimo / 100)
+        if (newE.pis <= 5) newE.pis = (d.baseSalary || 2500) * (e.pis / 100)
+        return { ...d, encargos: newE }
+      })
+
+      globalState.vehicles = globalState.vehicles.map((v) => ({
+        ...v,
+        estimatedKm: v.estimatedKm || 10000,
+        overrides: v.overrides || {},
       }))
+    } else {
+      globalState.drivers = [createDriver(globalState.settings)]
+      globalState.vehicles = [createVehicle()]
     }
   } catch (e) {
     console.error('Failed to load fleet calc state', e)
+    globalState.drivers = [createDriver(globalState.settings)]
+    globalState.vehicles = [createVehicle()]
   }
 }
 
@@ -251,12 +297,12 @@ const validarDadosCompletos = (s: FleetState): string[] => {
 
 const calcularCustoMotorista = (d: Driver, workingDays: number): number => {
   const base = d.baseSalary + (d.periculosidade ? d.baseSalary * 0.3 : 0)
-  const e = d.encargos || { fgts: 8, ferias: 11.11, decimo: 8.33, pis: 1 }
+  const e = d.encargos || { fgts: 0, ferias: 0, decimo: 0, pis: 0 }
 
-  const fgts = base * (e.fgts / 100)
-  const decimoTerceiro = base * (e.decimo / 100)
-  const ferias = base * (e.ferias / 100)
-  const pis = base * (e.pis / 100)
+  const fgts = e.fgts || 0
+  const decimoTerceiro = e.decimo || 0
+  const ferias = e.ferias || 0
+  const pis = e.pis || 0
   const ratVal = base * (d.rat / 100)
   const vrTotal = d.vrDaily * workingDays
   const toxAnualMensal = d.toxAnual / 12
@@ -276,13 +322,28 @@ const calcularCustoMotorista = (d: Driver, workingDays: number): number => {
   )
 }
 
-const calcularCustoVeiculo = (v: Vehicle, km: number) => {
-  const dep = Math.max(0, (v.purchaseValue - v.resaleValue) / 60)
+const calcularCustoVeiculo = (v: Vehicle, linkedKm: number) => {
+  const effectiveKm = linkedKm > 0 ? linkedKm : v.estimatedKm || 10000
+
+  const autoDep = Math.max(0, (v.purchaseValue - v.resaleValue) / 60)
+  const dep = v.overrides?.depreciation !== undefined ? v.overrides.depreciation : autoDep
+
   const fixed = (v.ipva + v.licenciamento + v.seguroCasco + v.rctrc + v.rcfdc) / 12
   const insurance = (v.seguroCasco + v.rctrc + v.rcfdc) / 12
-  const diesel = km > 0 ? (km / v.consumo) * v.dieselPrice : 0
-  const arla = v.usaArla ? diesel * 0.05 : 0
-  const pneus = km > 0 ? (v.pneusJogo / v.kmPneus) * km : 0
+
+  const autoDiesel = effectiveKm > 0 ? (effectiveKm / v.consumo) * v.dieselPrice : 0
+  const diesel = v.overrides?.diesel !== undefined ? v.overrides.diesel : autoDiesel
+
+  const autoArla = v.usaArla ? autoDiesel * 0.05 : 0
+  const arla = v.usaArla
+    ? v.overrides?.diesel !== undefined
+      ? v.overrides.diesel * 0.05
+      : autoArla
+    : 0
+
+  const autoPneus = effectiveKm > 0 ? (v.pneusJogo / v.kmPneus) * effectiveKm : 0
+  const pneus = v.overrides?.tires !== undefined ? v.overrides.tires : autoPneus
+
   const monthlyOps = v.manutencao + v.limpeza + v.averbacao + v.consulta + v.satelite
 
   const variable = diesel + arla + pneus + monthlyOps
@@ -529,6 +590,10 @@ export function useFleetCalculator() {
           maxDas: settings.max_das,
           workingDays: settings.working_days,
           varCostMaxPercent: settings.var_cost_max_percent || 60,
+          defaultFgts: settings.default_fgts || 8,
+          defaultDecimo: settings.default_decimo || 8.33,
+          defaultFerias: settings.default_ferias || 11.11,
+          defaultPis: settings.default_pis || 1,
         })
         if (settings.das_rate) {
           updateTaxes({
@@ -551,9 +616,30 @@ export function useFleetCalculator() {
   const updateSettings = (updates: Partial<Settings>) =>
     updateGlobal({ settings: { ...globalState.settings, ...updates } })
 
-  const addDriver = () => updateGlobal({ drivers: [...globalState.drivers, createDriver()] })
-  const updateDriver = (id: string, data: Partial<Driver>) =>
-    updateGlobal({ drivers: globalState.drivers.map((d) => (d.id === id ? { ...d, ...data } : d)) })
+  const addDriver = () =>
+    updateGlobal({ drivers: [...globalState.drivers, createDriver(globalState.settings)] })
+
+  const updateDriver = (id: string, data: Partial<Driver>) => {
+    updateGlobal({
+      drivers: globalState.drivers.map((d) => {
+        if (d.id !== id) return d
+        const newD = { ...d, ...data }
+
+        // Auto-recalculate encargos when baseSalary changes
+        if (data.baseSalary !== undefined) {
+          const s = globalState.settings
+          newD.encargos = {
+            fgts: newD.baseSalary * ((s.defaultFgts || 8) / 100),
+            decimo: newD.baseSalary * ((s.defaultDecimo || 8.33) / 100),
+            ferias: newD.baseSalary * ((s.defaultFerias || 11.11) / 100),
+            pis: newD.baseSalary * ((s.defaultPis || 1) / 100),
+          }
+        }
+        return newD
+      }),
+    })
+  }
+
   const removeDriver = (id: string) =>
     updateGlobal({
       drivers: globalState.drivers.filter((d) => d.id !== id),

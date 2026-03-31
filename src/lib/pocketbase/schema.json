@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-31T21:40:01.213Z",
+  "generatedAt": "2026-03-31T22:34:28.199Z",
   "collections": [
     {
       "name": "transzecao",
@@ -658,6 +658,30 @@
         },
         {
           "name": "cesta_basica",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "default_fgts",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "default_decimo",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "default_ferias",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "default_pis",
           "type": "number",
           "required": false,
           "system": false
