@@ -70,7 +70,9 @@ export function FleetCostsForm() {
             .catch(() => null)
           if (existing) await pb.collection('drivers').update(existing.id, payload)
           else await pb.collection('drivers').create(payload)
-        } catch (e) {}
+        } catch (e) {
+          console.error('Failed to upsert driver', e)
+        }
       }
 
       // Upsert vehicles
@@ -107,7 +109,9 @@ export function FleetCostsForm() {
             .catch(() => null)
           if (existing) await pb.collection('vehicles').update(existing.id, payload)
           else await pb.collection('vehicles').create(payload)
-        } catch (e) {}
+        } catch (e) {
+          console.error('Failed to upsert vehicle', e)
+        }
       }
 
       // Upsert vinculos
@@ -125,7 +129,9 @@ export function FleetCostsForm() {
             .catch(() => null)
           if (existing) await pb.collection('vinculos').update(existing.id, payload)
           else await pb.collection('vinculos').create(payload)
-        } catch (e) {}
+        } catch (e) {
+          console.error('Failed to upsert vinculo', e)
+        }
       }
     } catch (e) {
       console.error('Failed to sync masters', e)
