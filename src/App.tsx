@@ -19,6 +19,7 @@ import IA from './pages/IA'
 import Roteirizacao from './pages/Roteirizacao'
 import PortalCliente from './pages/PortalCliente'
 import PortalAdmin from './pages/PortalAdmin'
+import SupervisorApprovals from './pages/SupervisorApprovals'
 import { PortalProvider } from '@/stores/usePortalStore'
 
 const App = () => (
@@ -43,6 +44,7 @@ const App = () => (
             <Route path="/analytics" element={<Analytics />} />
             <Route path="/admin/logins" element={<LoginAdmin />} />
             <Route path="/admin/portal" element={<PortalAdmin />} />
+            <Route path="/supervisor/approvals" element={<SupervisorApprovals />} />
             <Route path="/ia" element={<IA />} />
             <Route path="/roteirizacao" element={<Roteirizacao />} />
           </Route>

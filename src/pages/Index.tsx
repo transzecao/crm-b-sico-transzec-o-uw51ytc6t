@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Users,
   TrendingUp,
@@ -10,7 +10,11 @@ import {
   BrainCircuit,
   Bell,
   Mail,
+  ClipboardCheck,
+  ChevronRight,
 } from 'lucide-react'
+import pb from '@/lib/pocketbase/client'
+import { useRealtime } from '@/hooks/use-realtime'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Table,
@@ -37,6 +41,65 @@ import { Link } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import { ConsultantPerformance } from '@/components/ConsultantPerformance'
 import { calculateAIProbability } from '@/utils/aiPredict'
+
+function PendingApprovalsShortcut({ role }: { role: string }) {
+  const isAuthorized = ['Acesso Master', 'Supervisor Comercial'].includes(role)
+  const [count, setCount] = useState(0)
+
+  const fetchCount = async () => {
+    try {
+      const res = await pb
+        .collection('leads')
+        .getList(1, 1, { filter: "status = 'pending_approval'" })
+      setCount(res.totalItems)
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
+  useEffect(() => {
+    if (isAuthorized) fetchCount()
+  }, [isAuthorized])
+
+  useRealtime('leads', () => {
+    if (isAuthorized) fetchCount()
+  })
+
+  if (!isAuthorized) return null
+
+  return (
+    <Link to="/supervisor/approvals" className="block mb-6">
+      <Card className="bg-slate-900 border-slate-800 shadow-sm hover:shadow-md transition-shadow cursor-pointer group relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+        <CardContent className="flex items-center justify-between p-4 sm:p-6 relative z-10">
+          <div className="flex items-center gap-4">
+            <div className="bg-blue-500/20 p-3 rounded-xl group-hover:bg-blue-500/30 transition-colors border border-blue-500/20">
+              <ClipboardCheck className="w-6 h-6 text-blue-400" />
+            </div>
+            <div>
+              <h3 className="text-white font-bold text-lg">Aprovações Pendentes</h3>
+              <p className="text-slate-400 text-sm hidden sm:block">
+                Gerencie novos cadastros aguardando liberação de acesso
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            {count > 0 ? (
+              <Badge className="bg-rose-500 hover:bg-rose-600 text-white px-3 py-1 text-sm font-bold shadow-sm shadow-rose-500/20 animate-pulse">
+                {count} aguardando
+              </Badge>
+            ) : (
+              <Badge className="bg-slate-800 text-slate-400 border-slate-700 px-3 py-1 text-sm font-medium">
+                0 aguardando
+              </Badge>
+            )}
+            <ChevronRight className="w-5 h-5 text-slate-600 group-hover:text-slate-400 group-hover:translate-x-1 transition-all" />
+          </div>
+        </CardContent>
+      </Card>
+    </Link>
+  )
+}
 
 function SupervisorNotificationCenter({ role }: { role: Role }) {
   const isComercial = role === 'Supervisor Comercial' || role === 'Acesso Master'
@@ -191,6 +254,8 @@ export default function Index() {
           Visão central do sistema e status das operações.
         </p>
       </div>
+
+      <PendingApprovalsShortcut role={state.role} />
 
       <SupervisorNotificationCenter role={state.role} />
       {['Acesso Master', 'Supervisor Comercial', 'Funcionário Comercial'].includes(state.role) && (

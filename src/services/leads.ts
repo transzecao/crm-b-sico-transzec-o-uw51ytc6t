@@ -15,6 +15,17 @@ export const createLead = async (data: any) => {
   return pb.collection('leads').create(data)
 }
 
+export const getPendingApprovals = async () => {
+  return pb.collection('leads').getFullList({
+    filter: "status = 'pending_approval'",
+    sort: '-created',
+  })
+}
+
+export const updateLeadStatus = async (id: string, status: string) => {
+  return pb.collection('leads').update(id, { status })
+}
+
 export const getMessagesByLead = async (leadId: string) => {
   const records = await pb.collection('whatsapp_messages').getFullList({
     filter: `lead_id = '${leadId}'`,
