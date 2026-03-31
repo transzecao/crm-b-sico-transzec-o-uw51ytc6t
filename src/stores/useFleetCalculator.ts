@@ -188,7 +188,9 @@ export function useFleetCalculator() {
           workingDays: settings.working_days,
         })
       }
-    } catch {}
+    } catch (error) {
+      console.error('Failed to load fleet settings', error)
+    }
   }
 
   const update = (updates: Partial<FleetState>) => {
