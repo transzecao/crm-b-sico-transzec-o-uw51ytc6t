@@ -4,7 +4,6 @@ import { Wallet } from 'lucide-react'
 import { FleetCostsForm } from '@/components/fleet/FleetCostsForm'
 import { FleetDashboard } from '@/components/fleet/FleetDashboard'
 import { FleetVehicles } from '@/components/fleet/FleetVehicles'
-import { FleetAdmin } from '@/components/fleet/FleetAdmin'
 import { Settings } from 'lucide-react'
 
 export default function ControleGastos() {
@@ -48,12 +47,6 @@ export default function ControleGastos() {
           >
             Veículos
           </TabsTrigger>
-          <TabsTrigger
-            value="admin"
-            className="data-[state=active]:bg-primary data-[state=active]:text-white flex-shrink-0 gap-2"
-          >
-            <Settings className="w-4 h-4" /> Parâmetros
-          </TabsTrigger>
         </TabsList>
         <TabsContent value="lancamento">
           <FleetCostsForm />
@@ -63,9 +56,6 @@ export default function ControleGastos() {
         </TabsContent>
         <TabsContent value="veiculos">
           <FleetVehicles />
-        </TabsContent>
-        <TabsContent value="admin">
-          <FleetAdmin />
         </TabsContent>
       </Tabs>
     </div>

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-31T19:42:28.371Z",
+  "generatedAt": "2026-03-31T20:11:26.243Z",
   "collections": [
     {
       "name": "transzecao",
@@ -493,6 +493,54 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "var_cost_max_percent",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "das_rate",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "cte_cost",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "docs_count",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "taxas_fiscal",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "dead_km",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "vr_daily",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "cesta_basica",
+          "type": "number",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": []

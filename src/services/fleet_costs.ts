@@ -50,6 +50,16 @@ export const getFleetSettings = async () => {
   }
 }
 
+export const getAuditLogs = async () => {
+  try {
+    return await pb
+      .collection('settings_audit_logs')
+      .getFullList({ sort: '-created', expand: 'user_id' })
+  } catch {
+    return []
+  }
+}
+
 export const updateFleetSettings = async (id: string, data: any) => {
   return pb.collection('fleet_settings').update(id, data)
 }

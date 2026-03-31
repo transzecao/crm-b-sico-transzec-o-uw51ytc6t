@@ -31,11 +31,12 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import useCrmStore, { Role } from '@/stores/useCrmStore'
-
 import { useRealtime } from '@/hooks/use-realtime'
+import { AdminPanelModal } from '@/components/fleet/AdminPanelModal'
 
 export function AppHeader() {
   const { state, updateState } = useCrmStore()
+  const [isAdminModalOpen, setIsAdminModalOpen] = useState(false)
   const [notifications, setNotifications] = useState<
     { id: string; title: string; text: string; icon?: React.ReactNode }[]
   >([
@@ -143,6 +144,17 @@ export function AppHeader() {
               </Link>
             </Button>
           )}
+          {canSeeAnalytics && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsAdminModalOpen(true)}
+              className="text-white border-white/30 hover:bg-white/10 hover:text-white h-8 px-3 bg-transparent"
+            >
+              <Settings className="w-3.5 h-3.5 mr-1" />
+              Modo Administrador
+            </Button>
+          )}
         </nav>
       </div>
 
@@ -239,6 +251,7 @@ export function AppHeader() {
           </DropdownMenu>
         </div>
       </div>
+      <AdminPanelModal open={isAdminModalOpen} onOpenChange={setIsAdminModalOpen} />
     </header>
   )
 }

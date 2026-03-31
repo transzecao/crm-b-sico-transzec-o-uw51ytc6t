@@ -78,6 +78,7 @@ export interface Settings {
   minMargin: number
   yellowMargin: number
   maxDas: number
+  varCostMaxPercent?: number
 }
 
 export interface AlertData {
@@ -238,6 +239,7 @@ const calcularCustoMotorista = (d: Driver, workingDays: number): number => {
 const calcularCustoVeiculo = (v: Vehicle, km: number) => {
   const dep = (v.purchaseValue - v.resaleValue) / 60
   const fixed = (v.ipva + v.licenciamento + v.seguroCasco + v.rctrc + v.rcfdc) / 12
+  const insurance = (v.seguroCasco + v.rctrc + v.rcfdc) / 12
   const diesel = km > 0 ? (km / v.consumo) * v.dieselPrice : 0
   const arla = v.usaArla ? diesel * 0.05 : 0
   const pneus = km > 0 ? (v.pneusJogo / v.kmPneus) * km : 0
@@ -246,7 +248,7 @@ const calcularCustoVeiculo = (v: Vehicle, km: number) => {
   const variable = diesel + arla + pneus + monthlyOps
   const total = dep + fixed + variable
 
-  return { total, variable }
+  return { total, variable, dep, fixed, insurance, diesel, pneus, monthlyOps }
 }
 
 // AC 4: Headquarters Cost Logic
@@ -278,10 +280,19 @@ const calcularCPK = (s: FleetState) => {
 
   let vehicleTotal = 0
   let totalVariableCosts = 0
+  let vehicleDepreciationTotal = 0
+  let vehicleInsuranceTotal = 0
+  let vehicleDieselTotal = 0
+  let vehicleTiresTotal = 0
+
   s.vehicles.forEach((v) => {
     const cost = calcularCustoVeiculo(v, vehicleKms[v.id] || 0)
     vehicleTotal += cost.total
     totalVariableCosts += cost.variable
+    vehicleDepreciationTotal += cost.dep
+    vehicleInsuranceTotal += cost.insurance
+    vehicleDieselTotal += cost.diesel
+    vehicleTiresTotal += cost.pneus
   })
 
   const hqTotal = calcularCustoSedeTotal(s.hq)
@@ -409,16 +420,37 @@ const calcularCPK = (s: FleetState) => {
 
   // Persist result for Admin validations
   if (typeof window !== 'undefined') {
-    localStorage.setItem(
-      'ultimoResultadoCPK',
-      JSON.stringify({
-        cpk: finalCpk,
-        margin: currentMargin,
-        faturamento,
-        dasCost,
-        dasPercent,
-      }),
-    )
+    const resultToSave = {
+      id: Date.now().toString(),
+      date: new Date().toISOString(),
+      cpk: finalCpk,
+      margin: currentMargin,
+      faturamento,
+      dasCost,
+      dasPercent,
+      costs: {
+        drivers: driverTotal,
+        hq: hqTotal,
+        structuralTaxes: baseTaxes,
+        depreciation: vehicleDepreciationTotal,
+        insurance: vehicleInsuranceTotal,
+        diesel: vehicleDieselTotal,
+        tires: vehicleTiresTotal,
+        deadKm: deadKmCost,
+        otherVariable:
+          totalVariableCosts - vehicleDieselTotal - vehicleTiresTotal - vehicleInsuranceTotal,
+      },
+    }
+
+    localStorage.setItem('ultimoResultadoCPK', JSON.stringify(resultToSave))
+
+    const historyStr = localStorage.getItem('cpkHistoricoCalculos')
+    const history = historyStr ? JSON.parse(historyStr) : []
+    history.push(resultToSave)
+    if (history.length > 50) history.shift()
+    localStorage.setItem('cpkHistoricoCalculos', JSON.stringify(history))
+
+    window.dispatchEvent(new Event('cpkHistoryUpdated'))
   }
 
   return {
@@ -464,7 +496,17 @@ export function useFleetCalculator() {
           yellowMargin: settings.yellow_margin,
           maxDas: settings.max_das,
           workingDays: settings.working_days,
+          varCostMaxPercent: settings.var_cost_max_percent || 60,
         })
+        if (settings.das_rate) {
+          updateTaxes({
+            dasRate: settings.das_rate,
+            cteCost: settings.cte_cost,
+            docsCount: settings.docs_count,
+            taxasFiscal: settings.taxas_fiscal,
+            deadKm: settings.dead_km,
+          })
+        }
       }
     } catch (error) {
       console.error('Failed to load fleet settings', error)
