@@ -30,14 +30,14 @@ export function TaxesTab() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-6">
         <div className="space-y-2">
-          <Label className="text-primary font-bold">Faturamento Total Estimado (R$)</Label>
+          <Label className="text-primary font-bold">Margem de Lucro Alvo (%)</Label>
           <Input
             type="number"
-            value={taxes.revenue}
-            onChange={(e) => updateTaxes({ revenue: Number(e.target.value) })}
+            value={taxes.targetMargin}
+            onChange={(e) => updateTaxes({ targetMargin: Number(e.target.value) })}
             className="font-bold text-lg h-12"
           />
-          <p className="text-xs text-slate-500">Usado para cálculo da margem líquida.</p>
+          <p className="text-xs text-slate-500">Usado para projetar o faturamento necessário.</p>
         </div>
 
         <div className="space-y-4 p-5 bg-slate-50 border border-slate-200 rounded-xl md:col-span-2 xl:col-span-3">

@@ -26,7 +26,9 @@ export function FleetCostsForm() {
     driverTotal,
     vehicleTotal,
     hqTotal,
-    taxesTotal,
+    baseTaxes,
+    dasCost,
+    faturamento,
     finalTotalCost,
     finalCpk,
     currentMargin,
@@ -74,14 +76,19 @@ export function FleetCostsForm() {
         fixed_depreciation: 0,
         fixed_tracking: 0,
         fixed_warehouse: hqTotal,
-        var_fuel: 0,
+        var_fuel: vehicleTotal,
         var_arla: 0,
         var_maintenance: 0,
         var_tires: 0,
         var_washing: 0,
         km_initial: 0,
         km_final: totalKm,
-        details: data,
+        details: {
+          ...data,
+          moduleTotals: { driverTotal, vehicleTotal, hqTotal, baseTaxes, dasCost },
+          faturamento,
+          margem: currentMargin,
+        },
         total_cost: finalTotalCost,
         estimated_km: totalKm,
         cpk: finalCpk,
@@ -237,8 +244,12 @@ export function FleetCostsForm() {
                 <span className="text-slate-100">{fmt(hqTotal)}</span>
               </div>
               <div className="flex justify-between border-b border-slate-700/50 pb-2.5">
-                <span className="text-slate-400">Impostos & Fiscal (DAS incl.)</span>
-                <span className="text-slate-100">{fmt(taxesTotal)}</span>
+                <span className="text-slate-400">Impostos Base (CT-e/Fiscal)</span>
+                <span className="text-slate-100">{fmt(baseTaxes)}</span>
+              </div>
+              <div className="flex justify-between border-b border-slate-700/50 pb-2.5">
+                <span className="text-slate-400">DAS Simples Nacional</span>
+                <span className="text-slate-100">{fmt(dasCost)}</span>
               </div>
 
               <div className="flex justify-between items-center bg-slate-800 p-3 rounded-lg mt-4 shadow-inner">

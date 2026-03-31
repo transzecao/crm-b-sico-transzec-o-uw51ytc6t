@@ -44,19 +44,29 @@ export function FleetDashboard() {
       cpk: Number((d.cpk || (d.km_final > 0 ? (d.total_cost || 0) / d.km_final : 0)).toFixed(2)),
       plate: d.expand?.vehicle_id?.plate || 'Geral',
       total_cost: d.total_cost || 0,
-      margin: d.details?.revenue
-        ? Number((((d.details.revenue - (d.total_cost || 0)) / d.details.revenue) * 100).toFixed(2))
-        : 0,
+      margin: d.details?.margem
+        ? Number(d.details.margem.toFixed(2))
+        : d.details?.faturamento
+          ? Number(
+              (
+                ((d.details.faturamento - (d.total_cost || 0)) / d.details.faturamento) *
+                100
+              ).toFixed(2),
+            )
+          : 0,
     }))
     .reverse()
 
   const latestDetails = data[0]?.details || {}
-  const pieData = latestDetails.baseSalary
+  const pieData = latestDetails.moduleTotals
     ? [
-        { name: 'Motorista', value: latestDetails.baseSalary * 1.5 },
-        { name: 'Veículo', value: 5000 },
-        { name: 'Sede', value: 2000 },
-        { name: 'Impostos', value: 1500 },
+        { name: 'Motoristas', value: latestDetails.moduleTotals.driverTotal },
+        { name: 'Veículos', value: latestDetails.moduleTotals.vehicleTotal },
+        { name: 'Sede', value: latestDetails.moduleTotals.hqTotal },
+        {
+          name: 'Impostos',
+          value: latestDetails.moduleTotals.baseTaxes + latestDetails.moduleTotals.dasCost,
+        },
       ]
     : [{ name: 'Dados', value: 100 }]
 

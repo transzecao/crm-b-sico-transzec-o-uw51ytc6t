@@ -62,7 +62,7 @@ export interface HQ {
 }
 
 export interface Taxes {
-  revenue: number
+  targetMargin: number
   dasRate: number
   useFaixa: boolean
   faixa: string
@@ -145,7 +145,7 @@ const initialState: FleetState = {
     docas: 300,
   },
   taxes: {
-    revenue: 50000,
+    targetMargin: 30,
     dasRate: 12,
     useFaixa: false,
     faixa: 'Faixa 1',
@@ -165,6 +165,161 @@ const initialState: FleetState = {
 
 let globalState = { ...initialState }
 const listeners = new Set<(state: FleetState) => void>()
+
+// AC 1: Data Integrity Check
+const validarDadosCompletos = (s: FleetState): string[] => {
+  const errors: string[] = []
+  if (s.drivers.length === 0) errors.push('Adicione pelo menos 1 motorista.')
+  if (s.vehicles.length === 0) errors.push('Adicione pelo menos 1 veículo.')
+  if (s.links.length === 0) errors.push('Adicione pelo menos 1 vínculo.')
+
+  s.drivers.forEach((d, i) => {
+    if (!d.name) errors.push(`Motorista ${i + 1}: Nome obrigatório.`)
+    if (!isValidCpf(d.cpf)) errors.push(`Motorista ${i + 1}: CPF inválido.`)
+    if (d.baseSalary <= 0) errors.push(`Motorista ${i + 1}: Salário Base deve ser maior que zero.`)
+  })
+
+  s.vehicles.forEach((v, i) => {
+    if (!isValidPlate(v.plate)) errors.push(`Veículo ${i + 1}: Placa inválida.`)
+    if (v.purchaseValue <= 0) errors.push(`Veículo ${i + 1}: Valor de Compra inválido.`)
+    if (v.resaleValue < 0) errors.push(`Veículo ${i + 1}: Valor de Revenda inválido.`)
+    if (v.consumo < 1 || v.consumo > 20)
+      errors.push(`Veículo ${i + 1}: Consumo deve estar entre 1 e 20 km/L.`)
+    if (v.kmPneus < 5000 || v.kmPneus > 500000)
+      errors.push(`Veículo ${i + 1}: KM Pneus estimado deve estar entre 5k e 500k.`)
+  })
+
+  if (s.hq.iptu < 0) errors.push('Sede: IPTU obrigatório ou inválido.')
+  if (s.hq.aluguel < 0) errors.push('Sede: Aluguel obrigatório ou inválido.')
+  if (s.taxes.dasRate < 0) errors.push('Impostos: Alíquota DAS inválida.')
+
+  const totalKm = s.links.reduce((acc, l) => acc + l.km, 0)
+  if (s.links.length > 0 && totalKm <= 0) {
+    errors.push('O KM total mensal rodado deve ser maior que zero (Alerta Vermelho).')
+  }
+
+  return errors
+}
+
+// AC 2: Driver Cost Logic
+const calcularCustoMotorista = (d: Driver, workingDays: number): number => {
+  const base = d.baseSalary + (d.periculosidade ? d.baseSalary * 0.3 : 0)
+  const fgts = base * 0.08
+  const decimoTerceiro = base / 12
+  const ferias = (base / 12) * 1.333
+  const pis = base * 0.01
+  const ratVal = base * (d.rat / 100)
+  const vrTotal = d.vrDaily * workingDays
+  const toxAnualMensal = d.toxAnual / 12
+
+  return (
+    base +
+    fgts +
+    decimoTerceiro +
+    ferias +
+    pis +
+    ratVal +
+    vrTotal +
+    d.vtMensal +
+    d.cestaBasica +
+    d.seguroVida +
+    toxAnualMensal
+  )
+}
+
+// AC 3: Vehicle Cost Logic
+const calcularCustoVeiculo = (v: Vehicle, km: number): number => {
+  const dep = (v.purchaseValue - v.resaleValue) / 60
+  const fixed = (v.ipva + v.licenciamento + v.seguroCasco + v.rctrc + v.rcfdc) / 12
+  const diesel = km > 0 ? (km / v.consumo) * v.dieselPrice : 0
+  const arla = v.usaArla ? diesel * 0.05 : 0
+  const pneus = km > 0 ? (v.pneusJogo / v.kmPneus) * km : 0
+  const monthlyOps = v.manutencao + v.limpeza + v.averbacao + v.consulta + v.satelite
+
+  return dep + fixed + diesel + arla + pneus + monthlyOps
+}
+
+// AC 4: Headquarters Cost Logic
+const calcularCustoSedeTotal = (hq: HQ): number => {
+  return (
+    (hq.iptu + hq.avcb + hq.seguroPatrimonial) / 12 +
+    hq.aluguel +
+    hq.agua +
+    hq.luz +
+    hq.internet +
+    hq.telefone +
+    hq.docas
+  )
+}
+
+// AC 5 & 6: Orchestration and Finalization
+const calcularCPK = (s: FleetState) => {
+  const errors = validarDadosCompletos(s)
+  const workingDays = s.settings.workingDays || 22
+
+  const vehicleKms: Record<string, number> = {}
+  let totalKm = 0
+  s.links.forEach((l) => {
+    vehicleKms[l.vehicleId] = (vehicleKms[l.vehicleId] || 0) + l.km
+    totalKm += l.km
+  })
+
+  const driverTotal = s.drivers.reduce((acc, d) => acc + calcularCustoMotorista(d, workingDays), 0)
+  const vehicleTotal = s.vehicles.reduce(
+    (acc, v) => acc + calcularCustoVeiculo(v, vehicleKms[v.id] || 0),
+    0,
+  )
+  const hqTotal = calcularCustoSedeTotal(s.hq)
+
+  // HQ allocated per link (Insight)
+  const hqPerLink = s.links.length > 0 ? hqTotal / s.links.length : 0
+
+  const baseTaxes = s.taxes.cteCost * s.taxes.docsCount + s.taxes.taxasFiscal / 12
+  const totalBaseCost = driverTotal + vehicleTotal + hqTotal + baseTaxes
+
+  // Ensure margin is bounded to avoid div by zero
+  const targetMargin = Math.max(0, Math.min(99, s.taxes.targetMargin || 30))
+  const faturamento = totalBaseCost / (1 - targetMargin / 100)
+  const dasCost = faturamento * (s.taxes.dasRate / 100)
+
+  const baseCostWithDas = totalBaseCost + dasCost
+  const baseCpk = totalKm > 0 ? baseCostWithDas / totalKm : 0
+
+  const deadKmCost = s.taxes.deadKm * baseCpk
+  const finalTotalCost = baseCostWithDas + deadKmCost
+  const finalCpk = totalKm > 0 ? finalTotalCost / totalKm : 0
+
+  const currentMargin = faturamento > 0 ? ((faturamento - finalTotalCost) / faturamento) * 100 : 0
+
+  let cpkStatus = 'green'
+  if (finalCpk > s.settings.maxCpk) cpkStatus = 'red'
+  else if (finalCpk > s.settings.maxCpk * 0.9) cpkStatus = 'yellow'
+
+  let marginStatus = 'green'
+  if (currentMargin < s.settings.minMargin) marginStatus = 'red'
+  else if (currentMargin < s.settings.yellowMargin) marginStatus = 'yellow'
+
+  return {
+    errors,
+    totalKm,
+    driverTotal,
+    vehicleTotal,
+    hqTotal,
+    hqPerLink,
+    baseTaxes,
+    totalBaseCost,
+    faturamento,
+    dasCost,
+    baseCpk,
+    deadKmCost,
+    finalTotalCost,
+    finalCpk,
+    currentMargin,
+    cpkStatus,
+    marginStatus,
+    dataCalculo: new Date().toISOString(),
+  }
+}
 
 export function useFleetCalculator() {
   const [state, setState] = useState(globalState)
@@ -231,111 +386,11 @@ export function useFleetCalculator() {
     })
   const removeLink = (id: string) => update({ links: globalState.links.filter((l) => l.id !== id) })
 
-  const s = state
-
-  const errors: string[] = []
-  if (s.drivers.length === 0) errors.push('Adicione pelo menos 1 motorista.')
-  if (s.vehicles.length === 0) errors.push('Adicione pelo menos 1 veículo.')
-  if (s.links.length === 0) errors.push('Adicione pelo menos 1 vínculo.')
-
-  s.drivers.forEach((d, i) => {
-    if (!d.name) errors.push(`Motorista ${i + 1}: Nome obrigatório.`)
-    if (!isValidCpf(d.cpf)) errors.push(`Motorista ${i + 1}: CPF inválido.`)
-    if (d.baseSalary <= 0) errors.push(`Motorista ${i + 1}: Salário Base deve ser maior que zero.`)
-  })
-
-  s.vehicles.forEach((v, i) => {
-    if (!isValidPlate(v.plate)) errors.push(`Veículo ${i + 1}: Placa inválida.`)
-    if (v.purchaseValue <= 0) errors.push(`Veículo ${i + 1}: Valor de Compra inválido.`)
-    if (v.resaleValue <= 0) errors.push(`Veículo ${i + 1}: Valor de Revenda inválido.`)
-    if (v.consumo < 1 || v.consumo > 20)
-      errors.push(`Veículo ${i + 1}: Consumo deve estar entre 1 e 20 km/L.`)
-    if (v.kmPneus < 50000 || v.kmPneus > 500000)
-      errors.push(`Veículo ${i + 1}: KM Pneus estimado deve estar entre 50k e 500k.`)
-  })
-
-  if (s.hq.iptu <= 0) errors.push('Sede: IPTU obrigatório.')
-  if (s.hq.aluguel <= 0) errors.push('Sede: Aluguel obrigatório.')
-  if (s.hq.seguroPatrimonial <= 0) errors.push('Sede: Seguro Patrimonial obrigatório.')
-  if (s.taxes.dasRate <= 0) errors.push('Impostos: Alíquota DAS obrigatória.')
-
-  const driverCosts = s.drivers.map((d) => {
-    const base = d.baseSalary + (d.periculosidade ? d.baseSalary * 0.3 : 0)
-    const fgts = base * 0.08
-    const decimoTerceiro = base / 12
-    const ferias = (base / 12) * 1.333
-    const pis = base * 0.01
-    const ratVal = base * (d.rat / 100)
-    const vrTotal = d.vrDaily * s.settings.workingDays
-    return (
-      base +
-      fgts +
-      decimoTerceiro +
-      ferias +
-      pis +
-      ratVal +
-      vrTotal +
-      d.vtMensal +
-      d.cestaBasica +
-      d.seguroVida +
-      d.toxAnual / 12
-    )
-  })
-  const driverTotal = driverCosts.reduce((a, b) => a + b, 0)
-
-  const vehicleKms: Record<string, number> = {}
-  let totalKm = 0
-  s.links.forEach((l) => {
-    vehicleKms[l.vehicleId] = (vehicleKms[l.vehicleId] || 0) + l.km
-    totalKm += l.km
-  })
-
-  const vehicleCosts = s.vehicles.map((v) => {
-    const km = vehicleKms[v.id] || 0
-    const dep = (v.purchaseValue - v.resaleValue) / 60
-    const fixed = (v.ipva + v.licenciamento + v.seguroCasco + v.rctrc + v.rcfdc) / 12
-    const diesel = km > 0 ? (km / v.consumo) * v.dieselPrice : 0
-    const pneus = km > 0 ? (v.pneusJogo / v.kmPneus) * km : 0
-    const arla = v.usaArla ? diesel * 0.05 : 0
-    const monthly = v.manutencao + v.limpeza + v.averbacao + v.consulta + v.satelite
-    return dep + fixed + diesel + pneus + arla + monthly
-  })
-  const vehicleTotal = vehicleCosts.reduce((a, b) => a + b, 0)
-
-  const hqTotal =
-    (s.hq.iptu + s.hq.avcb + s.hq.seguroPatrimonial) / 12 +
-    s.hq.aluguel +
-    s.hq.agua +
-    s.hq.luz +
-    s.hq.internet +
-    s.hq.telefone +
-    s.hq.docas
-
-  const dasCost = s.taxes.revenue * (s.taxes.dasRate / 100)
-  const cteCost = s.taxes.cteCost * s.taxes.docsCount
-  const fiscalizacaoMonthly = s.taxes.taxasFiscal / 12
-  const taxesTotal = dasCost + cteCost + fiscalizacaoMonthly
-
-  const totalBaseCost = driverTotal + vehicleTotal + hqTotal + taxesTotal
-  const cpk = totalKm > 0 ? totalBaseCost / totalKm : 0
-  const deadKmCost = s.taxes.deadKm * cpk
-  const finalTotalCost = totalBaseCost + deadKmCost
-  const finalCpk = totalKm > 0 ? finalTotalCost / totalKm : 0
-
-  const currentMargin =
-    s.taxes.revenue > 0 ? ((s.taxes.revenue - finalTotalCost) / s.taxes.revenue) * 100 : 0
-
-  let cpkStatus = 'green'
-  if (finalCpk > s.settings.maxCpk) cpkStatus = 'red'
-  else if (finalCpk > s.settings.maxCpk * 0.9) cpkStatus = 'yellow'
-
-  let marginStatus = 'green'
-  if (currentMargin < s.settings.minMargin) marginStatus = 'red'
-  else if (currentMargin < s.settings.yellowMargin) marginStatus = 'yellow'
+  const calculations = calcularCPK(state)
 
   return {
     data: state,
-    errors,
+    errors: calculations.errors,
     updateHQ,
     updateTaxes,
     updateSettings,
@@ -348,20 +403,6 @@ export function useFleetCalculator() {
     addLink,
     removeLink,
     loadSettings,
-    calculations: {
-      totalKm,
-      driverTotal,
-      vehicleTotal,
-      hqTotal,
-      taxesTotal,
-      totalBaseCost,
-      deadKmCost,
-      finalTotalCost,
-      cpk,
-      finalCpk,
-      currentMargin,
-      cpkStatus,
-      marginStatus,
-    },
+    calculations,
   }
 }
