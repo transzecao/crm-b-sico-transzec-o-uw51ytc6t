@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-31T21:03:49.168Z",
+  "generatedAt": "2026-03-31T21:40:01.213Z",
   "collections": [
     {
       "name": "transzecao",
@@ -376,6 +376,126 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "local_id",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "purchase_value",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "resale_value",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "ipva",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "licenciamento",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "seguro_casco",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "rctrc",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "rcfdc",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "consumo",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "diesel_price",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "pneus_jogo",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "km_pneus",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "manutencao",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "usa_arla",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "limpeza",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "averbacao",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "consulta",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "satelite",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "year",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "vehicle_type",
+          "type": "text",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": ["CREATE UNIQUE INDEX idx_vehicles_plate ON vehicles (plate)"]
@@ -603,6 +723,164 @@
         }
       ],
       "indexes": []
+    },
+    {
+      "name": "drivers",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": "@request.auth.id != ''",
+        "update": "@request.auth.id != ''",
+        "delete": "@request.auth.id != ''"
+      },
+      "fields": [
+        {
+          "name": "local_id",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "name",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "cpf",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "cnh",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "base_salary",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "periculosidade",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "vr_daily",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "vt_mensal",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "cesta_basica",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "seguro_vida",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "tox_anual",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "rat",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "encargos",
+          "type": "json",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": ["CREATE UNIQUE INDEX idx_drivers_local_id ON drivers (local_id)"]
+    },
+    {
+      "name": "vinculos",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": "@request.auth.id != ''",
+        "update": "@request.auth.id != ''",
+        "delete": "@request.auth.id != ''"
+      },
+      "fields": [
+        {
+          "name": "local_id",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "driver_local_id",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "vehicle_local_id",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "km_mensal",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": ["CREATE UNIQUE INDEX idx_vinculos_local_id ON vinculos (local_id)"]
     }
   ]
 }

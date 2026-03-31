@@ -25,7 +25,6 @@ import { Button } from '@/components/ui/button'
 import {
   Trash2,
   FileJson,
-  Camera,
   AlertCircle,
   Download,
   FileText,
@@ -33,6 +32,9 @@ import {
   Image as ImageIcon,
   Database,
   FileBarChart,
+  AlertTriangle,
+  CheckCircle,
+  XCircle,
 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { format } from 'date-fns'
@@ -75,6 +77,15 @@ export function FleetDashboard() {
     dlAnchorElem.setAttribute('href', dataStr)
     dlAnchorElem.setAttribute('download', 'historico_calculos_cpk.json')
     dlAnchorElem.click()
+  }
+
+  const exportSingleJSON = (data: any, filename: string) => {
+    const dataStr =
+      'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(data, null, 2))
+    const a = document.createElement('a')
+    a.href = dataStr
+    a.download = filename
+    a.click()
   }
 
   const exportChartAsPNG = (svgId: string, filename: string) => {
@@ -450,13 +461,37 @@ export function FleetDashboard() {
     )
   }
 
+  // Dynamic evaluation to reconstruct alerts for PDF if needed
+  let alertsForPdf: { text: string; color: string }[] = []
+  if (latest && latest.fullState?.settings) {
+    if (latest.cpk > latest.fullState.settings.maxCpk) {
+      alertsForPdf.push({ text: `CPK Crítico: R$ ${latest.cpk.toFixed(2)}/km`, color: '#dc3545' })
+    } else if (latest.cpk > latest.fullState.settings.maxCpk * 0.9) {
+      alertsForPdf.push({ text: `CPK em Alerta: R$ ${latest.cpk.toFixed(2)}/km`, color: '#ffc107' })
+    }
+
+    if (latest.margin < latest.fullState.settings.minMargin) {
+      alertsForPdf.push({ text: `Margem Crítica: ${latest.margin.toFixed(2)}%`, color: '#dc3545' })
+    } else if (latest.margin < latest.fullState.settings.yellowMargin) {
+      alertsForPdf.push({
+        text: `Margem em Alerta: ${latest.margin.toFixed(2)}%`,
+        color: '#ffc107',
+      })
+    }
+  }
+
   return (
     <div className="space-y-6 animate-fade-in pb-12" id="resultadosSection">
-      <div className="bg-[#e9f7ef] border-l-4 border-[#28a745] p-5 rounded-r-xl shadow-sm print:hidden mb-6">
-        <h3 className="text-[#155724] font-semibold text-lg mb-4 flex items-center gap-2">
-          <Download className="w-5 h-5" /> Exportar Relatórios e Dados
-        </h3>
-        <div className="flex flex-col md:flex-row flex-wrap gap-3">
+      <div className="bg-[#e9f7ef] border-l-4 border-[#28a745] p-5 rounded-r-xl shadow-sm print:hidden mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h3 className="text-[#155724] font-semibold text-lg flex items-center gap-2">
+            <Download className="w-5 h-5" /> Exportar Relatórios e Dados
+          </h3>
+          <p className="text-sm text-[#155724] opacity-80 mt-1">
+            Gere relatórios executivos ou extraia os dados puros para análise externa.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
           <Button
             onClick={() => handleExportPDF('completo')}
             className="bg-[#28a745] hover:bg-[#218838] text-white"
@@ -464,54 +499,55 @@ export function FleetDashboard() {
             <FileText className="w-4 h-4 mr-2" /> PDF Completo
           </Button>
           <Button
-            onClick={() => handleExportPDF('resumido')}
-            className="bg-[#28a745] hover:bg-[#218838] text-white"
-          >
-            <FileText className="w-4 h-4 mr-2" /> PDF Resumido
-          </Button>
-          <Button
-            onClick={() => handleExportPDF('graficos')}
-            className="bg-[#28a745] hover:bg-[#218838] text-white"
-          >
-            <FileBarChart className="w-4 h-4 mr-2" /> Gráficos PDF
-          </Button>
-          <Button
             onClick={handleExportExcel}
             className="bg-[#17a2b8] hover:bg-[#138496] text-white"
           >
-            <FileSpreadsheet className="w-4 h-4 mr-2" /> Excel Completo
+            <FileSpreadsheet className="w-4 h-4 mr-2" /> Excel
           </Button>
           <Button
             variant="outline"
             className="border-yellow-400 text-yellow-700 hover:bg-yellow-50 bg-white"
             onClick={exportAllPNGs}
           >
-            <ImageIcon className="w-4 h-4 mr-2" /> Imagens PNG
+            <ImageIcon className="w-4 h-4 mr-2" /> Gráficos
           </Button>
           <Button
             variant="secondary"
             className="bg-[#6c757d] hover:bg-[#5a6268] text-white"
             onClick={exportJSON}
           >
-            <Database className="w-4 h-4 mr-2" /> Dados Gráficos (JSON)
-          </Button>
-          <Button
-            variant="outline"
-            className="border-red-200 text-red-700 hover:bg-red-50 bg-white ml-auto"
-            onClick={clearHistory}
-          >
-            <Trash2 className="w-4 h-4 mr-2" /> Limpar Histórico
+            <Database className="w-4 h-4 mr-2" /> JSON Histórico
           </Button>
         </div>
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6" id="chart-container-section">
         <Card>
-          <CardHeader>
-            <CardTitle>Composição de Custos</CardTitle>
-            <CardDescription>Visão macro da estrutura de custos (%)</CardDescription>
+          <CardHeader className="flex flex-row items-start justify-between pb-2 border-b border-slate-100 mb-4">
+            <div>
+              <CardTitle>Composição de Custos</CardTitle>
+              <CardDescription>Visão macro da estrutura de custos (%)</CardDescription>
+            </div>
+            <div className="flex gap-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => exportChartAsPNG('chart-pie', 'composicao.png')}
+                title="Copiar Gráfico"
+              >
+                <ImageIcon className="w-4 h-4 text-slate-500" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => exportSingleJSON(pieData, 'composicao.json')}
+                title="Exportar JSON do Gráfico"
+              >
+                <FileJson className="w-4 h-4 text-slate-500" />
+              </Button>
+            </div>
           </CardHeader>
-          <CardContent className="h-[350px]" id="chart-pie">
+          <CardContent className="h-[320px]" id="chart-pie">
             <ChartContainer config={{}} className="w-full h-full">
               <ResponsiveContainer>
                 <PieChart>
@@ -519,7 +555,7 @@ export function FleetDashboard() {
                     data={pieData}
                     cx="50%"
                     cy="50%"
-                    outerRadius={110}
+                    outerRadius={100}
                     dataKey="value"
                     label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                   >
@@ -542,13 +578,31 @@ export function FleetDashboard() {
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle>Histórico de Performance</CardTitle>
-            <CardDescription>
-              Evolução de CPK (R$) vs Margem Líquida (%) - Últimos 10
-            </CardDescription>
+          <CardHeader className="flex flex-row items-start justify-between pb-2 border-b border-slate-100 mb-4">
+            <div>
+              <CardTitle>Histórico de Performance</CardTitle>
+              <CardDescription>
+                Evolução de CPK (R$) vs Margem Líquida (%) - Últimos 10
+              </CardDescription>
+            </div>
+            <div className="flex gap-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => exportChartAsPNG('chart-line', 'historico.png')}
+              >
+                <ImageIcon className="w-4 h-4 text-slate-500" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => exportSingleJSON(lineData, 'historico.json')}
+              >
+                <FileJson className="w-4 h-4 text-slate-500" />
+              </Button>
+            </div>
           </CardHeader>
-          <CardContent className="h-[350px]" id="chart-line">
+          <CardContent className="h-[320px]" id="chart-line">
             <ChartContainer
               config={{
                 cpk: { label: 'CPK', color: '#3b82f6' },
@@ -592,11 +646,29 @@ export function FleetDashboard() {
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle>Custos Fixos vs Variáveis</CardTitle>
-            <CardDescription>Comparação absoluta de incidência financeira</CardDescription>
+          <CardHeader className="flex flex-row items-start justify-between pb-2 border-b border-slate-100 mb-4">
+            <div>
+              <CardTitle>Custos Fixos vs Variáveis</CardTitle>
+              <CardDescription>Comparação absoluta de incidência financeira</CardDescription>
+            </div>
+            <div className="flex gap-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => exportChartAsPNG('chart-bar', 'fixo_variavel.png')}
+              >
+                <ImageIcon className="w-4 h-4 text-slate-500" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => exportSingleJSON(barData, 'fixo_variavel.json')}
+              >
+                <FileJson className="w-4 h-4 text-slate-500" />
+              </Button>
+            </div>
           </CardHeader>
-          <CardContent className="h-[350px]" id="chart-bar">
+          <CardContent className="h-[320px]" id="chart-bar">
             <ChartContainer
               config={{
                 Fixo: { label: 'Custo Fixo', color: '#64748b' },
@@ -642,13 +714,31 @@ export function FleetDashboard() {
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle>Distribuição Granular</CardTitle>
-            <CardDescription>
-              Visão em 8 categorias detalhadas para análise de gargalos
-            </CardDescription>
+          <CardHeader className="flex flex-row items-start justify-between pb-2 border-b border-slate-100 mb-4">
+            <div>
+              <CardTitle>Distribuição Granular</CardTitle>
+              <CardDescription>
+                Visão em 8 categorias detalhadas para análise de gargalos
+              </CardDescription>
+            </div>
+            <div className="flex gap-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => exportChartAsPNG('chart-doughnut', 'granular.png')}
+              >
+                <ImageIcon className="w-4 h-4 text-slate-500" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => exportSingleJSON(doughnutData, 'granular.json')}
+              >
+                <FileJson className="w-4 h-4 text-slate-500" />
+              </Button>
+            </div>
           </CardHeader>
-          <CardContent className="h-[350px]" id="chart-doughnut">
+          <CardContent className="h-[320px]" id="chart-doughnut">
             <ChartContainer config={{}} className="w-full h-full">
               <ResponsiveContainer>
                 <PieChart>
@@ -657,7 +747,7 @@ export function FleetDashboard() {
                     cx="50%"
                     cy="50%"
                     innerRadius={70}
-                    outerRadius={110}
+                    outerRadius={100}
                     paddingAngle={2}
                     dataKey="value"
                   >
@@ -754,6 +844,31 @@ export function FleetDashboard() {
                 </tbody>
               </table>
             </div>
+
+            {alertsForPdf.length > 0 && (
+              <div style={{ marginBottom: '30px' }}>
+                <h2 style={{ fontSize: '20px', color: '#2c3e50', marginBottom: '15px' }}>
+                  Alertas Ativos
+                </h2>
+                <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                  {alertsForPdf.map((a, idx) => (
+                    <li
+                      key={idx}
+                      style={{
+                        color: a.color,
+                        fontWeight: 'bold',
+                        padding: '10px',
+                        borderLeft: `4px solid ${a.color}`,
+                        backgroundColor: '#f9f9f9',
+                        marginBottom: '8px',
+                      }}
+                    >
+                      {a.text}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
             <div style={{ marginBottom: '30px' }}>
               <h2 style={{ fontSize: '20px', color: '#2c3e50', marginBottom: '15px' }}>

@@ -35,7 +35,17 @@ export function HQTab() {
           />
         </div>
         <div className="space-y-2">
-          <Label>AVCB Anual (R$)</Label>
+          <Label className="flex items-center gap-1">
+            AVCB Anual (R$)
+            <Tooltip>
+              <TooltipTrigger>
+                <span className="text-slate-400 cursor-pointer hover:text-primary transition-colors">
+                  (?)
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>Auto de Vistoria do Corpo de Bombeiros</TooltipContent>
+            </Tooltip>
+          </Label>
           <Input
             type="number"
             value={hq.avcb}

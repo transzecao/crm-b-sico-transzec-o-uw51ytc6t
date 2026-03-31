@@ -11,9 +11,21 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Plus, Trash2, ChevronDown } from 'lucide-react'
+import { Plus, Trash2, ChevronDown, Info } from 'lucide-react'
 import { useFleetCalculator } from '@/stores/useFleetCalculator'
 import { cn } from '@/lib/utils'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+
+const InfoIcon = ({ text }: { text: string }) => (
+  <Tooltip>
+    <TooltipTrigger>
+      <Info className="w-4 h-4 text-slate-400 inline ml-1 hover:text-primary transition-colors" />
+    </TooltipTrigger>
+    <TooltipContent side="top">
+      <p className="max-w-[200px] text-xs text-center">{text}</p>
+    </TooltipContent>
+  </Tooltip>
+)
 
 export function VehicleTab() {
   const { data, addVehicle, updateVehicle, removeVehicle } = useFleetCalculator()
@@ -108,8 +120,9 @@ export function VehicleTab() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>
-                    Valor Compra (R$) <span className="text-red-500">*</span>
+                  <Label className="flex items-center">
+                    Valor Compra (R$) <span className="text-red-500 ml-1">*</span>
+                    <InfoIcon text="Usado para cálculo de depreciação mensal." />
                   </Label>
                   <Input
                     type="number"
@@ -118,8 +131,9 @@ export function VehicleTab() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>
-                    Revenda (5 anos) (R$) <span className="text-red-500">*</span>
+                  <Label className="flex items-center">
+                    Revenda (5 anos) (R$) <span className="text-red-500 ml-1">*</span>
+                    <InfoIcon text="Valor residual após 5 anos (60 meses) para o cálculo da depreciação." />
                   </Label>
                   <Input
                     type="number"
@@ -153,7 +167,10 @@ export function VehicleTab() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>RCTR-C Anual (R$)</Label>
+                  <Label className="flex items-center">
+                    RCTR-C Anual (R$)
+                    <InfoIcon text="Seguro Obrigatório de Responsabilidade Civil do Transportador (Acidentes)." />
+                  </Label>
                   <Input
                     type="number"
                     value={v.rctrc}
@@ -161,7 +178,10 @@ export function VehicleTab() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>RCF-DC Anual (R$)</Label>
+                  <Label className="flex items-center">
+                    RCF-DC Anual (R$)
+                    <InfoIcon text="Seguro Facultativo Contra Desvio de Carga (Roubo/Roubo)." />
+                  </Label>
                   <Input
                     type="number"
                     value={v.rcfdc}
@@ -189,7 +209,10 @@ export function VehicleTab() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Custo Pneus Jogo (R$)</Label>
+                  <Label className="flex items-center">
+                    Custo Pneus Jogo (R$)
+                    <InfoIcon text="Custo total para trocar todos os pneus do veículo." />
+                  </Label>
                   <Input
                     type="number"
                     value={v.pneusJogo}
@@ -197,8 +220,9 @@ export function VehicleTab() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>
-                    KM Pneus Estimado <span className="text-red-500">*</span>
+                  <Label className="flex items-center">
+                    KM Pneus Estimado <span className="text-red-500 ml-1">*</span>
+                    <InfoIcon text="Vida útil estimada do jogo de pneus em KM." />
                   </Label>
                   <Input
                     type="number"
@@ -255,8 +279,9 @@ export function VehicleTab() {
                       checked={v.usaArla}
                       onCheckedChange={(c) => updateVehicle(v.id, { usaArla: !!c })}
                     />
-                    <Label htmlFor={`arla-${v.id}`} className="cursor-pointer">
+                    <Label htmlFor={`arla-${v.id}`} className="cursor-pointer flex items-center">
                       Usa Arla 32 (5%)
+                      <InfoIcon text="Soma 5% sobre o custo do consumo de diesel." />
                     </Label>
                   </div>
                 </div>

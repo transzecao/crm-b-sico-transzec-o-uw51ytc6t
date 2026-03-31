@@ -2,6 +2,13 @@ import { useState, useEffect } from 'react'
 import { getFleetSettings } from '@/services/fleet_costs'
 import { isValidCpf, isValidPlate } from '@/utils/formatters'
 
+export interface DriverEncargos {
+  fgts: number
+  ferias: number
+  decimo: number
+  pis: number
+}
+
 export interface Driver {
   id: string
   name: string
@@ -15,6 +22,7 @@ export interface Driver {
   seguroVida: number
   toxAnual: number
   rat: number
+  encargos: DriverEncargos
 }
 
 export interface Vehicle {
@@ -110,6 +118,12 @@ export const createDriver = (): Driver => ({
   seguroVida: 50,
   toxAnual: 120,
   rat: 1,
+  encargos: {
+    fgts: 8,
+    ferias: 11.11,
+    decimo: 8.33,
+    pis: 1,
+  },
 })
 
 export const createVehicle = (): Vehicle => ({
@@ -137,7 +151,7 @@ export const createVehicle = (): Vehicle => ({
   satelite: 150,
 })
 
-const initialState: FleetState = {
+const defaultInitialState: FleetState = {
   drivers: [createDriver()],
   vehicles: [createVehicle()],
   links: [],
@@ -171,10 +185,36 @@ const initialState: FleetState = {
   },
 }
 
-let globalState = { ...initialState }
+const STORAGE_KEY = 'fleet_calc_state'
+
+let globalState = defaultInitialState
+if (typeof window !== 'undefined') {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY)
+    if (saved) {
+      const parsed = JSON.parse(saved)
+      globalState = { ...defaultInitialState, ...parsed }
+      // Ensure complex objects like encargos exist on old saves
+      globalState.drivers = globalState.drivers.map((d) => ({
+        ...d,
+        encargos: d.encargos || { fgts: 8, ferias: 11.11, decimo: 8.33, pis: 1 },
+      }))
+    }
+  } catch (e) {
+    console.error('Failed to load fleet calc state', e)
+  }
+}
+
 const listeners = new Set<(state: FleetState) => void>()
 
-// AC 1: Data Integrity Check
+const updateGlobal = (updates: Partial<FleetState>) => {
+  globalState = { ...globalState, ...updates }
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(globalState))
+  }
+  listeners.forEach((l) => l(globalState))
+}
+
 const validarDadosCompletos = (s: FleetState): string[] => {
   const errors: string[] = []
   if (s.drivers.length === 0) errors.push('Adicione pelo menos 1 motorista.')
@@ -183,12 +223,12 @@ const validarDadosCompletos = (s: FleetState): string[] => {
 
   s.drivers.forEach((d, i) => {
     if (!d.name) errors.push(`Motorista ${i + 1}: Nome obrigatório.`)
-    if (!isValidCpf(d.cpf)) errors.push(`Motorista ${i + 1}: CPF inválido.`)
+    if (d.cpf && !isValidCpf(d.cpf)) errors.push(`Motorista ${i + 1}: CPF inválido.`)
     if (d.baseSalary <= 0) errors.push(`Motorista ${i + 1}: Salário Base deve ser maior que zero.`)
   })
 
   s.vehicles.forEach((v, i) => {
-    if (!isValidPlate(v.plate)) errors.push(`Veículo ${i + 1}: Placa inválida.`)
+    if (v.plate && !isValidPlate(v.plate)) errors.push(`Veículo ${i + 1}: Placa inválida.`)
     if (v.purchaseValue <= 0) errors.push(`Veículo ${i + 1}: Valor de Compra inválido.`)
     if (v.resaleValue < 0) errors.push(`Veículo ${i + 1}: Valor de Revenda inválido.`)
     if (v.consumo < 1 || v.consumo > 20)
@@ -209,24 +249,19 @@ const validarDadosCompletos = (s: FleetState): string[] => {
   return errors
 }
 
-const driverCache = new Map<string, number>()
-const vehicleCache = new Map<string, any>()
-
-// AC 2: Driver Cost Logic
 const calcularCustoMotorista = (d: Driver, workingDays: number): number => {
-  const hash = JSON.stringify({ ...d, workingDays })
-  if (driverCache.has(hash)) return driverCache.get(hash)!
-
   const base = d.baseSalary + (d.periculosidade ? d.baseSalary * 0.3 : 0)
-  const fgts = base * 0.08
-  const decimoTerceiro = base / 12
-  const ferias = (base / 12) * 1.333
-  const pis = base * 0.01
+  const e = d.encargos || { fgts: 8, ferias: 11.11, decimo: 8.33, pis: 1 }
+
+  const fgts = base * (e.fgts / 100)
+  const decimoTerceiro = base * (e.decimo / 100)
+  const ferias = base * (e.ferias / 100)
+  const pis = base * (e.pis / 100)
   const ratVal = base * (d.rat / 100)
   const vrTotal = d.vrDaily * workingDays
   const toxAnualMensal = d.toxAnual / 12
 
-  const result =
+  return (
     base +
     fgts +
     decimoTerceiro +
@@ -238,16 +273,11 @@ const calcularCustoMotorista = (d: Driver, workingDays: number): number => {
     d.cestaBasica +
     d.seguroVida +
     toxAnualMensal
-  driverCache.set(hash, result)
-  return result
+  )
 }
 
-// AC 3: Vehicle Cost Logic
 const calcularCustoVeiculo = (v: Vehicle, km: number) => {
-  const hash = JSON.stringify({ ...v, km })
-  if (vehicleCache.has(hash)) return vehicleCache.get(hash)!
-
-  const dep = (v.purchaseValue - v.resaleValue) / 60
+  const dep = Math.max(0, (v.purchaseValue - v.resaleValue) / 60)
   const fixed = (v.ipva + v.licenciamento + v.seguroCasco + v.rctrc + v.rcfdc) / 12
   const insurance = (v.seguroCasco + v.rctrc + v.rcfdc) / 12
   const diesel = km > 0 ? (km / v.consumo) * v.dieselPrice : 0
@@ -258,12 +288,9 @@ const calcularCustoVeiculo = (v: Vehicle, km: number) => {
   const variable = diesel + arla + pneus + monthlyOps
   const total = dep + fixed + variable
 
-  const result = { total, variable, dep, fixed, insurance, diesel, pneus, monthlyOps }
-  vehicleCache.set(hash, result)
-  return result
+  return { total, variable, dep, fixed, insurance, diesel, pneus, monthlyOps }
 }
 
-// AC 4: Headquarters Cost Logic
 const calcularCustoSedeTotal = (hq: HQ): number => {
   return (
     (hq.iptu + hq.avcb + hq.seguroPatrimonial) / 12 +
@@ -276,7 +303,6 @@ const calcularCustoSedeTotal = (hq: HQ): number => {
   )
 }
 
-// AC 5 & 6: Orchestration and Finalization
 const calcularCPK = (s: FleetState) => {
   const errors = validarDadosCompletos(s)
   const workingDays = s.settings.workingDays || 22
@@ -308,14 +334,11 @@ const calcularCPK = (s: FleetState) => {
   })
 
   const hqTotal = calcularCustoSedeTotal(s.hq)
-
-  // HQ allocated per link (Insight)
   const hqPerLink = s.links.length > 0 ? hqTotal / s.links.length : 0
 
   const baseTaxes = s.taxes.cteCost * s.taxes.docsCount + s.taxes.taxasFiscal / 12
   const totalBaseCost = driverTotal + vehicleTotal + hqTotal + baseTaxes
 
-  // Ensure margin is bounded to avoid div by zero
   const targetMargin = Math.max(0, Math.min(99, s.taxes.targetMargin || 30))
   const faturamento = totalBaseCost / (1 - targetMargin / 100)
   const dasCost = faturamento * (s.taxes.dasRate / 100)
@@ -337,7 +360,6 @@ const calcularCPK = (s: FleetState) => {
   if (currentMargin < s.settings.minMargin) marginStatus = 'red'
   else if (currentMargin < s.settings.yellowMargin) marginStatus = 'yellow'
 
-  // Dynamic Alerts Generation
   const alerts: AlertData[] = []
 
   if (s.links.length === 0) {
@@ -396,14 +418,15 @@ const calcularCPK = (s: FleetState) => {
   }
 
   const varCostPercent = finalTotalCost > 0 ? (totalVariableCosts / finalTotalCost) * 100 : 0
-  if (varCostPercent > 60) {
+  const varCostLimit = s.settings.varCostMaxPercent || 60
+  if (varCostPercent > varCostLimit) {
     alerts.push({
       id: 'var-red',
       type: 'critical',
       title: 'Custos Variáveis Altos',
       message: `Custos Variáveis representam ${varCostPercent.toFixed(2)}% do custo total`,
     })
-  } else if (varCostPercent > 50) {
+  } else if (varCostPercent > varCostLimit * 0.8) {
     alerts.push({
       id: 'var-yellow',
       type: 'warning',
@@ -421,7 +444,7 @@ const calcularCPK = (s: FleetState) => {
       title: 'DAS Crítico',
       message: `DAS: ${dasPercent.toFixed(2)}% do faturamento`,
     })
-  } else if (dasPercent > 15) {
+  } else if (dasPercent > maxDas * 0.8) {
     alerts.push({
       id: 'das-yellow',
       type: 'warning',
@@ -430,7 +453,6 @@ const calcularCPK = (s: FleetState) => {
     })
   }
 
-  // Persist result for Admin validations
   if (typeof window !== 'undefined') {
     const resultToSave = {
       id: Date.now().toString(),
@@ -461,14 +483,6 @@ const calcularCPK = (s: FleetState) => {
     }
 
     localStorage.setItem('ultimoResultadoCPK', JSON.stringify(resultToSave))
-
-    const historyStr = localStorage.getItem('cpkHistoricoCalculos')
-    const history = historyStr ? JSON.parse(historyStr) : []
-    history.push(resultToSave)
-    if (history.length > 50) history.shift()
-    localStorage.setItem('cpkHistoricoCalculos', JSON.stringify(history))
-
-    window.dispatchEvent(new Event('cpkHistoryUpdated'))
   }
 
   return {
@@ -531,43 +545,43 @@ export function useFleetCalculator() {
     }
   }
 
-  const update = (updates: Partial<FleetState>) => {
-    globalState = { ...globalState, ...updates }
-    listeners.forEach((l) => l(globalState))
-  }
-
-  const updateHQ = (updates: Partial<HQ>) => update({ hq: { ...globalState.hq, ...updates } })
+  const updateHQ = (updates: Partial<HQ>) => updateGlobal({ hq: { ...globalState.hq, ...updates } })
   const updateTaxes = (updates: Partial<Taxes>) =>
-    update({ taxes: { ...globalState.taxes, ...updates } })
+    updateGlobal({ taxes: { ...globalState.taxes, ...updates } })
   const updateSettings = (updates: Partial<Settings>) =>
-    update({ settings: { ...globalState.settings, ...updates } })
+    updateGlobal({ settings: { ...globalState.settings, ...updates } })
 
-  const addDriver = () => update({ drivers: [...globalState.drivers, createDriver()] })
+  const addDriver = () => updateGlobal({ drivers: [...globalState.drivers, createDriver()] })
   const updateDriver = (id: string, data: Partial<Driver>) =>
-    update({ drivers: globalState.drivers.map((d) => (d.id === id ? { ...d, ...data } : d)) })
+    updateGlobal({ drivers: globalState.drivers.map((d) => (d.id === id ? { ...d, ...data } : d)) })
   const removeDriver = (id: string) =>
-    update({
+    updateGlobal({
       drivers: globalState.drivers.filter((d) => d.id !== id),
       links: globalState.links.filter((l) => l.driverId !== id),
     })
 
-  const addVehicle = () => update({ vehicles: [...globalState.vehicles, createVehicle()] })
+  const addVehicle = () => updateGlobal({ vehicles: [...globalState.vehicles, createVehicle()] })
   const updateVehicle = (id: string, data: Partial<Vehicle>) =>
-    update({ vehicles: globalState.vehicles.map((v) => (v.id === id ? { ...v, ...data } : v)) })
+    updateGlobal({
+      vehicles: globalState.vehicles.map((v) => (v.id === id ? { ...v, ...data } : v)),
+    })
   const removeVehicle = (id: string) =>
-    update({
+    updateGlobal({
       vehicles: globalState.vehicles.filter((v) => v.id !== id),
       links: globalState.links.filter((l) => l.vehicleId !== id),
     })
 
   const addLink = (link: Omit<Link, 'id'>) =>
-    update({
+    updateGlobal({
       links: [
         ...globalState.links,
         { id: `LNK-${Math.random().toString(36).substr(2, 6).toUpperCase()}`, ...link },
       ],
     })
-  const removeLink = (id: string) => update({ links: globalState.links.filter((l) => l.id !== id) })
+  const removeLink = (id: string) =>
+    updateGlobal({ links: globalState.links.filter((l) => l.id !== id) })
+
+  const setFullState = (newState: FleetState) => updateGlobal(newState)
 
   const calculations = calcularCPK(state)
 
@@ -586,6 +600,7 @@ export function useFleetCalculator() {
     addLink,
     removeLink,
     loadSettings,
+    setFullState,
     calculations,
   }
 }

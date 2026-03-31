@@ -11,10 +11,23 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Plus, Trash2, ChevronDown } from 'lucide-react'
+import { Plus, Trash2, ChevronDown, Info } from 'lucide-react'
 import { useFleetCalculator, Driver } from '@/stores/useFleetCalculator'
 import { formatCpf } from '@/utils/formatters'
 import { cn } from '@/lib/utils'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { Badge } from '@/components/ui/badge'
+
+const InfoIcon = ({ text }: { text: string }) => (
+  <Tooltip>
+    <TooltipTrigger>
+      <Info className="w-4 h-4 text-slate-400 inline ml-1 hover:text-primary transition-colors" />
+    </TooltipTrigger>
+    <TooltipContent side="top">
+      <p className="max-w-[200px] text-xs text-center">{text}</p>
+    </TooltipContent>
+  </Tooltip>
+)
 
 export function DriverTab() {
   const { data, addDriver, updateDriver, removeDriver } = useFleetCalculator()
@@ -36,7 +49,7 @@ export function DriverTab() {
             key={d.id}
             open={openStates[d.id]}
             onOpenChange={() => toggle(d.id)}
-            className="border bg-white rounded-lg shadow-sm"
+            className="border bg-white rounded-lg shadow-sm overflow-hidden"
           >
             <div
               className="flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-slate-50 transition-colors"
@@ -118,8 +131,9 @@ export function DriverTab() {
                       checked={d.periculosidade}
                       onCheckedChange={(c) => updateDriver(d.id, { periculosidade: !!c })}
                     />
-                    <Label htmlFor={`peric-${d.id}`} className="cursor-pointer">
+                    <Label htmlFor={`peric-${d.id}`} className="cursor-pointer flex items-center">
                       Periculosidade (30%)
+                      <InfoIcon text="Adicional de 30% aplicado sobre o salário base." />
                     </Label>
                   </div>
                 </div>
@@ -164,7 +178,10 @@ export function DriverTab() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>RAT (%)</Label>
+                  <Label className="flex items-center">
+                    RAT (%)
+                    <InfoIcon text="Risco Ambiental do Trabalho. Alíquota aplicada sobre o salário base." />
+                  </Label>
                   <Input
                     type="number"
                     value={d.rat}
@@ -172,9 +189,82 @@ export function DriverTab() {
                   />
                 </div>
               </div>
+
+              {/* Editable Charges (Encargos) */}
+              <div className="md:col-span-3 xl:col-span-4 flex flex-wrap gap-3 items-center p-3 mt-2 bg-slate-100/80 rounded-lg border border-slate-200 shadow-sm">
+                <span className="text-sm font-bold text-slate-700 flex items-center gap-1 mr-2">
+                  Encargos Trabalhistas
+                  <InfoIcon text="Percentuais aplicados sobre a base salarial. Altere se o regime tributário da empresa for diferente." />
+                </span>
+                <Badge
+                  variant="outline"
+                  className="bg-white px-2 py-1.5 flex items-center gap-1 border-slate-300"
+                >
+                  <span className="text-xs text-slate-500 font-semibold">FGTS:</span>
+                  <Input
+                    className="w-12 h-6 p-0 border-none bg-transparent text-center text-xs focus-visible:ring-1"
+                    value={d.encargos?.fgts || 0}
+                    onChange={(e) =>
+                      updateDriver(d.id, {
+                        encargos: { ...d.encargos, fgts: Number(e.target.value) },
+                      })
+                    }
+                  />
+                  <span className="text-xs text-slate-400">%</span>
+                </Badge>
+                <Badge
+                  variant="outline"
+                  className="bg-white px-2 py-1.5 flex items-center gap-1 border-slate-300"
+                >
+                  <span className="text-xs text-slate-500 font-semibold">Férias:</span>
+                  <Input
+                    className="w-12 h-6 p-0 border-none bg-transparent text-center text-xs focus-visible:ring-1"
+                    value={d.encargos?.ferias || 0}
+                    onChange={(e) =>
+                      updateDriver(d.id, {
+                        encargos: { ...d.encargos, ferias: Number(e.target.value) },
+                      })
+                    }
+                  />
+                  <span className="text-xs text-slate-400">%</span>
+                </Badge>
+                <Badge
+                  variant="outline"
+                  className="bg-white px-2 py-1.5 flex items-center gap-1 border-slate-300"
+                >
+                  <span className="text-xs text-slate-500 font-semibold">13º Salário:</span>
+                  <Input
+                    className="w-12 h-6 p-0 border-none bg-transparent text-center text-xs focus-visible:ring-1"
+                    value={d.encargos?.decimo || 0}
+                    onChange={(e) =>
+                      updateDriver(d.id, {
+                        encargos: { ...d.encargos, decimo: Number(e.target.value) },
+                      })
+                    }
+                  />
+                  <span className="text-xs text-slate-400">%</span>
+                </Badge>
+                <Badge
+                  variant="outline"
+                  className="bg-white px-2 py-1.5 flex items-center gap-1 border-slate-300"
+                >
+                  <span className="text-xs text-slate-500 font-semibold">PIS:</span>
+                  <Input
+                    className="w-12 h-6 p-0 border-none bg-transparent text-center text-xs focus-visible:ring-1"
+                    value={d.encargos?.pis || 0}
+                    onChange={(e) =>
+                      updateDriver(d.id, {
+                        encargos: { ...d.encargos, pis: Number(e.target.value) },
+                      })
+                    }
+                  />
+                  <span className="text-xs text-slate-400">%</span>
+                </Badge>
+              </div>
+
               <div className="flex justify-between items-center pt-4 border-t border-slate-200 mt-4">
                 <div className="text-sm text-slate-500 font-medium">
-                  Cálculos automáticos: FGTS (8%), 13º, Férias e PIS inclusos.
+                  Cálculos reagem em tempo real na aba de resultados.
                 </div>
                 <Button variant="destructive" size="sm" onClick={() => removeDriver(d.id)}>
                   <Trash2 className="w-4 h-4 mr-2" /> Remover

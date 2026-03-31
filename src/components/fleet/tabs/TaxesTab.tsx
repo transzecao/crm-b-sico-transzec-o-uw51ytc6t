@@ -120,7 +120,19 @@ export function TaxesTab() {
           />
         </div>
         <div className="space-y-2">
-          <Label>KM Morto Mensal (Sem carga)</Label>
+          <Label className="flex items-center gap-1">
+            KM Morto Mensal (Sem carga)
+            <Tooltip>
+              <TooltipTrigger>
+                <span className="text-slate-400 cursor-pointer hover:text-primary transition-colors">
+                  (?)
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>
+                Kilometragem rodada sem carga, gera custo sem gerar receita.
+              </TooltipContent>
+            </Tooltip>
+          </Label>
           <Input
             type="number"
             value={taxes.deadKm}

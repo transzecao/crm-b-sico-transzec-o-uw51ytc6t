@@ -19,7 +19,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { AlertTriangle, Settings as SettingsIcon, Save } from 'lucide-react'
+import { AlertTriangle, Settings as SettingsIcon, Save, Download, Upload } from 'lucide-react'
 import { getFleetSettings, updateFleetSettings, getAuditLogs } from '@/services/fleet_costs'
 import { createAuditLog } from '@/services/audit_logs'
 import { useToast } from '@/hooks/use-toast'
@@ -46,7 +46,7 @@ export function AdminPanelModal({
   onOpenChange: (val: boolean) => void
 }) {
   const { toast } = useToast()
-  const { loadSettings } = useFleetCalculator()
+  const { loadSettings, data, setFullState } = useFleetCalculator()
 
   const [settings, setSettings] = useState<any>(null)
   const [originalSettings, setOriginalSettings] = useState<any>(null)
@@ -63,10 +63,10 @@ export function AdminPanelModal({
   }, [open])
 
   const loadData = async () => {
-    const data = await getFleetSettings()
-    if (data) {
-      setSettings({ ...data })
-      setOriginalSettings({ ...data })
+    const d = await getFleetSettings()
+    if (d) {
+      setSettings({ ...d })
+      setOriginalSettings({ ...d })
     }
     const logs = await getAuditLogs()
     setAuditLogs(logs as unknown as AuditLog[])
@@ -159,6 +159,44 @@ export function AdminPanelModal({
     }
   }
 
+  const handleExportBackup = () => {
+    const stateStr = localStorage.getItem('fleet_calc_state') || JSON.stringify(data)
+    const blob = new Blob([stateStr], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `backup_cpk_${new Date().toISOString().split('T')[0]}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+    toast({ title: 'Sucesso', description: 'Backup local gerado com sucesso.' })
+  }
+
+  const handleImportBackup = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      try {
+        const json = JSON.parse(event.target?.result as string)
+        if (json && json.drivers && json.vehicles) {
+          setFullState(json)
+          toast({ title: 'Sucesso', description: 'Estado da calculadora restaurado.' })
+          onOpenChange(false)
+        } else {
+          toast({
+            title: 'Erro',
+            description: 'Formato de arquivo inválido.',
+            variant: 'destructive',
+          })
+        }
+      } catch (error) {
+        toast({ title: 'Erro', description: 'Falha ao ler o arquivo.', variant: 'destructive' })
+      }
+    }
+    reader.readAsText(file)
+  }
+
   if (!settings) return null
 
   return (
@@ -180,19 +218,22 @@ export function AdminPanelModal({
           </DialogHeader>
 
           <Tabs defaultValue="thresholds" className="flex-1 flex flex-col min-h-0">
-            <div className="px-6 pt-4 border-b">
-              <TabsList className="w-full justify-start h-auto p-1 bg-slate-100">
-                <TabsTrigger value="thresholds" className="py-2 px-4">
+            <div className="px-6 pt-4 border-b overflow-x-auto">
+              <TabsList className="w-auto justify-start h-auto p-1 bg-slate-100 flex-nowrap">
+                <TabsTrigger value="thresholds" className="py-2 px-4 whitespace-nowrap">
                   Gatilhos & Alertas
                 </TabsTrigger>
-                <TabsTrigger value="parameters" className="py-2 px-4">
+                <TabsTrigger value="parameters" className="py-2 px-4 whitespace-nowrap">
                   Parâmetros de Custo
                 </TabsTrigger>
-                <TabsTrigger value="standards" className="py-2 px-4">
+                <TabsTrigger value="standards" className="py-2 px-4 whitespace-nowrap">
                   Valores Padrão
                 </TabsTrigger>
-                <TabsTrigger value="audit" className="py-2 px-4">
+                <TabsTrigger value="audit" className="py-2 px-4 whitespace-nowrap">
                   Histórico (Audit Log)
+                </TabsTrigger>
+                <TabsTrigger value="backup" className="py-2 px-4 whitespace-nowrap">
+                  Backup & Restauração
                 </TabsTrigger>
               </TabsList>
             </div>
@@ -419,6 +460,46 @@ export function AdminPanelModal({
                       )}
                     </TableBody>
                   </Table>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="backup" className="mt-0 space-y-6 animate-fade-in">
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 flex flex-col items-center text-center space-y-4">
+                  <Download className="w-12 h-12 text-blue-500" />
+                  <div>
+                    <h3 className="text-lg font-bold text-blue-900">Exportar Dados Locais</h3>
+                    <p className="text-sm text-blue-700 max-w-md">
+                      Faça o download de toda a estrutura atual da calculadora (motoristas,
+                      veículos, vínculos e configurações) em formato JSON.
+                    </p>
+                  </div>
+                  <Button onClick={handleExportBackup} className="bg-blue-600 hover:bg-blue-700">
+                    Baixar Backup (.json)
+                  </Button>
+                </div>
+
+                <div className="bg-slate-50 border border-slate-200 rounded-xl p-6 flex flex-col items-center text-center space-y-4">
+                  <Upload className="w-12 h-12 text-slate-500" />
+                  <div>
+                    <h3 className="text-lg font-bold text-slate-900">Restaurar Backup</h3>
+                    <p className="text-sm text-slate-600 max-w-md">
+                      Substitua o estado atual da calculadora importando um arquivo JSON previamente
+                      exportado.
+                    </p>
+                  </div>
+                  <Label
+                    htmlFor="import-backup"
+                    className="cursor-pointer bg-slate-900 text-white hover:bg-slate-800 px-4 py-2 rounded-md font-medium"
+                  >
+                    Selecionar Arquivo
+                  </Label>
+                  <Input
+                    id="import-backup"
+                    type="file"
+                    accept=".json"
+                    className="hidden"
+                    onChange={handleImportBackup}
+                  />
                 </div>
               </TabsContent>
             </ScrollArea>
