@@ -11,6 +11,7 @@ import {
   BrainCircuit,
   KeyRound,
   Map as MapIcon,
+  Wallet,
 } from 'lucide-react'
 import {
   Sidebar,
@@ -100,6 +101,12 @@ export function AppSidebar() {
       url: '/pipeline/2',
       icon: Sprout,
       roles: ['Acesso Master', 'Supervisor Comercial', 'Funcionário Marketing'],
+    },
+    {
+      title: 'Controle de Gastos',
+      url: '/financeiro/controle-gastos',
+      icon: Wallet,
+      roles: ['Acesso Master', 'Supervisor Financeiro'],
     },
     {
       title: 'Roteirização',

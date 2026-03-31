@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-31T00:38:36.168Z",
+  "generatedAt": "2026-03-31T15:18:49.047Z",
   "collections": [
     {
       "name": "transzecao",
@@ -152,6 +152,131 @@
         }
       ],
       "indexes": ["CREATE INDEX idx_whatsapp_messages_lead_id ON whatsapp_messages (lead_id)"]
+    },
+    {
+      "name": "fleet_costs",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": "@request.auth.id != ''",
+        "update": "@request.auth.id != ''",
+        "delete": "@request.auth.id != ''"
+      },
+      "fields": [
+        {
+          "name": "user_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "transzecao"
+        },
+        {
+          "name": "month_year",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "fixed_salary_driver",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "fixed_salary_helper",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "fixed_insurance",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "fixed_ipva",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "fixed_depreciation",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "fixed_tracking",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "fixed_warehouse",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "var_fuel",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "var_arla",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "var_maintenance",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "var_tires",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "var_washing",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "km_initial",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "km_final",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": []
     }
   ]
 }

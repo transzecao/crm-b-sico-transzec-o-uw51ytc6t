@@ -12,6 +12,7 @@ import Pipeline1 from './pages/Pipeline1'
 import Pipeline2 from './pages/Pipeline2'
 import Company360 from './pages/Company360'
 import Financeiro from './pages/Financeiro'
+import ControleGastos from './pages/ControleGastos'
 import Analytics from './pages/Analytics'
 import LoginAdmin from './pages/LoginAdmin'
 import NotFound from './pages/NotFound'
@@ -41,6 +42,7 @@ const App = () => (
             <Route path="/pipeline/2" element={<Pipeline2 />} />
             <Route path="/empresa/:id/360" element={<Company360 />} />
             <Route path="/financeiro" element={<Financeiro />} />
+            <Route path="/financeiro/controle-gastos" element={<ControleGastos />} />
             <Route path="/analytics" element={<Analytics />} />
             <Route path="/admin/logins" element={<LoginAdmin />} />
             <Route path="/admin/portal" element={<PortalAdmin />} />
