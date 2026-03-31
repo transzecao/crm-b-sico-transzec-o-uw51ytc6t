@@ -19,6 +19,10 @@ export interface FleetCostData {
   var_washing: number
   km_initial: number
   km_final: number
+  details?: any
+  total_cost?: number
+  estimated_km?: number
+  cpk?: number
   expand?: {
     vehicle_id?: {
       plate: string
@@ -35,4 +39,17 @@ export const getFleetCosts = () => {
   return pb
     .collection('fleet_costs')
     .getFullList<FleetCostData>({ sort: '-created', expand: 'vehicle_id' })
+}
+
+export const getFleetSettings = async () => {
+  try {
+    const records = await pb.collection('fleet_settings').getFullList()
+    return records[0]
+  } catch {
+    return null
+  }
+}
+
+export const updateFleetSettings = async (id: string, data: any) => {
+  return pb.collection('fleet_settings').update(id, data)
 }

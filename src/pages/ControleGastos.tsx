@@ -4,6 +4,8 @@ import { Wallet } from 'lucide-react'
 import { FleetCostsForm } from '@/components/fleet/FleetCostsForm'
 import { FleetDashboard } from '@/components/fleet/FleetDashboard'
 import { FleetVehicles } from '@/components/fleet/FleetVehicles'
+import { FleetAdmin } from '@/components/fleet/FleetAdmin'
+import { Settings } from 'lucide-react'
 
 export default function ControleGastos() {
   const [tab, setTab] = useState('lancamento')
@@ -17,10 +19,10 @@ export default function ControleGastos() {
           </div>
           <div>
             <h1 className="text-3xl font-bold tracking-tight text-slate-900">
-              Controle da Frota e Gastos
+              Controle da Frota e Gastos (CPK)
             </h1>
             <p className="text-slate-500 font-medium mt-1">
-              Acompanhe custos, cpk, veículos e inteligência artificial.
+              Calculadora modular de CPK, relatórios e alertas inteligentes.
             </p>
           </div>
         </div>
@@ -32,7 +34,7 @@ export default function ControleGastos() {
             value="lancamento"
             className="data-[state=active]:bg-primary data-[state=active]:text-white flex-shrink-0"
           >
-            Lançamento de Custos
+            Calculadora CPK
           </TabsTrigger>
           <TabsTrigger
             value="dashboard"
@@ -44,7 +46,13 @@ export default function ControleGastos() {
             value="veiculos"
             className="data-[state=active]:bg-primary data-[state=active]:text-white flex-shrink-0"
           >
-            Veículos & Manutenção
+            Veículos
+          </TabsTrigger>
+          <TabsTrigger
+            value="admin"
+            className="data-[state=active]:bg-primary data-[state=active]:text-white flex-shrink-0 gap-2"
+          >
+            <Settings className="w-4 h-4" /> Parâmetros
           </TabsTrigger>
         </TabsList>
         <TabsContent value="lancamento">
@@ -55,6 +63,9 @@ export default function ControleGastos() {
         </TabsContent>
         <TabsContent value="veiculos">
           <FleetVehicles />
+        </TabsContent>
+        <TabsContent value="admin">
+          <FleetAdmin />
         </TabsContent>
       </Tabs>
     </div>

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-31T15:58:11.156Z",
+  "generatedAt": "2026-03-31T18:36:03.109Z",
   "collections": [
     {
       "name": "transzecao",
@@ -281,6 +281,30 @@
           "required": false,
           "system": false,
           "collectionRef": "vehicles"
+        },
+        {
+          "name": "details",
+          "type": "json",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "total_cost",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "estimated_km",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "cpk",
+          "type": "number",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": []
@@ -383,6 +407,76 @@
         {
           "name": "message_sent",
           "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "name": "fleet_settings",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": "@request.auth.id != ''",
+        "update": "@request.auth.id != ''",
+        "delete": "@request.auth.id != ''"
+      },
+      "fields": [
+        {
+          "name": "max_cpk",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "min_margin",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "yellow_margin",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "max_das",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "fuel_consumption",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "fuel_price",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "working_days",
+          "type": "number",
           "required": false,
           "system": false
         },
