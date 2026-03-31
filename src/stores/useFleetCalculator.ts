@@ -80,6 +80,13 @@ export interface Settings {
   maxDas: number
 }
 
+export interface AlertData {
+  id: string
+  type: 'success' | 'warning' | 'critical' | 'info' | 'error'
+  title: string
+  message: string
+}
+
 export interface FleetState {
   drivers: Driver[]
   vehicles: Vehicle[]
@@ -228,7 +235,7 @@ const calcularCustoMotorista = (d: Driver, workingDays: number): number => {
 }
 
 // AC 3: Vehicle Cost Logic
-const calcularCustoVeiculo = (v: Vehicle, km: number): number => {
+const calcularCustoVeiculo = (v: Vehicle, km: number) => {
   const dep = (v.purchaseValue - v.resaleValue) / 60
   const fixed = (v.ipva + v.licenciamento + v.seguroCasco + v.rctrc + v.rcfdc) / 12
   const diesel = km > 0 ? (km / v.consumo) * v.dieselPrice : 0
@@ -236,7 +243,10 @@ const calcularCustoVeiculo = (v: Vehicle, km: number): number => {
   const pneus = km > 0 ? (v.pneusJogo / v.kmPneus) * km : 0
   const monthlyOps = v.manutencao + v.limpeza + v.averbacao + v.consulta + v.satelite
 
-  return dep + fixed + diesel + arla + pneus + monthlyOps
+  const variable = diesel + arla + pneus + monthlyOps
+  const total = dep + fixed + variable
+
+  return { total, variable }
 }
 
 // AC 4: Headquarters Cost Logic
@@ -265,10 +275,15 @@ const calcularCPK = (s: FleetState) => {
   })
 
   const driverTotal = s.drivers.reduce((acc, d) => acc + calcularCustoMotorista(d, workingDays), 0)
-  const vehicleTotal = s.vehicles.reduce(
-    (acc, v) => acc + calcularCustoVeiculo(v, vehicleKms[v.id] || 0),
-    0,
-  )
+
+  let vehicleTotal = 0
+  let totalVariableCosts = 0
+  s.vehicles.forEach((v) => {
+    const cost = calcularCustoVeiculo(v, vehicleKms[v.id] || 0)
+    vehicleTotal += cost.total
+    totalVariableCosts += cost.variable
+  })
+
   const hqTotal = calcularCustoSedeTotal(s.hq)
 
   // HQ allocated per link (Insight)
@@ -299,8 +314,116 @@ const calcularCPK = (s: FleetState) => {
   if (currentMargin < s.settings.minMargin) marginStatus = 'red'
   else if (currentMargin < s.settings.yellowMargin) marginStatus = 'yellow'
 
+  // Dynamic Alerts Generation
+  const alerts: AlertData[] = []
+
+  if (s.links.length === 0) {
+    alerts.push({
+      id: 'no-links',
+      type: 'error',
+      title: 'Erro de Dados',
+      message: '❌ Nenhum vínculo motorista-veículo criado.',
+    })
+  }
+
+  if (finalCpk > s.settings.maxCpk) {
+    alerts.push({
+      id: 'cpk-red',
+      type: 'critical',
+      title: 'CPK Crítico',
+      message: `CPK: R$ ${finalCpk.toFixed(2)}/km (Acima de R$ ${s.settings.maxCpk.toFixed(2)})`,
+    })
+  } else if (finalCpk > s.settings.maxCpk * 0.9) {
+    alerts.push({
+      id: 'cpk-yellow',
+      type: 'warning',
+      title: 'CPK em Alerta',
+      message: `CPK: R$ ${finalCpk.toFixed(2)}/km (Próximo ao limite de R$ ${s.settings.maxCpk.toFixed(2)})`,
+    })
+  } else if (finalCpk > 0) {
+    alerts.push({
+      id: 'cpk-green',
+      type: 'success',
+      title: 'CPK Saudável',
+      message: `CPK: R$ ${finalCpk.toFixed(2)}/km`,
+    })
+  }
+
+  if (currentMargin < s.settings.minMargin) {
+    alerts.push({
+      id: 'margin-red',
+      type: 'critical',
+      title: 'Margem Crítica',
+      message: `Margem: ${currentMargin.toFixed(2)}% (Abaixo de ${s.settings.minMargin}%)`,
+    })
+  } else if (currentMargin < s.settings.yellowMargin) {
+    alerts.push({
+      id: 'margin-yellow',
+      type: 'warning',
+      title: 'Margem em Alerta',
+      message: `Margem: ${currentMargin.toFixed(2)}% (Abaixo de ${s.settings.yellowMargin}%)`,
+    })
+  } else if (currentMargin > 0) {
+    alerts.push({
+      id: 'margin-green',
+      type: 'success',
+      title: 'Margem Saudável',
+      message: `Margem: ${currentMargin.toFixed(2)}%`,
+    })
+  }
+
+  const varCostPercent = finalTotalCost > 0 ? (totalVariableCosts / finalTotalCost) * 100 : 0
+  if (varCostPercent > 60) {
+    alerts.push({
+      id: 'var-red',
+      type: 'critical',
+      title: 'Custos Variáveis Altos',
+      message: `Custos Variáveis representam ${varCostPercent.toFixed(2)}% do custo total`,
+    })
+  } else if (varCostPercent > 50) {
+    alerts.push({
+      id: 'var-yellow',
+      type: 'warning',
+      title: 'Custos Variáveis em Alerta',
+      message: `Custos Variáveis representam ${varCostPercent.toFixed(2)}% do custo total`,
+    })
+  }
+
+  const maxDas = s.settings.maxDas || 20
+  const dasPercent = faturamento > 0 ? (dasCost / faturamento) * 100 : 0
+  if (dasPercent > maxDas) {
+    alerts.push({
+      id: 'das-red',
+      type: 'critical',
+      title: 'DAS Crítico',
+      message: `DAS: ${dasPercent.toFixed(2)}% do faturamento`,
+    })
+  } else if (dasPercent > 15) {
+    alerts.push({
+      id: 'das-yellow',
+      type: 'warning',
+      title: 'DAS em Alerta',
+      message: `DAS: ${dasPercent.toFixed(2)}% do faturamento`,
+    })
+  }
+
+  // Persist result for Admin validations
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(
+      'ultimoResultadoCPK',
+      JSON.stringify({
+        cpk: finalCpk,
+        margin: currentMargin,
+        faturamento,
+        dasCost,
+        dasPercent,
+      }),
+    )
+  }
+
   return {
     errors,
+    alerts,
     totalKm,
     driverTotal,
     vehicleTotal,
