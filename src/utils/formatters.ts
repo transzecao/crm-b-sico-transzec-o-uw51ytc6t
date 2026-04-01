@@ -38,9 +38,9 @@ export const isValidPlate = (plate: string) => {
   )
 }
 
-export const formatCurrency = (value: number) => {
-  if (isNaN(value)) return 'R$ 0,00'
+export const formatCurrency = (value?: number | null) => {
+  if (value == null || isNaN(Number(value))) return 'R$ 0,00'
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
-    Math.max(0, value),
+    Math.max(0, Number(value)),
   )
 }

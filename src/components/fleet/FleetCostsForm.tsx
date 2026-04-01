@@ -41,13 +41,15 @@ export function FleetCostsForm() {
     loadSettings()
   }, [])
 
-  const fmt = (v: number) =>
-    new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(isNaN(v) ? 0 : v)
+  const fmt = (v?: number | null) =>
+    new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
+      v == null || isNaN(Number(v)) ? 0 : Number(v),
+    )
 
   const syncMastersToDB = async () => {
     try {
       // Upsert drivers
-      for (const d of data.drivers) {
+      for (const d of data?.drivers || []) {
         const payload = {
           local_id: d.id,
           name: d.name,
@@ -76,7 +78,7 @@ export function FleetCostsForm() {
       }
 
       // Upsert vehicles
-      for (const v of data.vehicles) {
+      for (const v of data?.vehicles || []) {
         const payload = {
           local_id: v.id,
           plate: v.plate,
@@ -115,7 +117,7 @@ export function FleetCostsForm() {
       }
 
       // Upsert vinculos
-      for (const l of data.links) {
+      for (const l of data?.links || []) {
         const payload = {
           local_id: l.id,
           driver_local_id: l.driverId,
@@ -167,29 +169,29 @@ export function FleetCostsForm() {
       await createFleetCost({
         user_id: userId,
         month_year: monthYear,
-        fixed_salary_driver: driverTotal,
+        fixed_salary_driver: driverTotal || 0,
         fixed_salary_helper: 0,
         fixed_insurance: 0,
         fixed_ipva: 0,
         fixed_depreciation: 0,
         fixed_tracking: 0,
-        fixed_warehouse: hqTotal,
-        var_fuel: vehicleTotal, // simplified var logic mapping
+        fixed_warehouse: hqTotal || 0,
+        var_fuel: vehicleTotal || 0,
         var_arla: 0,
         var_maintenance: 0,
         var_tires: 0,
         var_washing: 0,
         km_initial: 0,
-        km_final: totalKm,
+        km_final: totalKm || 0,
         details: {
           ...data,
           moduleTotals: { driverTotal, vehicleTotal, hqTotal, baseTaxes, dasCost },
           faturamento,
-          margem: currentMargin,
+          margem: currentMargin || 0,
         },
-        total_cost: finalTotalCost,
-        estimated_km: totalKm,
-        cpk: finalCpk,
+        total_cost: finalTotalCost || 0,
+        estimated_km: totalKm || 0,
+        cpk: finalCpk || 0,
       })
       toast({
         title: 'Sucesso',
@@ -207,7 +209,7 @@ export function FleetCostsForm() {
     }
   }
 
-  const StatusIcon = ({ status }: { status: string }) => {
+  const StatusIcon = ({ status }: { status?: string }) => {
     if (status === 'green') return <CheckCircle className="w-5 h-5 text-green-500" />
     if (status === 'yellow') return <AlertTriangle className="w-5 h-5 text-yellow-500" />
     return <XCircle className="w-5 h-5 text-red-500" />
@@ -242,19 +244,19 @@ export function FleetCostsForm() {
                   value="drivers"
                   className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-white rounded-none px-6 py-4 flex-shrink-0"
                 >
-                  Motoristas ({data.drivers.length})
+                  Motoristas ({data?.drivers?.length || 0})
                 </TabsTrigger>
                 <TabsTrigger
                   value="vehicles"
                   className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-white rounded-none px-6 py-4 flex-shrink-0"
                 >
-                  Veículos ({data.vehicles.length})
+                  Veículos ({data?.vehicles?.length || 0})
                 </TabsTrigger>
                 <TabsTrigger
                   value="links"
                   className="data-[state=active]:border-b-2 data-[state=active]:border-emerald-600 data-[state=active]:text-emerald-700 data-[state=active]:bg-white rounded-none px-6 py-4 font-bold flex-shrink-0"
                 >
-                  Vínculos ({data.links.length})
+                  Vínculos ({data?.links?.length || 0})
                 </TabsTrigger>
                 <TabsTrigger
                   value="hq"
@@ -328,7 +330,7 @@ export function FleetCostsForm() {
                 KM Mensal Total (Vínculos)
               </Label>
               <div className="text-3xl font-black text-emerald-400">
-                {totalKm.toLocaleString('pt-BR')}{' '}
+                {(totalKm || 0).toLocaleString('pt-BR')}{' '}
                 <span className="text-lg font-medium text-emerald-600">km</span>
               </div>
             </div>
@@ -381,7 +383,7 @@ export function FleetCostsForm() {
                   Margem Líquida
                 </span>
                 <span className="text-2xl font-black text-white tracking-tight">
-                  {currentMargin.toFixed(1)}%
+                  {(currentMargin || 0).toFixed(1)}%
                 </span>
               </div>
             </div>
