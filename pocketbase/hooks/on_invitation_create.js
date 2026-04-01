@@ -43,10 +43,6 @@ onRecordAfterCreateSuccess((e) => {
     console.log(
       `Successfully sent invitation email to ${email} via Titan SMTP (port 587/STARTTLS).`,
     )
-
-    // Update record status to sent (if it wasn't already)
-    e.record.set('status', 'sent')
-    $app.saveNoValidate(e.record)
   } catch (err) {
     console.log(`Failed to send invitation email to ${email}:`, err)
 
