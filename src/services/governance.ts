@@ -1,6 +1,6 @@
 import pb from '@/lib/pocketbase/client'
 import { ClientResponseError } from 'pocketbase'
-import { extractFieldErrors } from '@/lib/pocketbase/errors'
+import { extractFieldErrors, getErrorMessage } from '@/lib/pocketbase/errors'
 
 export const getUsersList = async () => {
   try {
@@ -33,11 +33,12 @@ export const getInvitations = async () => {
   }
 }
 
-export const createInvitation = async (data: any) => {
+export const createInvitation = async (data: { email: string; role: string }) => {
   const payload = {
-    ...data,
-    token: data.token || crypto.randomUUID(),
-    status: data.status || 'sent',
+    email: data.email,
+    role: data.role,
+    token: crypto.randomUUID(),
+    status: 'sent',
   }
 
   try {
@@ -48,7 +49,7 @@ export const createInvitation = async (data: any) => {
   } catch (err: any) {
     if (err.status !== 404) {
       console.error('Error fetching existing invitation:', err)
-      throw err
+      throw new Error(getErrorMessage(err) || 'Erro ao verificar convite existente.')
     }
   }
 
@@ -58,10 +59,12 @@ export const createInvitation = async (data: any) => {
     if (error instanceof ClientResponseError) {
       const fieldErrors = extractFieldErrors(error)
       console.error('Validation errors creating invitation:', fieldErrors)
+      const msg = getErrorMessage(error)
+      throw new Error(msg || 'Erro de validação ao criar convite.')
     } else {
       console.error('Network or unknown error creating invitation:', error)
+      throw new Error('Erro de rede ou desconhecido ao criar convite.')
     }
-    throw error
   }
 }
 

@@ -1,8 +1,9 @@
 import usePortalStore from '@/stores/usePortalStore'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
 import { useToast } from '@/hooks/use-toast'
 import {
   Select,
@@ -12,9 +13,11 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { useState } from 'react'
+import { createInvitation } from '@/services/governance'
+import { Loader2 } from 'lucide-react'
 
 export default function PortalAdmin() {
-  const [adminRole, setAdminRole] = useState('Comercial')
+  const [adminRole, setAdminRole] = useState('Master')
 
   const {
     users,
@@ -36,6 +39,29 @@ export default function PortalAdmin() {
   const financeMsgs = messages.filter((m) => m.department === 'Financeiro')
   const coletaMsgs = messages.filter((m) => m.department === 'Coleta')
 
+  const [inviteEmail, setInviteEmail] = useState('')
+  const [inviteRole, setInviteRole] = useState('Cliente')
+  const [isInviting, setIsInviting] = useState(false)
+
+  const handleInvite = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!inviteEmail) return
+    setIsInviting(true)
+    try {
+      await createInvitation({ email: inviteEmail, role: inviteRole })
+      toast({
+        title: 'Convite enviado!',
+        description: `Um convite foi criado com sucesso para ${inviteEmail}.`,
+      })
+      setInviteEmail('')
+      setInviteRole('Cliente')
+    } catch (err: any) {
+      toast({ variant: 'destructive', title: 'Erro ao enviar convite', description: err.message })
+    } finally {
+      setIsInviting(false)
+    }
+  }
+
   return (
     <div className="space-y-6 bg-slate-50 min-h-[calc(100vh-6rem)] p-2 md:p-6 rounded-xl animate-fade-in-up">
       <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
@@ -54,6 +80,7 @@ export default function PortalAdmin() {
               <SelectValue placeholder="Selecione o Perfil" />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="Master">Acesso Master</SelectItem>
               <SelectItem value="Comercial">Supervisor Comercial</SelectItem>
               <SelectItem value="Coleta">Supervisor Coleta</SelectItem>
               <SelectItem value="Financeiro">Supervisor Financeiro</SelectItem>
@@ -64,10 +91,70 @@ export default function PortalAdmin() {
 
       <Tabs value={adminRole.toLowerCase()} className="w-full">
         <TabsList className="bg-white p-1 rounded-xl shadow-sm border border-slate-200 mb-4 h-auto flex-wrap w-full hidden">
+          <TabsTrigger value="master">Master</TabsTrigger>
           <TabsTrigger value="comercial">Comercial</TabsTrigger>
           <TabsTrigger value="coleta">Coleta</TabsTrigger>
           <TabsTrigger value="financeiro">Financeiro</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="master" className="space-y-4">
+          <div className="bg-purple-50 border border-purple-200 p-4 rounded-xl mb-4">
+            <h3 className="font-bold text-purple-800">Acesso Restrito - Master</h3>
+            <p className="text-sm text-purple-600">
+              Você tem acesso global. Utilize esta área para convidar novos usuários e gerenciar o
+              sistema.
+            </p>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Convidar Usuário</CardTitle>
+              <CardDescription>
+                Envie um convite para novos membros da equipe ou clientes.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleInvite} className="flex flex-col md:flex-row gap-4 items-end">
+                <div className="space-y-2 flex-1 w-full">
+                  <label className="text-sm font-medium text-slate-700">E-mail</label>
+                  <Input
+                    type="email"
+                    placeholder="email@exemplo.com"
+                    value={inviteEmail}
+                    onChange={(e) => setInviteEmail(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="space-y-2 flex-1 w-full">
+                  <label className="text-sm font-medium text-slate-700">Função (Role)</label>
+                  <Select value={inviteRole} onValueChange={setInviteRole}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione a função" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Acesso Master">Acesso Master</SelectItem>
+                      <SelectItem value="Supervisor Financeiro">Supervisor Financeiro</SelectItem>
+                      <SelectItem value="Supervisor Comercial">Supervisor Comercial</SelectItem>
+                      <SelectItem value="Supervisor Coleta">Supervisor Coleta</SelectItem>
+                      <SelectItem value="Funcionário Comercial">Funcionário Comercial</SelectItem>
+                      <SelectItem value="Funcionário Marketing">Funcionário Marketing</SelectItem>
+                      <SelectItem value="Funcionário Coleta">Funcionário Coleta</SelectItem>
+                      <SelectItem value="Cliente">Cliente</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button
+                  type="submit"
+                  className="w-full md:w-auto"
+                  disabled={isInviting || !inviteEmail}
+                >
+                  {isInviting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                  Enviar Convite
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         <TabsContent value="comercial" className="space-y-4">
           <div className="bg-blue-50 border border-blue-200 p-4 rounded-xl mb-4">
