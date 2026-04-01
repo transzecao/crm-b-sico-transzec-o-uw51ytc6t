@@ -38,6 +38,8 @@ import {
 } from '@/components/ui/select'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { useRealtime } from '@/hooks/use-realtime'
+import { extractFieldErrors, getErrorMessage } from '@/lib/pocketbase/errors'
 
 export default function LoginAdmin() {
   const { state } = useCrmStore()
@@ -63,6 +65,12 @@ export default function LoginAdmin() {
     }
   }, [state.role])
 
+  useRealtime('invitations', () => {
+    if (state.role === 'Acesso Master') {
+      getInvitations().then(setInvitations)
+    }
+  })
+
   const loadData = async () => {
     const [u, h, i, a] = await Promise.all([
       getUsersList(),
@@ -85,18 +93,27 @@ export default function LoginAdmin() {
       await createInvitation({
         email: inviteEmail,
         role: inviteRole,
-        token: Math.random().toString(36).substring(7),
+        token: Math.random().toString(36).substring(2) + Math.random().toString(36).substring(2),
         status: 'sent',
       })
       toast({ title: 'Convite enviado!', description: 'O usuário receberá o link por e-mail.' })
       setIsInviteOpen(false)
       setInviteEmail('')
-      loadData()
     } catch (e: any) {
       console.error('Erro ao criar convite:', e)
+      const fieldErrors = extractFieldErrors(e)
+      const errorMsg = getErrorMessage(e)
+
+      let description = errorMsg || 'Falha ao criar o registro de convite.'
+      if (fieldErrors.email) {
+        description = `Erro no e-mail: ${fieldErrors.email}`
+      } else if (fieldErrors.status) {
+        description = `Erro no status: ${fieldErrors.status}`
+      }
+
       toast({
         title: 'Erro ao convidar',
-        description: e.response?.message || 'Verifique se o e-mail já possui um convite pendente.',
+        description,
         variant: 'destructive',
       })
     }

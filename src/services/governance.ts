@@ -1,4 +1,6 @@
 import pb from '@/lib/pocketbase/client'
+import { ClientResponseError } from 'pocketbase'
+import { extractFieldErrors } from '@/lib/pocketbase/errors'
 
 export const getUsersList = async () => {
   try {
@@ -32,7 +34,26 @@ export const getInvitations = async () => {
 }
 
 export const createInvitation = async (data: any) => {
-  return await pb.collection('invitations').create(data)
+  try {
+    const existing = await pb.collection('invitations').getFirstListItem(`email="${data.email}"`)
+    if (existing) {
+      return await pb.collection('invitations').update(existing.id, data)
+    }
+  } catch (err: any) {
+    if (err.status !== 404) {
+      throw err
+    }
+  }
+
+  try {
+    return await pb.collection('invitations').create(data)
+  } catch (error: any) {
+    if (error instanceof ClientResponseError) {
+      const fieldErrors = extractFieldErrors(error)
+      console.error('Validation errors creating invitation:', fieldErrors)
+    }
+    throw error
+  }
 }
 
 export const getAuditLogs = async () => {
