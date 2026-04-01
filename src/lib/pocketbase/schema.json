@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-01T22:23:08.482Z",
+  "generatedAt": "2026-04-01T22:57:41.085Z",
   "collections": [
     {
       "name": "transzecao",
@@ -43,16 +43,7 @@
           "type": "select",
           "required": false,
           "system": false,
-          "selectValues": [
-            "Acesso Master",
-            "Supervisor Financeiro",
-            "Supervisor Comercial",
-            "Supervisor Coleta",
-            "Funcionário Comercial",
-            "Funcionário Marketing",
-            "Funcionário Coleta",
-            "Cliente"
-          ]
+          "selectValues": ["admin", "supervisor", "employee"]
         },
         {
           "name": "status",
@@ -75,6 +66,12 @@
         },
         {
           "name": "position",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "setor",
           "type": "text",
           "required": false,
           "system": false
@@ -975,16 +972,7 @@
           "type": "select",
           "required": true,
           "system": false,
-          "selectValues": [
-            "Acesso Master",
-            "Supervisor Financeiro",
-            "Supervisor Comercial",
-            "Supervisor Coleta",
-            "Funcionário Comercial",
-            "Funcionário Marketing",
-            "Funcionário Coleta",
-            "Cliente"
-          ]
+          "selectValues": ["admin", "supervisor", "employee"]
         },
         {
           "name": "token",
@@ -1012,6 +1000,12 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "setor",
+          "type": "text",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": []

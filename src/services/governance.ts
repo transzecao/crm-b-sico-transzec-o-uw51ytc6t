@@ -33,10 +33,11 @@ export const getInvitations = async () => {
   }
 }
 
-export const createInvitation = async (data: { email: string; role: string }) => {
+export const createInvitation = async (data: { email: string; role: string; setor: string }) => {
   const payload = {
     email: data.email.trim(),
     role: data.role,
+    setor: data.setor,
     token: crypto.randomUUID(),
     status: 'sent',
   }

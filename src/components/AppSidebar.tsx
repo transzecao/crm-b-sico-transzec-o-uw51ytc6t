@@ -16,6 +16,7 @@ import {
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -23,104 +24,104 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar'
+import { Button } from '@/components/ui/button'
+import { LogOut } from 'lucide-react'
+import { useAuth } from '@/hooks/use-auth'
 import useCrmStore from '@/stores/useCrmStore'
 import { cn } from '@/lib/utils'
 
 export function AppSidebar() {
   const location = useLocation()
-  const { state } = useCrmStore()
+  const { user, signOut } = useAuth()
+
+  const handleLogout = () => {
+    signOut()
+    window.location.href = '/login'
+  }
 
   const items = [
     {
       title: 'Tarefas',
-      url: '/',
+      url: '/app/dashboard',
       icon: CheckSquare,
-      roles: [
-        'Acesso Master',
-        'Supervisor Financeiro',
-        'Supervisor Comercial',
-        'Supervisor Coleta',
-      ],
+      roles: ['admin', 'supervisor', 'employee'],
     },
     {
       title: 'Lead Novo',
       url: '/empresa/nova',
       icon: Inbox,
-      roles: ['Acesso Master', 'Supervisor Coleta'],
+      roles: ['admin', 'supervisor', 'employee'],
     },
     {
       title: 'Pipeline',
       url: '/pipeline/1',
       icon: KanbanSquare,
-      roles: ['Acesso Master', 'Supervisor Comercial', 'Funcionário Comercial'],
+      roles: ['admin', 'supervisor', 'employee'],
     },
     {
       title: 'Nutrição',
       url: '/pipeline/2',
       icon: Sprout,
-      roles: ['Acesso Master', 'Supervisor Comercial', 'Funcionário Marketing'],
+      roles: ['admin', 'supervisor', 'employee'],
     },
     {
       title: 'Contatos',
       url: '/contatos',
       icon: Users,
-      roles: ['Acesso Master', 'Supervisor Comercial', 'Supervisor Financeiro'],
+      roles: ['admin', 'supervisor', 'employee'],
     },
     {
       title: 'Empresas',
       url: '/empresas',
       icon: Building2,
-      roles: ['Acesso Master', 'Supervisor Financeiro', 'Supervisor Comercial'],
+      roles: ['admin', 'supervisor', 'employee'],
     },
     {
       title: 'Propostas',
       url: '/financeiro',
       icon: FileText,
-      roles: [
-        'Acesso Master',
-        'Supervisor Financeiro',
-        'Supervisor Coleta',
-        'Funcionário Comercial',
-      ],
+      roles: ['admin', 'supervisor', 'employee'],
     },
     {
       title: 'Controle de Gastos',
       url: '/financeiro/controle-gastos',
       icon: Wallet,
-      roles: ['Acesso Master', 'Supervisor Financeiro'],
+      roles: ['admin', 'supervisor'],
     },
     {
       title: 'Relatórios',
       url: '/analytics',
       icon: BarChart3,
-      roles: ['Acesso Master', 'Supervisor Financeiro', 'Supervisor Coleta'],
+      roles: ['admin', 'supervisor'],
     },
     {
       title: 'Roteirização',
       url: '/roteirizacao',
       icon: MapIcon,
-      roles: ['Acesso Master', 'Supervisor Coleta', 'Funcionário Coleta'],
+      roles: ['admin', 'supervisor', 'employee'],
+    },
+    {
+      title: 'Aprovações',
+      url: '/supervisor/approvals',
+      icon: CheckSquare,
+      roles: ['admin', 'supervisor'],
     },
     {
       title: 'Governança',
       url: '/admin/logins',
       icon: KeyRound,
-      roles: ['Acesso Master'],
+      roles: ['admin'],
     },
     {
       title: 'The Brain (Global)',
       url: '/ia',
       icon: BrainCircuit,
-      roles: [
-        'Acesso Master',
-        'Supervisor Comercial',
-        'Supervisor Financeiro',
-        'Supervisor Coleta',
-      ],
+      roles: ['admin', 'supervisor'],
     },
   ]
 
-  const visibleItems = items.filter((item) => item.roles.includes(state.role))
+  const userRole = user?.role || 'employee'
+  const visibleItems = items.filter((item) => item.roles.includes(userRole))
 
   return (
     <Sidebar className="border-r border-slate-200 bg-white">
@@ -164,6 +165,15 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+      <SidebarFooter className="p-4 border-t border-slate-200">
+        <Button
+          variant="ghost"
+          className="w-full justify-start text-rose-500 hover:text-rose-600 hover:bg-rose-50"
+          onClick={handleLogout}
+        >
+          <LogOut className="w-4 h-4 mr-2" /> Sair
+        </Button>
+      </SidebarFooter>
     </Sidebar>
   )
 }

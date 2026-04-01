@@ -13,7 +13,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { useToast } from '@/hooks/use-toast'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
-import useCrmStore from '@/stores/useCrmStore'
+import { useAuth } from '@/hooks/use-auth'
 import {
   getUsersList,
   getLoginHistory,
@@ -42,7 +42,7 @@ import { useRealtime } from '@/hooks/use-realtime'
 import { extractFieldErrors, getErrorMessage } from '@/lib/pocketbase/errors'
 
 export default function LoginAdmin() {
-  const { state } = useCrmStore()
+  const { user } = useAuth()
   const { toast } = useToast()
 
   const [users, setUsers] = useState<any[]>([])
@@ -51,23 +51,25 @@ export default function LoginAdmin() {
   const [auditLogs, setAuditLogs] = useState<any[]>([])
 
   const [inviteEmail, setInviteEmail] = useState('')
-  const [inviteRole, setInviteRole] = useState('Cliente')
+  const [inviteRole, setInviteRole] = useState('employee')
+  const [inviteSetor, setInviteSetor] = useState('geral')
   const [isInviteOpen, setIsInviteOpen] = useState(false)
   const [isInviting, setIsInviting] = useState(false)
 
   const [editingUser, setEditingUser] = useState<any>(null)
   const [editRole, setEditRole] = useState('')
+  const [editSetor, setEditSetor] = useState('')
   const [editStatus, setEditStatus] = useState('')
   const [isEditOpen, setIsEditOpen] = useState(false)
 
   useEffect(() => {
-    if (state.role === 'Acesso Master') {
+    if (user?.role === 'admin') {
       loadData()
     }
-  }, [state.role])
+  }, [user])
 
   useRealtime('invitations', () => {
-    if (state.role === 'Acesso Master') {
+    if (user?.role === 'admin') {
       getInvitations().then(setInvitations)
     }
   })
@@ -95,25 +97,16 @@ export default function LoginAdmin() {
       await createInvitation({
         email: inviteEmail,
         role: inviteRole,
+        setor: inviteSetor,
       })
       toast({ title: 'Convite enviado!', description: 'O usuário receberá o link por e-mail.' })
       setIsInviteOpen(false)
       setInviteEmail('')
     } catch (e: any) {
-      console.error('Erro ao criar convite:', e)
-      const fieldErrors = extractFieldErrors(e)
       const errorMsg = getErrorMessage(e)
-
-      let description = errorMsg || 'Falha ao criar o registro de convite.'
-      if (fieldErrors.email) {
-        description = `Erro no e-mail: ${fieldErrors.email}`
-      } else if (fieldErrors.status) {
-        description = `Erro no status: ${fieldErrors.status}`
-      }
-
       toast({
         title: 'Erro ao convidar',
-        description,
+        description: errorMsg || 'Falha ao criar o registro de convite.',
         variant: 'destructive',
       })
     } finally {
@@ -121,16 +114,17 @@ export default function LoginAdmin() {
     }
   }
 
-  const openEdit = (user: any) => {
-    setEditingUser(user)
-    setEditRole(user.role || 'Cliente')
-    setEditStatus(user.status || 'pending')
+  const openEdit = (u: any) => {
+    setEditingUser(u)
+    setEditRole(u.role || 'employee')
+    setEditSetor(u.setor || 'geral')
+    setEditStatus(u.status || 'pending')
     setIsEditOpen(true)
   }
 
   const handleUpdateUser = async () => {
     try {
-      await updateUser(editingUser.id, { role: editRole, status: editStatus })
+      await updateUser(editingUser.id, { role: editRole, setor: editSetor, status: editStatus })
       toast({ title: 'Usuário atualizado com sucesso' })
       setIsEditOpen(false)
       loadData()
@@ -139,14 +133,12 @@ export default function LoginAdmin() {
     }
   }
 
-  if (state.role !== 'Acesso Master') {
+  if (user?.role !== 'admin') {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] space-y-4">
         <ShieldAlert className="w-16 h-16 text-rose-500" />
         <h2 className="text-2xl font-bold text-slate-800">Acesso Restrito</h2>
-        <p className="text-slate-500">
-          Apenas o perfil "Acesso Master" pode visualizar esta página.
-        </p>
+        <p className="text-slate-500">Apenas administradores podem visualizar esta página.</p>
       </div>
     )
   }
@@ -194,20 +186,25 @@ export default function LoginAdmin() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Acesso Master">Acesso Master</SelectItem>
-                    <SelectItem value="Supervisor Financeiro">Supervisor Financeiro</SelectItem>
-                    <SelectItem value="Supervisor Comercial">Supervisor Comercial</SelectItem>
-                    <SelectItem value="Supervisor Coleta">Supervisor Coleta</SelectItem>
-                    <SelectItem value="Funcionário Comercial">Funcionário Comercial</SelectItem>
-                    <SelectItem value="Funcionário Marketing">Funcionário Marketing</SelectItem>
-                    <SelectItem value="Funcionário Coleta">Funcionário Coleta</SelectItem>
-                    <SelectItem value="Cliente">Cliente</SelectItem>
+                    <SelectItem value="admin">Administrador (Master)</SelectItem>
+                    <SelectItem value="supervisor">Supervisor</SelectItem>
+                    <SelectItem value="employee">Funcionário</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-              <div className="bg-slate-50 p-3 rounded-md border text-sm text-slate-600">
-                <strong>Mensagem:</strong> Olá! Você foi convidado a criar uma conta no CRM da
-                Transzecão. Clique no link abaixo para se cadastrar.
+              <div className="space-y-2">
+                <Label>Setor</Label>
+                <Select value={inviteSetor} onValueChange={setInviteSetor}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="geral">Geral</SelectItem>
+                    <SelectItem value="coleta">Coleta</SelectItem>
+                    <SelectItem value="financeiro">Financeiro</SelectItem>
+                    <SelectItem value="comercial">Comercial</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <Button onClick={handleInvite} className="w-full" disabled={isInviting}>
                 {isInviting ? (
@@ -242,27 +239,18 @@ export default function LoginAdmin() {
           >
             Histórico de Logins
           </TabsTrigger>
-          <TabsTrigger
-            value="audit"
-            className="data-[state=active]:bg-primary data-[state=active]:text-white text-sm py-2 px-4 font-semibold"
-          >
-            Auditoria de Ações
-          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="users">
           <Card className="border-slate-200 shadow-sm bg-white overflow-hidden">
-            <CardHeader className="pb-4 border-b border-slate-100 bg-slate-50">
-              <CardTitle className="text-lg text-slate-800">Usuários Cadastrados</CardTitle>
-            </CardHeader>
             <CardContent className="p-0">
               <Table>
                 <TableHeader className="bg-slate-50/50">
                   <TableRow>
                     <TableHead>Nome / E-mail</TableHead>
                     <TableHead>Perfil</TableHead>
+                    <TableHead>Setor</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead>Última Atividade</TableHead>
                     <TableHead></TableHead>
                   </TableRow>
                 </TableHeader>
@@ -277,22 +265,18 @@ export default function LoginAdmin() {
                         <Badge variant="outline">{u.role || 'N/A'}</Badge>
                       </TableCell>
                       <TableCell>
+                        <Badge variant="secondary">{u.setor || 'geral'}</Badge>
+                      </TableCell>
+                      <TableCell>
                         <Badge
                           className={
                             u.status === 'active'
                               ? 'bg-emerald-500 text-white'
-                              : u.status === 'inactive'
-                                ? 'bg-rose-500 text-white'
-                                : 'bg-amber-500 text-white'
+                              : 'bg-rose-500 text-white'
                           }
                         >
                           {u.status || 'pending'}
                         </Badge>
-                      </TableCell>
-                      <TableCell className="text-sm text-slate-600">
-                        {u.last_activity
-                          ? new Date(u.last_activity).toLocaleString('pt-BR')
-                          : 'Nunca acessou'}
                       </TableCell>
                       <TableCell>
                         <Button
@@ -308,7 +292,7 @@ export default function LoginAdmin() {
                   ))}
                   {users.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center py-8">
+                      <TableCell colSpan={5} className="text-center py-8 text-slate-500">
                         Nenhum usuário encontrado.
                       </TableCell>
                     </TableRow>
@@ -321,17 +305,14 @@ export default function LoginAdmin() {
 
         <TabsContent value="invites">
           <Card className="border-slate-200 shadow-sm bg-white overflow-hidden">
-            <CardHeader className="pb-4 border-b border-slate-100 bg-slate-50">
-              <CardTitle className="text-lg text-slate-800">Convites Enviados</CardTitle>
-            </CardHeader>
             <CardContent className="p-0">
               <Table>
                 <TableHeader className="bg-slate-50/50">
                   <TableRow>
                     <TableHead>E-mail</TableHead>
-                    <TableHead>Perfil Solicitado</TableHead>
+                    <TableHead>Perfil</TableHead>
+                    <TableHead>Setor</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead>Data do Convite</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -339,17 +320,15 @@ export default function LoginAdmin() {
                     <TableRow key={i.id}>
                       <TableCell className="font-medium">{i.email}</TableCell>
                       <TableCell>{i.role}</TableCell>
+                      <TableCell>{i.setor}</TableCell>
                       <TableCell>
                         <Badge variant="secondary">{i.status}</Badge>
-                      </TableCell>
-                      <TableCell className="text-sm text-slate-500">
-                        {new Date(i.created).toLocaleString('pt-BR')}
                       </TableCell>
                     </TableRow>
                   ))}
                   {invitations.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={4} className="text-center py-8">
+                      <TableCell colSpan={4} className="text-center py-8 text-slate-500">
                         Nenhum convite pendente.
                       </TableCell>
                     </TableRow>
@@ -362,11 +341,6 @@ export default function LoginAdmin() {
 
         <TabsContent value="history">
           <Card className="border-slate-200 shadow-sm bg-white overflow-hidden">
-            <CardHeader className="pb-4 border-b border-slate-100 bg-slate-50">
-              <CardTitle className="text-lg text-slate-800 flex items-center gap-2">
-                <History className="w-5 h-5 text-secondary" /> Histórico de Acessos Recentes
-              </CardTitle>
-            </CardHeader>
             <CardContent className="p-0">
               <Table>
                 <TableHeader className="bg-slate-50/50">
@@ -392,55 +366,8 @@ export default function LoginAdmin() {
                   ))}
                   {history.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={3} className="text-center py-8">
+                      <TableCell colSpan={3} className="text-center py-8 text-slate-500">
                         Nenhum acesso registrado.
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="audit">
-          <Card className="border-slate-200 shadow-sm bg-white overflow-hidden">
-            <CardHeader className="pb-4 border-b border-slate-100 bg-slate-50">
-              <CardTitle className="text-lg text-slate-800 flex items-center gap-2">
-                <ArrowRightLeft className="w-5 h-5 text-primary" /> Log de Operações Governança
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader className="bg-slate-50/50">
-                  <TableRow>
-                    <TableHead>Data/Hora</TableHead>
-                    <TableHead>Ação</TableHead>
-                    <TableHead>Valor Anterior</TableHead>
-                    <TableHead>Novo Valor</TableHead>
-                    <TableHead>Impacto</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {auditLogs.map((l) => (
-                    <TableRow key={l.id}>
-                      <TableCell className="text-xs text-slate-500">
-                        {new Date(l.created).toLocaleString('pt-BR')}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline">{l.parameter}</Badge>
-                      </TableCell>
-                      <TableCell className="text-xs">{l.old_value}</TableCell>
-                      <TableCell className="text-xs text-emerald-700 font-bold">
-                        {l.new_value}
-                      </TableCell>
-                      <TableCell className="text-xs">{l.impact}</TableCell>
-                    </TableRow>
-                  ))}
-                  {auditLogs.length === 0 && (
-                    <TableRow>
-                      <TableCell colSpan={5} className="text-center py-8">
-                        Nenhum log registrado.
                       </TableCell>
                     </TableRow>
                   )}
@@ -477,14 +404,23 @@ export default function LoginAdmin() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Acesso Master">Acesso Master</SelectItem>
-                  <SelectItem value="Supervisor Financeiro">Supervisor Financeiro</SelectItem>
-                  <SelectItem value="Supervisor Comercial">Supervisor Comercial</SelectItem>
-                  <SelectItem value="Supervisor Coleta">Supervisor Coleta</SelectItem>
-                  <SelectItem value="Funcionário Comercial">Funcionário Comercial</SelectItem>
-                  <SelectItem value="Funcionário Marketing">Funcionário Marketing</SelectItem>
-                  <SelectItem value="Funcionário Coleta">Funcionário Coleta</SelectItem>
-                  <SelectItem value="Cliente">Cliente</SelectItem>
+                  <SelectItem value="admin">Administrador (Master)</SelectItem>
+                  <SelectItem value="supervisor">Supervisor</SelectItem>
+                  <SelectItem value="employee">Funcionário</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Setor</Label>
+              <Select value={editSetor} onValueChange={setEditSetor}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="geral">Geral</SelectItem>
+                  <SelectItem value="coleta">Coleta</SelectItem>
+                  <SelectItem value="financeiro">Financeiro</SelectItem>
+                  <SelectItem value="comercial">Comercial</SelectItem>
                 </SelectContent>
               </Select>
             </div>
