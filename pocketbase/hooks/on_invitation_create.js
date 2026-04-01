@@ -40,35 +40,33 @@ onRecordAfterCreateSuccess((e) => {
 
     // Send via configured SMTP
     $app.newMailClient().send(message)
-    console.log(`Successfully sent invitation email to ${email} via Titan SMTP.`)
+    console.log(
+      `Successfully sent invitation email to ${email} via Titan SMTP (port 587/STARTTLS).`,
+    )
 
     // Update record status to sent (if it wasn't already)
     e.record.set('status', 'sent')
     $app.saveNoValidate(e.record)
-
-    e.next()
   } catch (err) {
     console.log(`Failed to send invitation email to ${email}:`, err)
 
     // Log specific SMTP errors to assist debugging
     const errMsg = (err.message || '').toLowerCase()
     if (errMsg.includes('auth') || errMsg.includes('credentials')) {
-      console.log('SMTP Error: Authentication failed with Titan server. Please verify credentials.')
+      console.log(
+        `SMTP Error: Authentication failed with Titan server on port 587. Details: ${err.message}`,
+      )
     } else if (errMsg.includes('timeout')) {
-      console.log('SMTP Error: Connection timed out while trying to reach smtp.titan.email.')
+      console.log(
+        `SMTP Error: Connection timed out while trying to reach smtp.titan.email on port 587. Details: ${err.message}`,
+      )
     } else {
-      console.log('SMTP Error: Unknown error during email dispatch.')
+      console.log(`SMTP Error: Email dispatch failed. Response code/message: ${err.message}`)
     }
 
-    // Rollback the creation if email fails to avoid broken invitations
-    try {
-      $app.delete(e.record)
-    } catch (delErr) {
-      console.log(`Failed to rollback invitation record:`, delErr)
-    }
-
-    throw new BadRequestError(
-      `Falha ao enviar e-mail de convite. Verifique as configurações SMTP. Erro: ${err.message}`,
-    )
+    // Decoupled Email Delivery: Do NOT delete the record or throw an error.
+    // Allow the record to be saved so the invitation can be tracked or re-sent later.
   }
+
+  e.next()
 }, 'invitations')
