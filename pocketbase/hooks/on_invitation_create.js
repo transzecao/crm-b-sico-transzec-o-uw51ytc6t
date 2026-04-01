@@ -7,7 +7,7 @@ onRecordAfterCreateSuccess((e) => {
   const registerLink = `${appUrl}/register?token=${token}`
 
   try {
-    // Build the email message using MailerMessage globally available in PB JSVM v0.22+
+    // Build the email message using MailerMessage globally available in PB JSVM
     const message = new MailerMessage({
       from: {
         address: 'nicoly@transzecao.com.br',
@@ -38,28 +38,20 @@ onRecordAfterCreateSuccess((e) => {
 
     // Send via configured SMTP
     $app.newMailClient().send(message)
-    console.log(
-      `Successfully sent invitation email to ${email} via Titan SMTP (port 587/STARTTLS).`,
-    )
+    console.log(`Successfully sent invitation email to ${email}.`)
   } catch (err) {
+    // Decoupled Email Delivery: Do NOT delete the record or throw an error to the client.
+    // Allow the record to be saved so the invitation can be tracked or re-sent later.
     console.log(`Failed to send invitation email to ${email}:`, err)
 
-    // Log specific SMTP errors to assist debugging
     const errMsg = (err.message || '').toLowerCase()
     if (errMsg.includes('auth') || errMsg.includes('credentials')) {
-      console.log(
-        `SMTP Error: Authentication failed with Titan server on port 587. Details: ${err.message}`,
-      )
+      console.log(`SMTP Error: Authentication failed. Details: ${err.message}`)
     } else if (errMsg.includes('timeout')) {
-      console.log(
-        `SMTP Error: Connection timed out while trying to reach smtp.titan.email on port 587. Details: ${err.message}`,
-      )
+      console.log(`SMTP Error: Connection timed out. Details: ${err.message}`)
     } else {
-      console.log(`SMTP Error: Email dispatch failed. Response code/message: ${err.message}`)
+      console.log(`SMTP Error: Email dispatch failed. Details: ${err.message}`)
     }
-
-    // Decoupled Email Delivery: Do NOT delete the record or throw an error.
-    // Allow the record to be saved so the invitation can be tracked or re-sent later.
   }
 
   e.next()
