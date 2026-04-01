@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-01T22:09:59.188Z",
+  "generatedAt": "2026-04-01T22:23:08.482Z",
   "collections": [
     {
       "name": "transzecao",
@@ -959,7 +959,7 @@
       "apiRules": {
         "list": "@request.auth.id != ''",
         "view": "@request.auth.id != ''",
-        "create": "@request.auth.id != ''",
+        "create": null,
         "update": "@request.auth.id != ''",
         "delete": "@request.auth.id != ''"
       },

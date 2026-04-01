@@ -35,25 +35,34 @@ export const getInvitations = async () => {
 
 export const createInvitation = async (data: { email: string; role: string }) => {
   const payload = {
-    email: data.email,
+    email: data.email.trim(),
     role: data.role,
     token: crypto.randomUUID(),
     status: 'sent',
   }
 
-  try {
-    const existing = await pb.collection('invitations').getFirstListItem(`email="${payload.email}"`)
-    if (existing) {
-      return await pb.collection('invitations').update(existing.id, payload)
-    }
-  } catch (err: any) {
-    if (err.status !== 404) {
-      console.error('Error fetching existing invitation:', err)
-      throw new Error(getErrorMessage(err) || 'Erro ao verificar convite existente.')
-    }
+  if (!pb.authStore.isValid) {
+    throw new Error('Usuário não autenticado. Faça login novamente.')
   }
 
   try {
+    let existingId: string | null = null
+    try {
+      const existing = await pb
+        .collection('invitations')
+        .getFirstListItem(`email="${payload.email}"`)
+      existingId = existing.id
+    } catch (err: any) {
+      if (err.status !== 404) {
+        console.error('Error fetching existing invitation:', err)
+        throw new Error(getErrorMessage(err) || 'Erro ao verificar convite existente.')
+      }
+    }
+
+    if (existingId) {
+      return await pb.collection('invitations').update(existingId, payload)
+    }
+
     return await pb.collection('invitations').create(payload)
   } catch (error: any) {
     if (error instanceof ClientResponseError) {

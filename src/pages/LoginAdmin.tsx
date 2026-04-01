@@ -53,6 +53,7 @@ export default function LoginAdmin() {
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteRole, setInviteRole] = useState('Cliente')
   const [isInviteOpen, setIsInviteOpen] = useState(false)
+  const [isInviting, setIsInviting] = useState(false)
 
   const [editingUser, setEditingUser] = useState<any>(null)
   const [editRole, setEditRole] = useState('')
@@ -89,6 +90,7 @@ export default function LoginAdmin() {
       toast({ title: 'E-mail inválido', variant: 'destructive' })
       return
     }
+    setIsInviting(true)
     try {
       await createInvitation({
         email: inviteEmail,
@@ -114,6 +116,8 @@ export default function LoginAdmin() {
         description,
         variant: 'destructive',
       })
+    } finally {
+      setIsInviting(false)
     }
   }
 
@@ -205,8 +209,13 @@ export default function LoginAdmin() {
                 <strong>Mensagem:</strong> Olá! Você foi convidado a criar uma conta no CRM da
                 Transzecão. Clique no link abaixo para se cadastrar.
               </div>
-              <Button onClick={handleInvite} className="w-full">
-                <Mail className="w-4 h-4 mr-2" /> Enviar Convite
+              <Button onClick={handleInvite} className="w-full" disabled={isInviting}>
+                {isInviting ? (
+                  <span className="animate-spin mr-2 border-2 border-white/20 border-t-white rounded-full w-4 h-4" />
+                ) : (
+                  <Mail className="w-4 h-4 mr-2" />
+                )}
+                {isInviting ? 'Enviando...' : 'Enviar Convite'}
               </Button>
             </div>
           </DialogContent>
