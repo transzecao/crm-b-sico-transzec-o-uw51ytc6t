@@ -93,8 +93,6 @@ export default function LoginAdmin() {
       await createInvitation({
         email: inviteEmail,
         role: inviteRole,
-        token: Math.random().toString(36).substring(2) + Math.random().toString(36).substring(2),
-        status: 'sent',
       })
       toast({ title: 'Convite enviado!', description: 'O usuário receberá o link por e-mail.' })
       setIsInviteOpen(false)

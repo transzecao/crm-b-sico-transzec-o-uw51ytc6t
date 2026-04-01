@@ -34,23 +34,32 @@ export const getInvitations = async () => {
 }
 
 export const createInvitation = async (data: any) => {
+  const payload = {
+    ...data,
+    token: data.token || crypto.randomUUID(),
+    status: data.status || 'sent',
+  }
+
   try {
-    const existing = await pb.collection('invitations').getFirstListItem(`email="${data.email}"`)
+    const existing = await pb.collection('invitations').getFirstListItem(`email="${payload.email}"`)
     if (existing) {
-      return await pb.collection('invitations').update(existing.id, data)
+      return await pb.collection('invitations').update(existing.id, payload)
     }
   } catch (err: any) {
     if (err.status !== 404) {
+      console.error('Error fetching existing invitation:', err)
       throw err
     }
   }
 
   try {
-    return await pb.collection('invitations').create(data)
+    return await pb.collection('invitations').create(payload)
   } catch (error: any) {
     if (error instanceof ClientResponseError) {
       const fieldErrors = extractFieldErrors(error)
       console.error('Validation errors creating invitation:', fieldErrors)
+    } else {
+      console.error('Network or unknown error creating invitation:', error)
     }
     throw error
   }
