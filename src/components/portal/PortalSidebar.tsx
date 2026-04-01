@@ -17,10 +17,6 @@ export function PortalSidebar({ activeTab, setActiveTab, onLogout }: any) {
     { id: 'home', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'coleta', label: 'Agendar Coleta', icon: Truck },
     { id: 'cotacao', label: 'Cotação', icon: Calculator },
-    { id: 'cotacao-hist', label: 'Histórico de Cotações', icon: History },
-    { id: 'docs', label: 'Documentos', icon: FileText },
-    { id: 'messages', label: 'Mensagens', icon: MessageSquare },
-    { id: 'blog', label: 'Blog', icon: Newspaper },
   ]
 
   const SidebarContent = () => (

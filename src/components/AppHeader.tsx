@@ -237,11 +237,10 @@ export function AppHeader() {
             <DropdownMenuContent align="end" className="w-48">
               <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="cursor-pointer">
-                <User className="w-4 h-4 mr-2" /> Perfil
-              </DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer">
-                <Settings className="w-4 h-4 mr-2" /> Redefinir Senha
+              <DropdownMenuItem className="cursor-pointer" asChild>
+                <Link to="/profile">
+                  <User className="w-4 h-4 mr-2" /> Meu Perfil
+                </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem className="text-red-600 cursor-pointer">

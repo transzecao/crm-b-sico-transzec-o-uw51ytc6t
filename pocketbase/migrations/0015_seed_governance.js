@@ -1,0 +1,78 @@
+migrate(
+  (app) => {
+    const transzecao = app.findCollectionByNameOrId('transzecao')
+
+    const usersToSeed = [
+      {
+        email: 'master@transzecao.com',
+        name: 'Admin Master',
+        role: 'Acesso Master',
+        status: 'active',
+        position: 'Diretor',
+      },
+      {
+        email: 'financeiro@transzecao.com',
+        name: 'João Financeiro',
+        role: 'Supervisor Financeiro',
+        status: 'active',
+        position: 'Gerente Financeiro',
+      },
+      {
+        email: 'comercial@transzecao.com',
+        name: 'Maria Comercial',
+        role: 'Supervisor Comercial',
+        status: 'active',
+        position: 'Gerente Comercial',
+      },
+      {
+        email: 'coleta@transzecao.com',
+        name: 'Carlos Coleta',
+        role: 'Supervisor Coleta',
+        status: 'inactive',
+        position: 'Coordenador',
+      },
+    ]
+
+    for (let u of usersToSeed) {
+      try {
+        app.findAuthRecordByEmail('transzecao', u.email)
+      } catch (_) {
+        let record = new Record(transzecao)
+        record.setEmail(u.email)
+        record.setPassword('Skip@Pass123')
+        record.setVerified(true)
+        record.set('name', u.name)
+        record.set('role', u.role)
+        record.set('status', u.status)
+        record.set('position', u.position)
+        record.set(
+          'last_activity',
+          new Date().toISOString().replace('T', ' ').substring(0, 19) + 'Z',
+        )
+        app.save(record)
+      }
+    }
+
+    try {
+      const masterUser = app.findAuthRecordByEmail('transzecao', 'master@transzecao.com')
+      const historyCol = app.findCollectionByNameOrId('login_history')
+      let hRec = new Record(historyCol)
+      hRec.set('user_id', masterUser.id)
+      hRec.set('ip_address', '192.168.1.100')
+      app.save(hRec)
+    } catch (e) {}
+
+    const invCol = app.findCollectionByNameOrId('invitations')
+    try {
+      app.findFirstRecordByData('invitations', 'email', 'novo@cliente.com')
+    } catch (_) {
+      let iRec = new Record(invCol)
+      iRec.set('email', 'novo@cliente.com')
+      iRec.set('role', 'Cliente')
+      iRec.set('token', 'xyz123')
+      iRec.set('status', 'sent')
+      app.save(iRec)
+    }
+  },
+  (app) => {},
+)

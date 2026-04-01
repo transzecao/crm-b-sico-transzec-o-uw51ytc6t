@@ -40,21 +40,13 @@ export function AppSidebar() {
         'Supervisor Financeiro',
         'Supervisor Comercial',
         'Supervisor Coleta',
-        'Funcionário Comercial',
-        'Funcionário Marketing',
-        'Funcionário Coleta',
       ],
     },
     {
       title: 'Lead Novo',
       url: '/empresa/nova',
       icon: Inbox,
-      roles: [
-        'Acesso Master',
-        'Supervisor Comercial',
-        'Funcionário Comercial',
-        'Funcionário Marketing',
-      ],
+      roles: ['Acesso Master', 'Supervisor Coleta'],
     },
     {
       title: 'Pipeline',
@@ -63,44 +55,33 @@ export function AppSidebar() {
       roles: ['Acesso Master', 'Supervisor Comercial', 'Funcionário Comercial'],
     },
     {
+      title: 'Nutrição',
+      url: '/pipeline/2',
+      icon: Sprout,
+      roles: ['Acesso Master', 'Supervisor Comercial', 'Funcionário Marketing'],
+    },
+    {
+      title: 'Contatos',
+      url: '/contatos',
+      icon: Users,
+      roles: ['Acesso Master', 'Supervisor Comercial', 'Supervisor Financeiro'],
+    },
+    {
+      title: 'Empresas',
+      url: '/empresas',
+      icon: Building2,
+      roles: ['Acesso Master', 'Supervisor Financeiro', 'Supervisor Comercial'],
+    },
+    {
       title: 'Propostas',
       url: '/financeiro',
       icon: FileText,
       roles: [
         'Acesso Master',
         'Supervisor Financeiro',
-        'Supervisor Comercial',
-        'Funcionário Comercial',
-        'Funcionário Coleta',
-      ],
-    },
-    {
-      title: 'Relatórios',
-      url: '/analytics',
-      icon: BarChart3,
-      roles: [
-        'Acesso Master',
-        'Supervisor Financeiro',
-        'Supervisor Comercial',
         'Supervisor Coleta',
-      ],
-    },
-    {
-      title: 'Empresas',
-      url: '/empresas',
-      icon: Building2,
-      roles: [
-        'Acesso Master',
-        'Supervisor Comercial',
         'Funcionário Comercial',
-        'Funcionário Coleta',
       ],
-    },
-    {
-      title: 'Nutrição',
-      url: '/pipeline/2',
-      icon: Sprout,
-      roles: ['Acesso Master', 'Supervisor Comercial', 'Funcionário Marketing'],
     },
     {
       title: 'Controle de Gastos',
@@ -109,21 +90,16 @@ export function AppSidebar() {
       roles: ['Acesso Master', 'Supervisor Financeiro'],
     },
     {
+      title: 'Relatórios',
+      url: '/analytics',
+      icon: BarChart3,
+      roles: ['Acesso Master', 'Supervisor Financeiro', 'Supervisor Coleta'],
+    },
+    {
       title: 'Roteirização',
       url: '/roteirizacao',
       icon: MapIcon,
       roles: ['Acesso Master', 'Supervisor Coleta', 'Funcionário Coleta'],
-    },
-    {
-      title: 'Contatos',
-      url: '/contatos',
-      icon: Users,
-      roles: [
-        'Acesso Master',
-        'Supervisor Comercial',
-        'Funcionário Comercial',
-        'Funcionário Coleta',
-      ],
     },
     {
       title: 'Governança',
