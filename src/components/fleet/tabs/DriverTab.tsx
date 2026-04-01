@@ -37,19 +37,36 @@ const InfoIcon = ({ text }: { text: string }) => (
 )
 
 export function DriverTab() {
-  const { data, addDriver, updateDriver, removeDriver, addCustomFieldDef } = useFleetCalculator()
+  const { data, addDriver, updateDriver, removeDriver } = useFleetCalculator()
   const [openStates, setOpenStates] = useState<Record<string, boolean>>({})
 
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [newFieldName, setNewFieldName] = useState('')
+  const [modalConfig, setModalConfig] = useState<{ isOpen: boolean; targetId: string | null }>({
+    isOpen: false,
+    targetId: null,
+  })
+  const [newField, setNewField] = useState({ name: '', value: 0 })
 
   const toggle = (id: string) => setOpenStates((prev) => ({ ...prev, [id]: !prev[id] }))
 
   const handleAddField = () => {
-    if (newFieldName.trim()) {
-      addCustomFieldDef('driver', newFieldName.trim())
-      setNewFieldName('')
-      setIsModalOpen(false)
+    if (newField.name.trim() && modalConfig.targetId) {
+      const driver = data.drivers.find((d) => d.id === modalConfig.targetId)
+      if (driver) {
+        updateDriver(driver.id, {
+          customFields: { ...driver.customFields, [newField.name.trim()]: newField.value },
+        })
+      }
+      setNewField({ name: '', value: 0 })
+      setModalConfig({ isOpen: false, targetId: null })
+    }
+  }
+
+  const handleRemoveField = (driverId: string, fieldName: string) => {
+    const driver = data.drivers.find((d) => d.id === driverId)
+    if (driver && driver.customFields) {
+      const newCustom = { ...driver.customFields }
+      delete newCustom[fieldName]
+      updateDriver(driver.id, { customFields: newCustom })
     }
   }
 
@@ -294,19 +311,28 @@ export function DriverTab() {
               </div>
 
               {/* Custom Fields */}
-              {data.customFieldDefs?.driver?.length > 0 && (
+              {d.customFields && Object.keys(d.customFields).length > 0 && (
                 <div className="md:col-span-3 xl:col-span-4 mt-2 bg-[#f8f9fa] p-[10px] rounded-[5px] border border-slate-200">
                   <span className="text-sm font-bold text-slate-700 block mb-2">
                     Campos Personalizados (R$/mês)
                   </span>
                   <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-4">
-                    {data.customFieldDefs.driver.map((field) => (
-                      <div className="space-y-2" key={field}>
-                        <Label>{field} (R$)</Label>
+                    {Object.entries(d.customFields).map(([field, val]) => (
+                      <div className="space-y-2 relative group" key={field}>
+                        <Label className="flex items-center gap-2">
+                          {field} (R$)
+                          <button
+                            className="text-red-500 opacity-0 group-hover:opacity-100 transition-opacity focus:opacity-100"
+                            onClick={() => handleRemoveField(d.id, field)}
+                            title="Remover campo"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </Label>
                         <Input
                           type="number"
                           className="bg-white"
-                          value={d.customFields?.[field] || 0}
+                          value={val || 0}
                           onChange={(e) =>
                             updateDriver(d.id, {
                               customFields: { ...d.customFields, [field]: Number(e.target.value) },
@@ -318,6 +344,14 @@ export function DriverTab() {
                   </div>
                 </div>
               )}
+
+              <Button
+                variant="outline"
+                className="w-full mt-4 border-2 border-dashed border-[#28a745] text-[#28a745] hover:bg-[#28a745] hover:text-white transition-all duration-300 transform hover:scale-[1.01]"
+                onClick={() => setModalConfig({ isOpen: true, targetId: d.id })}
+              >
+                <Plus className="w-4 h-4 mr-2" /> Adicionar Campo Personalizado
+              </Button>
 
               <div className="flex justify-between items-center pt-4 border-t border-slate-200 mt-4">
                 <div className="text-sm text-slate-500 font-medium">
@@ -332,36 +366,46 @@ export function DriverTab() {
         ))}
       </div>
 
-      <div className="mt-6 pt-4 border-t border-slate-200">
-        <Button
-          variant="outline"
-          className="btn-add-campo w-full border-dashed border-green-500 text-green-700 hover:bg-green-50"
-          onClick={() => setIsModalOpen(true)}
-        >
-          <Plus className="w-4 h-4 mr-2" /> Adicionar Campo Personalizado
-        </Button>
-      </div>
-
-      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+      <Dialog
+        open={modalConfig.isOpen}
+        onOpenChange={(open) => !open && setModalConfig({ isOpen: false, targetId: null })}
+      >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Novo Campo Personalizado - Motoristas</DialogTitle>
+            <DialogTitle>Novo Campo Personalizado - Motorista</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label>Nome do Campo</Label>
+              <Label>
+                Nome do Campo <span className="text-red-500">*</span>
+              </Label>
               <Input
                 placeholder="Ex: Auxílio Combustível"
-                value={newFieldName}
-                onChange={(e) => setNewFieldName(e.target.value)}
+                value={newField.name}
+                onChange={(e) => setNewField((prev) => ({ ...prev, name: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Valor Inicial (R$)</Label>
+              <Input
+                type="number"
+                value={newField.value}
+                onChange={(e) =>
+                  setNewField((prev) => ({ ...prev, value: Number(e.target.value) }))
+                }
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsModalOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setModalConfig({ isOpen: false, targetId: null })}
+            >
               Cancelar
             </Button>
-            <Button onClick={handleAddField}>Adicionar</Button>
+            <Button onClick={handleAddField} className="bg-[#28a745] hover:bg-green-700 text-white">
+              Adicionar
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

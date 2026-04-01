@@ -9,6 +9,7 @@ export interface VehicleData {
   last_maintenance_date: string
   next_maintenance_date: string
   status: 'active' | 'maintenance' | 'inactive'
+  custom_fields?: Record<string, number>
 }
 
 export const getVehicles = () => pb.collection('vehicles').getFullList<VehicleData>()

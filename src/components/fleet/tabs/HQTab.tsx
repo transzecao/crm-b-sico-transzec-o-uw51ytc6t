@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
-import { Plus } from 'lucide-react'
+import { Plus, Trash2 } from 'lucide-react'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import {
   Dialog,
@@ -14,17 +14,27 @@ import {
 import { useFleetCalculator } from '@/stores/useFleetCalculator'
 
 export function HQTab() {
-  const { data, updateHQ, addCustomFieldDef } = useFleetCalculator()
+  const { data, updateHQ } = useFleetCalculator()
   const { hq } = data
 
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [newFieldName, setNewFieldName] = useState('')
+  const [newField, setNewField] = useState({ name: '', value: 0 })
 
   const handleAddField = () => {
-    if (newFieldName.trim()) {
-      addCustomFieldDef('hq', newFieldName.trim())
-      setNewFieldName('')
+    if (newField.name.trim()) {
+      updateHQ({
+        customFields: { ...hq.customFields, [newField.name.trim()]: newField.value },
+      })
+      setNewField({ name: '', value: 0 })
       setIsModalOpen(false)
+    }
+  }
+
+  const handleRemoveField = (fieldName: string) => {
+    if (hq.customFields) {
+      const newCustom = { ...hq.customFields }
+      delete newCustom[fieldName]
+      updateHQ({ customFields: newCustom })
     }
   }
 
@@ -134,16 +144,25 @@ export function HQTab() {
         </div>
       </div>
 
-      {data.customFieldDefs?.hq?.length > 0 && (
+      {hq.customFields && Object.keys(hq.customFields).length > 0 && (
         <>
           <h4 className="text-md font-bold text-slate-700 pt-4">Campos Personalizados</h4>
           <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-6 bg-slate-50/50 p-4 rounded-xl border border-slate-100">
-            {data.customFieldDefs.hq.map((field) => (
-              <div className="space-y-2" key={field}>
-                <Label>{field} (R$)</Label>
+            {Object.entries(hq.customFields).map(([field, val]) => (
+              <div className="space-y-2 relative group" key={field}>
+                <Label className="flex items-center gap-2">
+                  {field} (R$)
+                  <button
+                    className="text-red-500 opacity-0 group-hover:opacity-100 transition-opacity focus:opacity-100"
+                    onClick={() => handleRemoveField(field)}
+                    title="Remover campo"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </button>
+                </Label>
                 <Input
                   type="number"
-                  value={hq.customFields?.[field] || 0}
+                  value={val || 0}
                   onChange={(e) =>
                     updateHQ({
                       customFields: { ...hq.customFields, [field]: Number(e.target.value) },
@@ -157,15 +176,13 @@ export function HQTab() {
         </>
       )}
 
-      <div className="mt-6 pt-4 border-t border-slate-200">
-        <Button
-          variant="outline"
-          className="btn-add-campo w-full border-dashed border-green-500 text-green-700 hover:bg-green-50"
-          onClick={() => setIsModalOpen(true)}
-        >
-          <Plus className="w-4 h-4 mr-2" /> Adicionar Campo Personalizado
-        </Button>
-      </div>
+      <Button
+        variant="outline"
+        className="w-full mt-4 border-2 border-dashed border-[#28a745] text-[#28a745] hover:bg-[#28a745] hover:text-white transition-all duration-300 transform hover:scale-[1.01]"
+        onClick={() => setIsModalOpen(true)}
+      >
+        <Plus className="w-4 h-4 mr-2" /> Adicionar Campo Personalizado
+      </Button>
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent>
@@ -174,11 +191,23 @@ export function HQTab() {
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label>Nome do Campo</Label>
+              <Label>
+                Nome do Campo <span className="text-red-500">*</span>
+              </Label>
               <Input
                 placeholder="Ex: Serviços de Limpeza"
-                value={newFieldName}
-                onChange={(e) => setNewFieldName(e.target.value)}
+                value={newField.name}
+                onChange={(e) => setNewField((prev) => ({ ...prev, name: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Valor Inicial (R$)</Label>
+              <Input
+                type="number"
+                value={newField.value}
+                onChange={(e) =>
+                  setNewField((prev) => ({ ...prev, value: Number(e.target.value) }))
+                }
               />
             </div>
           </div>
@@ -186,7 +215,9 @@ export function HQTab() {
             <Button variant="outline" onClick={() => setIsModalOpen(false)}>
               Cancelar
             </Button>
-            <Button onClick={handleAddField}>Adicionar</Button>
+            <Button onClick={handleAddField} className="bg-[#28a745] hover:bg-green-700 text-white">
+              Adicionar
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

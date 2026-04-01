@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-01T13:25:47.032Z",
+  "generatedAt": "2026-04-01T13:46:00.537Z",
   "collections": [
     {
       "name": "transzecao",
@@ -494,6 +494,12 @@
         {
           "name": "vehicle_type",
           "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "custom_fields",
+          "type": "json",
           "required": false,
           "system": false
         }

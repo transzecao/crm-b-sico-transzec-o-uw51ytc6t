@@ -126,7 +126,7 @@ export interface FleetState {
   hq: HQ
   taxes: Taxes
   settings: Settings
-  customFieldDefs: CustomFieldDefs
+  customFieldDefs?: CustomFieldDefs
 }
 
 export const createDriver = (settings?: Settings): Driver => {
@@ -229,12 +229,6 @@ const defaultInitialState: FleetState = {
     defaultFerias: 11.11,
     defaultPis: 1,
   },
-  customFieldDefs: {
-    driver: [],
-    vehicle: [],
-    hq: [],
-    taxes: [],
-  },
 }
 
 const STORAGE_KEY = 'fleet_calc_state'
@@ -246,10 +240,6 @@ if (typeof window !== 'undefined') {
     if (saved) {
       const parsed = JSON.parse(saved)
       globalState = { ...defaultInitialState, ...parsed }
-
-      if (!globalState.customFieldDefs) {
-        globalState.customFieldDefs = { driver: [], vehicle: [], hq: [], taxes: [] }
-      }
 
       globalState.drivers = globalState.drivers.map((d) => {
         const e = d.encargos || { fgts: 8, ferias: 11.11, decimo: 8.33, pis: 1 }
@@ -601,7 +591,6 @@ const calcularCPK = (s: FleetState) => {
         vehicles: s.vehicles,
         settings: s.settings,
         taxes: s.taxes,
-        customFieldDefs: s.customFieldDefs,
       },
     }
 
@@ -742,24 +731,6 @@ export function useFleetCalculator() {
 
   const setFullState = (newState: FleetState) => updateGlobal(newState)
 
-  const addCustomFieldDef = (module: 'driver' | 'vehicle' | 'hq' | 'taxes', fieldName: string) => {
-    const currentDefs = globalState.customFieldDefs || {
-      driver: [],
-      vehicle: [],
-      hq: [],
-      taxes: [],
-    }
-    if (!currentDefs[module]) currentDefs[module] = []
-    if (!currentDefs[module].includes(fieldName)) {
-      updateGlobal({
-        customFieldDefs: {
-          ...currentDefs,
-          [module]: [...currentDefs[module], fieldName],
-        },
-      })
-    }
-  }
-
   const calculations = calcularCPK(state)
 
   return {
@@ -778,7 +749,6 @@ export function useFleetCalculator() {
     removeLink,
     loadSettings,
     setFullState,
-    addCustomFieldDef,
     calculations,
   }
 }
