@@ -72,12 +72,21 @@ export function AdminPanelModal({
     setAuditLogs(logs as unknown as AuditLog[])
   }
 
-  const handleSaveAttempt = () => {
-    if (!settings?.id) return
+  const validarCompatibilidadeAlteracao = () => {
+    if (!settings) return false
 
     const warnings: string[] = []
     const impacts: string[] = []
     let hasRedImpact = false
+
+    if (settings.yellow_margin < settings.min_margin) {
+      toast({
+        title: 'Erro de Validação',
+        description: 'A Margem de Alerta Amarelo não pode ser menor que a Margem Mínima.',
+        variant: 'destructive',
+      })
+      return false
+    }
 
     const lastResultStr = localStorage.getItem('ultimoResultadoCPK')
     if (lastResultStr) {
@@ -85,21 +94,29 @@ export function AdminPanelModal({
 
       if (settings.max_cpk < lastResult.cpk) {
         warnings.push(
-          `O novo CPK Máximo (R$ ${settings.max_cpk}) é menor que o CPK atual (R$ ${lastResult.cpk.toFixed(2)}).`,
+          `O novo CPK Máximo (R$ ${settings.max_cpk}) é menor que o CPK atual (R$ ${lastResult.cpk?.toFixed(2)}).`,
         )
         hasRedImpact = true
       }
       if (settings.min_margin > lastResult.margin) {
         warnings.push(
-          `A nova Margem Mínima (${settings.min_margin}%) é maior que a margem atual (${lastResult.margin.toFixed(2)}%).`,
+          `A nova Margem Mínima (${settings.min_margin}%) é maior que a margem atual (${lastResult.margin?.toFixed(2)}%).`,
         )
         hasRedImpact = true
       }
       if (settings.max_das < lastResult.dasPercent) {
         warnings.push(
-          `O novo DAS Máximo (${settings.max_das}%) é menor que o percentual atual (${lastResult.dasPercent.toFixed(2)}%).`,
+          `O novo DAS Máximo (${settings.max_das}%) é menor que o percentual atual (${lastResult.dasPercent?.toFixed(2)}%).`,
         )
         hasRedImpact = true
+      }
+
+      if (originalSettings && settings.das_rate !== originalSettings.das_rate) {
+        const diff = settings.das_rate - originalSettings.das_rate
+        const deltaFinanceiro = ((lastResult.faturamento || 0) * diff) / 100
+        impacts.push(
+          `Alteração de DAS (${originalSettings.das_rate}% para ${settings.das_rate}%): Impacto financeiro estimado de R$ ${deltaFinanceiro.toFixed(2)} no faturamento mensal.`,
+        )
       }
     }
 
@@ -109,19 +126,32 @@ export function AdminPanelModal({
         settings[key] !== originalSettings[key] &&
         !['id', 'created', 'updated', 'collectionId', 'collectionName'].includes(key)
       ) {
-        impacts.push(`Parâmetro ${key} alterado de ${originalSettings[key]} para ${settings[key]}`)
+        if (key !== 'das_rate') {
+          impacts.push(
+            `Parâmetro ${key} alterado de ${originalSettings[key]} para ${settings[key]}`,
+          )
+        }
       }
     })
 
     if (impacts.length === 0) {
       toast({ title: 'Aviso', description: 'Nenhuma alteração foi feita.' })
-      return
+      return false
     }
 
     if (hasRedImpact || warnings.length > 0) {
       setConfirmDialog({ isOpen: true, warnings, impacts })
-    } else {
-      executeSave(impacts)
+      return false
+    }
+
+    return impacts
+  }
+
+  const handleSaveAttempt = () => {
+    if (!settings?.id) return
+    const res = validarCompatibilidadeAlteracao()
+    if (res) {
+      executeSave(res as string[])
     }
   }
 

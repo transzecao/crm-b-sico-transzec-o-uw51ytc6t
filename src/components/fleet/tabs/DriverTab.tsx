@@ -17,6 +17,13 @@ import { formatCpf } from '@/utils/formatters'
 import { cn } from '@/lib/utils'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { Badge } from '@/components/ui/badge'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog'
 
 const InfoIcon = ({ text }: { text: string }) => (
   <Tooltip>
@@ -30,10 +37,21 @@ const InfoIcon = ({ text }: { text: string }) => (
 )
 
 export function DriverTab() {
-  const { data, addDriver, updateDriver, removeDriver } = useFleetCalculator()
+  const { data, addDriver, updateDriver, removeDriver, addCustomFieldDef } = useFleetCalculator()
   const [openStates, setOpenStates] = useState<Record<string, boolean>>({})
 
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [newFieldName, setNewFieldName] = useState('')
+
   const toggle = (id: string) => setOpenStates((prev) => ({ ...prev, [id]: !prev[id] }))
+
+  const handleAddField = () => {
+    if (newFieldName.trim()) {
+      addCustomFieldDef('driver', newFieldName.trim())
+      setNewFieldName('')
+      setIsModalOpen(false)
+    }
+  }
 
   return (
     <div className="space-y-4 animate-fade-in">
@@ -275,6 +293,32 @@ export function DriverTab() {
                 </div>
               </div>
 
+              {/* Custom Fields */}
+              {data.customFieldDefs?.driver?.length > 0 && (
+                <div className="md:col-span-3 xl:col-span-4 mt-2 bg-[#f8f9fa] p-[10px] rounded-[5px] border border-slate-200">
+                  <span className="text-sm font-bold text-slate-700 block mb-2">
+                    Campos Personalizados (R$/mês)
+                  </span>
+                  <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-4">
+                    {data.customFieldDefs.driver.map((field) => (
+                      <div className="space-y-2" key={field}>
+                        <Label>{field} (R$)</Label>
+                        <Input
+                          type="number"
+                          className="bg-white"
+                          value={d.customFields?.[field] || 0}
+                          onChange={(e) =>
+                            updateDriver(d.id, {
+                              customFields: { ...d.customFields, [field]: Number(e.target.value) },
+                            })
+                          }
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="flex justify-between items-center pt-4 border-t border-slate-200 mt-4">
                 <div className="text-sm text-slate-500 font-medium">
                   Cálculos reagem em tempo real na aba de resultados.
@@ -287,6 +331,40 @@ export function DriverTab() {
           </Collapsible>
         ))}
       </div>
+
+      <div className="mt-6 pt-4 border-t border-slate-200">
+        <Button
+          variant="outline"
+          className="btn-add-campo w-full border-dashed border-green-500 text-green-700 hover:bg-green-50"
+          onClick={() => setIsModalOpen(true)}
+        >
+          <Plus className="w-4 h-4 mr-2" /> Adicionar Campo Personalizado
+        </Button>
+      </div>
+
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Novo Campo Personalizado - Motoristas</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Nome do Campo</Label>
+              <Input
+                placeholder="Ex: Auxílio Combustível"
+                value={newFieldName}
+                onChange={(e) => setNewFieldName(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsModalOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleAddField}>Adicionar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

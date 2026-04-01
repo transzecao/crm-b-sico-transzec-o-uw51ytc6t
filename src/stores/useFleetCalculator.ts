@@ -23,6 +23,7 @@ export interface Driver {
   toxAnual: number
   rat: number
   encargos: DriverEncargos
+  customFields?: Record<string, number>
 }
 
 export interface VehicleBreakdownOverrides {
@@ -56,6 +57,7 @@ export interface Vehicle {
   satelite: number
   estimatedKm: number
   overrides: VehicleBreakdownOverrides
+  customFields?: Record<string, number>
 }
 
 export interface Link {
@@ -75,6 +77,7 @@ export interface HQ {
   avcb: number
   seguroPatrimonial: number
   docas: number
+  customFields?: Record<string, number>
 }
 
 export interface Taxes {
@@ -86,6 +89,7 @@ export interface Taxes {
   docsCount: number
   taxasFiscal: number
   deadKm: number
+  customFields?: Record<string, number>
 }
 
 export interface Settings {
@@ -108,6 +112,13 @@ export interface AlertData {
   message: string
 }
 
+export interface CustomFieldDefs {
+  driver: string[]
+  vehicle: string[]
+  hq: string[]
+  taxes: string[]
+}
+
 export interface FleetState {
   drivers: Driver[]
   vehicles: Vehicle[]
@@ -115,6 +126,7 @@ export interface FleetState {
   hq: HQ
   taxes: Taxes
   settings: Settings
+  customFieldDefs: CustomFieldDefs
 }
 
 export const createDriver = (settings?: Settings): Driver => {
@@ -147,6 +159,7 @@ export const createDriver = (settings?: Settings): Driver => {
       decimo: baseSalary * ((s.defaultDecimo || 8.33) / 100),
       pis: baseSalary * ((s.defaultPis || 1) / 100),
     },
+    customFields: {},
   }
 }
 
@@ -175,6 +188,7 @@ export const createVehicle = (): Vehicle => ({
   satelite: 150,
   estimatedKm: 10000,
   overrides: {},
+  customFields: {},
 })
 
 const defaultInitialState: FleetState = {
@@ -191,6 +205,7 @@ const defaultInitialState: FleetState = {
     avcb: 500,
     seguroPatrimonial: 1200,
     docas: 300,
+    customFields: {},
   },
   taxes: {
     targetMargin: 30,
@@ -201,6 +216,7 @@ const defaultInitialState: FleetState = {
     docsCount: 200,
     taxasFiscal: 1000,
     deadKm: 100,
+    customFields: {},
   },
   settings: {
     workingDays: 22,
@@ -213,6 +229,12 @@ const defaultInitialState: FleetState = {
     defaultFerias: 11.11,
     defaultPis: 1,
   },
+  customFieldDefs: {
+    driver: [],
+    vehicle: [],
+    hq: [],
+    taxes: [],
+  },
 }
 
 const STORAGE_KEY = 'fleet_calc_state'
@@ -224,6 +246,10 @@ if (typeof window !== 'undefined') {
     if (saved) {
       const parsed = JSON.parse(saved)
       globalState = { ...defaultInitialState, ...parsed }
+
+      if (!globalState.customFieldDefs) {
+        globalState.customFieldDefs = { driver: [], vehicle: [], hq: [], taxes: [] }
+      }
 
       globalState.drivers = globalState.drivers.map((d) => {
         const e = d.encargos || { fgts: 8, ferias: 11.11, decimo: 8.33, pis: 1 }
@@ -267,26 +293,6 @@ const validarDadosCompletos = (s: FleetState): string[] => {
   if (s.vehicles.length === 0) errors.push('Adicione pelo menos 1 veículo.')
   if (s.links.length === 0) errors.push('Adicione pelo menos 1 vínculo.')
 
-  s.drivers.forEach((d, i) => {
-    if (!d.name) errors.push(`Motorista ${i + 1}: Nome obrigatório.`)
-    if (d.cpf && !isValidCpf(d.cpf)) errors.push(`Motorista ${i + 1}: CPF inválido.`)
-    if (d.baseSalary <= 0) errors.push(`Motorista ${i + 1}: Salário Base deve ser maior que zero.`)
-  })
-
-  s.vehicles.forEach((v, i) => {
-    if (v.plate && !isValidPlate(v.plate)) errors.push(`Veículo ${i + 1}: Placa inválida.`)
-    if (v.purchaseValue <= 0) errors.push(`Veículo ${i + 1}: Valor de Compra inválido.`)
-    if (v.resaleValue < 0) errors.push(`Veículo ${i + 1}: Valor de Revenda inválido.`)
-    if (v.consumo < 1 || v.consumo > 20)
-      errors.push(`Veículo ${i + 1}: Consumo deve estar entre 1 e 20 km/L.`)
-    if (v.kmPneus < 5000 || v.kmPneus > 500000)
-      errors.push(`Veículo ${i + 1}: KM Pneus estimado deve estar entre 5k e 500k.`)
-  })
-
-  if (s.hq.iptu < 0) errors.push('Sede: IPTU obrigatório ou inválido.')
-  if (s.hq.aluguel < 0) errors.push('Sede: Aluguel obrigatório ou inválido.')
-  if (s.taxes.dasRate < 0) errors.push('Impostos: Alíquota DAS inválida.')
-
   const totalKm = s.links.reduce((acc, l) => acc + l.km, 0)
   if (s.links.length > 0 && totalKm <= 0) {
     errors.push('O KM total mensal rodado deve ser maior que zero (Alerta Vermelho).')
@@ -296,16 +302,22 @@ const validarDadosCompletos = (s: FleetState): string[] => {
 }
 
 const calcularCustoMotorista = (d: Driver, workingDays: number): number => {
-  const base = d.baseSalary + (d.periculosidade ? d.baseSalary * 0.3 : 0)
-  const e = d.encargos || { fgts: 0, ferias: 0, decimo: 0, pis: 0 }
+  const periculosidade = d.periculosidade ? d.baseSalary * 0.3 : 0
+  const base = d.baseSalary + periculosidade
 
-  const fgts = e.fgts || 0
-  const decimoTerceiro = e.decimo || 0
-  const ferias = e.ferias || 0
-  const pis = e.pis || 0
+  const fgts = d.encargos?.fgts ?? d.baseSalary * 0.08
+  const decimoTerceiro = d.encargos?.decimo ?? d.baseSalary / 12
+  const ferias = d.encargos?.ferias ?? (d.baseSalary / 12) * 1.333
+  const pis = d.encargos?.pis ?? d.baseSalary * 0.01
+
   const ratVal = base * (d.rat / 100)
   const vrTotal = d.vrDaily * workingDays
   const toxAnualMensal = d.toxAnual / 12
+
+  let customSum = 0
+  if (d.customFields) {
+    customSum = Object.values(d.customFields).reduce((acc, v) => acc + (Number(v) || 0), 0)
+  }
 
   return (
     base +
@@ -318,7 +330,8 @@ const calcularCustoMotorista = (d: Driver, workingDays: number): number => {
     d.vtMensal +
     d.cestaBasica +
     d.seguroVida +
-    toxAnualMensal
+    toxAnualMensal +
+    customSum
   )
 }
 
@@ -328,39 +341,66 @@ const calcularCustoVeiculo = (v: Vehicle, linkedKm: number) => {
   const autoDep = Math.max(0, (v.purchaseValue - v.resaleValue) / 60)
   const dep = v.overrides?.depreciation !== undefined ? v.overrides.depreciation : autoDep
 
-  const fixed = (v.ipva + v.licenciamento + v.seguroCasco + v.rctrc + v.rcfdc) / 12
-  const insurance = (v.seguroCasco + v.rctrc + v.rcfdc) / 12
+  const ipva = v.ipva / 12
+  const licenciamento = v.licenciamento / 12
+  const seguro = v.seguroCasco / 12
+  const cargaSeguro = (v.rctrc + v.rcfdc) / 12
 
-  const autoDiesel = effectiveKm > 0 ? (effectiveKm / v.consumo) * v.dieselPrice : 0
+  const autoDiesel =
+    effectiveKm > 0 && v.consumo > 0 ? (effectiveKm / v.consumo) * v.dieselPrice : 0
   const diesel = v.overrides?.diesel !== undefined ? v.overrides.diesel : autoDiesel
 
-  const autoArla = v.usaArla ? autoDiesel * 0.05 : 0
+  const autoArla = v.usaArla ? diesel * 0.05 : 0
   const arla = v.usaArla
     ? v.overrides?.diesel !== undefined
       ? v.overrides.diesel * 0.05
       : autoArla
     : 0
 
-  const autoPneus = effectiveKm > 0 ? (v.pneusJogo / v.kmPneus) * effectiveKm : 0
+  const autoPneus = effectiveKm > 0 && v.kmPneus > 0 ? (v.pneusJogo / v.kmPneus) * effectiveKm : 0
   const pneus = v.overrides?.tires !== undefined ? v.overrides.tires : autoPneus
 
-  const monthlyOps = v.manutencao + v.limpeza + v.averbacao + v.consulta + v.satelite
+  const manutencao = v.manutencao
+  const limpeza = v.limpeza
+  const monitoramento = v.satelite + v.consulta + v.averbacao
 
-  const variable = diesel + arla + pneus + monthlyOps
+  let customSum = 0
+  if (v.customFields) {
+    customSum = Object.values(v.customFields).reduce((acc, val) => acc + (Number(val) || 0), 0)
+  }
+
+  const fixed = ipva + licenciamento + seguro + cargaSeguro
+  const variable = diesel + arla + pneus + manutencao + limpeza + monitoramento + customSum
   const total = dep + fixed + variable
 
-  return { total, variable, dep, fixed, insurance, diesel, pneus, monthlyOps }
+  return {
+    total,
+    variable,
+    dep,
+    fixed,
+    insurance: seguro + cargaSeguro,
+    diesel,
+    pneus,
+    monthlyOps: manutencao + limpeza + monitoramento + customSum,
+  }
 }
 
 const calcularCustoSedeTotal = (hq: HQ): number => {
+  let customSum = 0
+  if (hq.customFields) {
+    customSum = Object.values(hq.customFields).reduce((acc, val) => acc + (Number(val) || 0), 0)
+  }
   return (
-    (hq.iptu + hq.avcb + hq.seguroPatrimonial) / 12 +
+    hq.iptu / 12 +
     hq.aluguel +
     hq.agua +
     hq.luz +
     hq.internet +
     hq.telefone +
-    hq.docas
+    hq.avcb / 12 +
+    hq.seguroPatrimonial / 12 +
+    hq.docas +
+    customSum
   )
 }
 
@@ -397,29 +437,54 @@ const calcularCPK = (s: FleetState) => {
   const hqTotal = calcularCustoSedeTotal(s.hq)
   const hqPerLink = s.links.length > 0 ? hqTotal / s.links.length : 0
 
-  const baseTaxes = s.taxes.cteCost * s.taxes.docsCount + s.taxes.taxasFiscal / 12
+  let customSumTaxes = 0
+  if (s.taxes.customFields) {
+    customSumTaxes = Object.values(s.taxes.customFields).reduce(
+      (acc, val) => acc + (Number(val) || 0),
+      0,
+    )
+  }
+  const baseTaxes = s.taxes.cteCost * s.taxes.docsCount + s.taxes.taxasFiscal / 12 + customSumTaxes
+
   const totalBaseCost = driverTotal + vehicleTotal + hqTotal + baseTaxes
 
   const targetMargin = Math.max(0, Math.min(99, s.taxes.targetMargin || 30))
   const faturamento = totalBaseCost / (1 - targetMargin / 100)
   const dasCost = faturamento * (s.taxes.dasRate / 100)
 
-  const baseCostWithDas = totalBaseCost + dasCost
-  const baseCpk = totalKm > 0 ? baseCostWithDas / totalKm : 0
+  const preliminaryCost = totalBaseCost + dasCost
+  const preliminaryCpk = totalKm > 0 ? preliminaryCost / totalKm : 0
 
-  const deadKmCost = s.taxes.deadKm * baseCpk
-  const finalTotalCost = baseCostWithDas + deadKmCost
-  const finalCpk = totalKm > 0 ? finalTotalCost / totalKm : 0
+  const deadKmCost = s.taxes.deadKm * preliminaryCpk
 
-  const currentMargin = faturamento > 0 ? ((faturamento - finalTotalCost) / faturamento) * 100 : 0
+  // Recalculate
+  const finalTotalCost = totalBaseCost + dasCost + deadKmCost
+  const finalFaturamento = finalTotalCost / (1 - targetMargin / 100)
+  const finalDasCost = finalFaturamento * (s.taxes.dasRate / 100)
+
+  const cpkFinal = totalKm > 0 ? (totalBaseCost + finalDasCost + deadKmCost) / totalKm : 0
+  const currentMargin =
+    finalFaturamento > 0
+      ? ((finalFaturamento - (totalBaseCost + finalDasCost + deadKmCost)) / finalFaturamento) * 100
+      : 0
+
+  // Alert Rules Validation
+  const maxCpk = s.settings.maxCpk || 4.5
+  const minMargin = s.settings.minMargin || 15
+  const yellowMargin = s.settings.yellowMargin || 25
+  const maxDas = s.settings.maxDas || 20
+  const varCostLimit = s.settings.varCostMaxPercent || 60
+
+  const varCostPercent = finalTotalCost > 0 ? (totalVariableCosts / finalTotalCost) * 100 : 0
+  const dasPercent = finalFaturamento > 0 ? (finalDasCost / finalFaturamento) * 100 : 0
 
   let cpkStatus = 'green'
-  if (finalCpk > s.settings.maxCpk) cpkStatus = 'red'
-  else if (finalCpk > s.settings.maxCpk * 0.9) cpkStatus = 'yellow'
+  if (cpkFinal > maxCpk) cpkStatus = 'red'
+  else if (cpkFinal > maxCpk * 0.9) cpkStatus = 'yellow'
 
   let marginStatus = 'green'
-  if (currentMargin < s.settings.minMargin) marginStatus = 'red'
-  else if (currentMargin < s.settings.yellowMargin) marginStatus = 'yellow'
+  if (currentMargin < minMargin) marginStatus = 'red'
+  else if (currentMargin < yellowMargin) marginStatus = 'yellow'
 
   const alerts: AlertData[] = []
 
@@ -432,42 +497,42 @@ const calcularCPK = (s: FleetState) => {
     })
   }
 
-  if (finalCpk > s.settings.maxCpk) {
+  if (cpkFinal > maxCpk) {
     alerts.push({
       id: 'cpk-red',
       type: 'critical',
       title: 'CPK Crítico',
-      message: `CPK: R$ ${finalCpk.toFixed(2)}/km (Acima de R$ ${s.settings.maxCpk.toFixed(2)})`,
+      message: `CPK: R$ ${cpkFinal.toFixed(2)}/km (Acima de R$ ${maxCpk.toFixed(2)})`,
     })
-  } else if (finalCpk > s.settings.maxCpk * 0.9) {
+  } else if (cpkFinal > maxCpk * 0.9) {
     alerts.push({
       id: 'cpk-yellow',
       type: 'warning',
       title: 'CPK em Alerta',
-      message: `CPK: R$ ${finalCpk.toFixed(2)}/km (Próximo ao limite de R$ ${s.settings.maxCpk.toFixed(2)})`,
+      message: `CPK: R$ ${cpkFinal.toFixed(2)}/km (Próximo de R$ ${maxCpk.toFixed(2)})`,
     })
-  } else if (finalCpk > 0) {
+  } else if (cpkFinal > 0) {
     alerts.push({
       id: 'cpk-green',
       type: 'success',
       title: 'CPK Saudável',
-      message: `CPK: R$ ${finalCpk.toFixed(2)}/km`,
+      message: `CPK: R$ ${cpkFinal.toFixed(2)}/km`,
     })
   }
 
-  if (currentMargin < s.settings.minMargin) {
+  if (currentMargin < minMargin) {
     alerts.push({
       id: 'margin-red',
       type: 'critical',
       title: 'Margem Crítica',
-      message: `Margem: ${currentMargin.toFixed(2)}% (Abaixo de ${s.settings.minMargin}%)`,
+      message: `Margem: ${currentMargin.toFixed(2)}% (Abaixo de ${minMargin}%)`,
     })
-  } else if (currentMargin < s.settings.yellowMargin) {
+  } else if (currentMargin < yellowMargin) {
     alerts.push({
       id: 'margin-yellow',
       type: 'warning',
       title: 'Margem em Alerta',
-      message: `Margem: ${currentMargin.toFixed(2)}% (Abaixo de ${s.settings.yellowMargin}%)`,
+      message: `Margem: ${currentMargin.toFixed(2)}% (Abaixo de ${yellowMargin}%)`,
     })
   } else if (currentMargin > 0) {
     alerts.push({
@@ -478,26 +543,22 @@ const calcularCPK = (s: FleetState) => {
     })
   }
 
-  const varCostPercent = finalTotalCost > 0 ? (totalVariableCosts / finalTotalCost) * 100 : 0
-  const varCostLimit = s.settings.varCostMaxPercent || 60
   if (varCostPercent > varCostLimit) {
     alerts.push({
       id: 'var-red',
       type: 'critical',
-      title: 'Custos Variáveis Altos',
-      message: `Custos Variáveis representam ${varCostPercent.toFixed(2)}% do custo total`,
+      title: 'Custos Variáveis Críticos',
+      message: `Representam ${varCostPercent.toFixed(2)}% do custo total`,
     })
   } else if (varCostPercent > varCostLimit * 0.8) {
     alerts.push({
       id: 'var-yellow',
       type: 'warning',
       title: 'Custos Variáveis em Alerta',
-      message: `Custos Variáveis representam ${varCostPercent.toFixed(2)}% do custo total`,
+      message: `Representam ${varCostPercent.toFixed(2)}% do custo total`,
     })
   }
 
-  const maxDas = s.settings.maxDas || 20
-  const dasPercent = faturamento > 0 ? (dasCost / faturamento) * 100 : 0
   if (dasPercent > maxDas) {
     alerts.push({
       id: 'das-red',
@@ -518,10 +579,10 @@ const calcularCPK = (s: FleetState) => {
     const resultToSave = {
       id: Date.now().toString(),
       date: new Date().toISOString(),
-      cpk: finalCpk,
+      cpk: cpkFinal,
       margin: currentMargin,
-      faturamento,
-      dasCost,
+      faturamento: finalFaturamento,
+      dasCost: finalDasCost,
       dasPercent,
       costs: {
         drivers: driverTotal,
@@ -540,6 +601,7 @@ const calcularCPK = (s: FleetState) => {
         vehicles: s.vehicles,
         settings: s.settings,
         taxes: s.taxes,
+        customFieldDefs: s.customFieldDefs,
       },
     }
 
@@ -549,19 +611,30 @@ const calcularCPK = (s: FleetState) => {
   return {
     errors,
     alerts,
-    totalKm,
+    cpkFinal,
+    custoTotal: finalTotalCost,
+    faturamento: finalFaturamento,
+    margem: currentMargin,
+    das: finalDasCost,
+    custosMotoristas: driverTotal,
+    custosVeiculos: vehicleTotal,
+    custosSede: hqTotal,
+    custosImpostosTaxas: baseTaxes,
+    custosVariaveis: totalVariableCosts,
+    totalKmMensal: totalKm,
+
+    // backward compatibility
     driverTotal,
     vehicleTotal,
     hqTotal,
     hqPerLink,
     baseTaxes,
     totalBaseCost,
-    faturamento,
-    dasCost,
-    baseCpk,
+    dasCost: finalDasCost,
+    baseCpk: preliminaryCpk,
     deadKmCost,
     finalTotalCost,
-    finalCpk,
+    finalCpk: cpkFinal,
     currentMargin,
     cpkStatus,
     marginStatus,
@@ -669,6 +742,24 @@ export function useFleetCalculator() {
 
   const setFullState = (newState: FleetState) => updateGlobal(newState)
 
+  const addCustomFieldDef = (module: 'driver' | 'vehicle' | 'hq' | 'taxes', fieldName: string) => {
+    const currentDefs = globalState.customFieldDefs || {
+      driver: [],
+      vehicle: [],
+      hq: [],
+      taxes: [],
+    }
+    if (!currentDefs[module]) currentDefs[module] = []
+    if (!currentDefs[module].includes(fieldName)) {
+      updateGlobal({
+        customFieldDefs: {
+          ...currentDefs,
+          [module]: [...currentDefs[module], fieldName],
+        },
+      })
+    }
+  }
+
   const calculations = calcularCPK(state)
 
   return {
@@ -687,6 +778,7 @@ export function useFleetCalculator() {
     removeLink,
     loadSettings,
     setFullState,
+    addCustomFieldDef,
     calculations,
   }
 }

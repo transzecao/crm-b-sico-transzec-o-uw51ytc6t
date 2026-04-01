@@ -1,11 +1,32 @@
+import { useState } from 'react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Button } from '@/components/ui/button'
+import { Plus } from 'lucide-react'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog'
 import { useFleetCalculator } from '@/stores/useFleetCalculator'
 
 export function HQTab() {
-  const { data, updateHQ } = useFleetCalculator()
+  const { data, updateHQ, addCustomFieldDef } = useFleetCalculator()
   const { hq } = data
+
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [newFieldName, setNewFieldName] = useState('')
+
+  const handleAddField = () => {
+    if (newFieldName.trim()) {
+      addCustomFieldDef('hq', newFieldName.trim())
+      setNewFieldName('')
+      setIsModalOpen(false)
+    }
+  }
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -112,6 +133,63 @@ export function HQTab() {
           />
         </div>
       </div>
+
+      {data.customFieldDefs?.hq?.length > 0 && (
+        <>
+          <h4 className="text-md font-bold text-slate-700 pt-4">Campos Personalizados</h4>
+          <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-6 bg-slate-50/50 p-4 rounded-xl border border-slate-100">
+            {data.customFieldDefs.hq.map((field) => (
+              <div className="space-y-2" key={field}>
+                <Label>{field} (R$)</Label>
+                <Input
+                  type="number"
+                  value={hq.customFields?.[field] || 0}
+                  onChange={(e) =>
+                    updateHQ({
+                      customFields: { ...hq.customFields, [field]: Number(e.target.value) },
+                    })
+                  }
+                  className="bg-white"
+                />
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      <div className="mt-6 pt-4 border-t border-slate-200">
+        <Button
+          variant="outline"
+          className="btn-add-campo w-full border-dashed border-green-500 text-green-700 hover:bg-green-50"
+          onClick={() => setIsModalOpen(true)}
+        >
+          <Plus className="w-4 h-4 mr-2" /> Adicionar Campo Personalizado
+        </Button>
+      </div>
+
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Novo Campo Personalizado - Sede</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Nome do Campo</Label>
+              <Input
+                placeholder="Ex: Serviços de Limpeza"
+                value={newFieldName}
+                onChange={(e) => setNewFieldName(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsModalOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleAddField}>Adicionar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

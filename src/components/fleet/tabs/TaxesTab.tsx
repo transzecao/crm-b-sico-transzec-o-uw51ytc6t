@@ -1,6 +1,9 @@
+import { useState } from 'react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
+import { Button } from '@/components/ui/button'
+import { Plus } from 'lucide-react'
 import {
   Select,
   SelectContent,
@@ -9,11 +12,21 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog'
 import { useFleetCalculator } from '@/stores/useFleetCalculator'
 
 export function TaxesTab() {
-  const { data, updateTaxes } = useFleetCalculator()
+  const { data, updateTaxes, addCustomFieldDef } = useFleetCalculator()
   const { taxes } = data
+
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [newFieldName, setNewFieldName] = useState('')
 
   const handleFaixaChange = (faixa: string) => {
     let rate = 4
@@ -23,6 +36,14 @@ export function TaxesTab() {
     else if (faixa === 'Faixa 4') rate = 10.7
     else if (faixa === 'Faixa 5') rate = 14.3
     updateTaxes({ faixa, dasRate: rate })
+  }
+
+  const handleAddField = () => {
+    if (newFieldName.trim()) {
+      addCustomFieldDef('taxes', newFieldName.trim())
+      setNewFieldName('')
+      setIsModalOpen(false)
+    }
   }
 
   return (
@@ -142,6 +163,63 @@ export function TaxesTab() {
           />
         </div>
       </div>
+
+      {data.customFieldDefs?.taxes?.length > 0 && (
+        <>
+          <h4 className="text-md font-bold text-slate-700 pt-4">Campos Personalizados</h4>
+          <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-6 bg-slate-50/50 p-4 rounded-xl border border-slate-100">
+            {data.customFieldDefs.taxes.map((field) => (
+              <div className="space-y-2" key={field}>
+                <Label>{field} (R$)</Label>
+                <Input
+                  type="number"
+                  value={taxes.customFields?.[field] || 0}
+                  onChange={(e) =>
+                    updateTaxes({
+                      customFields: { ...taxes.customFields, [field]: Number(e.target.value) },
+                    })
+                  }
+                  className="bg-white"
+                />
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      <div className="mt-6 pt-4 border-t border-slate-200">
+        <Button
+          variant="outline"
+          className="btn-add-campo w-full border-dashed border-green-500 text-green-700 hover:bg-green-50"
+          onClick={() => setIsModalOpen(true)}
+        >
+          <Plus className="w-4 h-4 mr-2" /> Adicionar Campo Personalizado
+        </Button>
+      </div>
+
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Novo Campo Personalizado - Impostos/Taxas</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Nome do Campo</Label>
+              <Input
+                placeholder="Ex: Outras Taxas"
+                value={newFieldName}
+                onChange={(e) => setNewFieldName(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsModalOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleAddField}>Adicionar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
