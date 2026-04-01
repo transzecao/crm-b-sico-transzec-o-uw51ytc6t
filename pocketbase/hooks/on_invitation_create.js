@@ -23,10 +23,19 @@ onRecordAfterCreateSuccess((e) => {
     // Send via configured SMTP
     $app.newMailClient().send(message)
     console.log(`Successfully sent invitation email to ${email}`)
+    e.next()
   } catch (err) {
-    // Log the error but allow the hook chain to complete (doesn't prevent record creation)
     console.log(`Failed to send invitation email to ${email}:`, err)
-  }
 
-  e.next()
+    // Rollback the creation if email fails to avoid broken invitations
+    try {
+      $app.delete(e.record)
+    } catch (delErr) {
+      console.log(`Failed to rollback invitation record:`, delErr)
+    }
+
+    throw new BadRequestError(
+      `Falha ao enviar e-mail de convite. Verifique as configurações SMTP. Erro: ${err.message}`,
+    )
+  }
 }, 'invitations')
