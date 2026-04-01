@@ -92,8 +92,13 @@ export default function LoginAdmin() {
       setIsInviteOpen(false)
       setInviteEmail('')
       loadData()
-    } catch (e) {
-      toast({ title: 'Erro ao convidar', variant: 'destructive' })
+    } catch (e: any) {
+      console.error('Erro ao criar convite:', e)
+      toast({
+        title: 'Erro ao convidar',
+        description: e.response?.message || 'Verifique se o e-mail já possui um convite pendente.',
+        variant: 'destructive',
+      })
     }
   }
 

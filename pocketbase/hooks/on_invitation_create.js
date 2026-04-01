@@ -7,10 +7,8 @@ onRecordAfterCreateSuccess((e) => {
   const registerLink = `${appUrl}/register?token=${token}`
 
   try {
-    const mailer = require('mailer')
-
-    // Build the email message
-    const message = new mailer.Message({
+    // Build the email message using MailerMessage globally available in PB JSVM v0.22+
+    const message = new MailerMessage({
       from: {
         address: 'nicoly@transzecao.com.br',
         name: 'Transzecão CRM',
