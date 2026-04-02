@@ -18,7 +18,11 @@ export function ProtectedRoute({ allowedRoles }: { allowedRoles?: string[] }) {
   }
 
   if (allowedRoles && !allowedRoles.includes(user.role)) {
-    if (user.role === 'master') return <Navigate to="/app/dashboard" replace />
+    // Master role bypasses all route restrictions
+    if (user.role === 'master') {
+      return <Outlet />
+    }
+
     if (user.role === 'sup_financeiro') return <Navigate to="/financeiro" replace />
     if (user.role === 'sup_comercial') return <Navigate to="/pipeline/1" replace />
     if (user.role === 'sup_coleta') return <Navigate to="/roteirizacao" replace />

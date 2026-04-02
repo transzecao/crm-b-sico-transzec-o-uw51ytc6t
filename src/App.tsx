@@ -107,6 +107,7 @@ const App = () => (
                   }
                 >
                   <Route path="/app/dashboard" element={<Index />} />
+                  <Route path="/admin/dashboard" element={<Index />} />
                   <Route path="/profile" element={<Profile />} />
                 </Route>
               </Route>

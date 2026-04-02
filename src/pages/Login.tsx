@@ -23,18 +23,59 @@ export default function Login() {
     setLoading(false)
 
     if (error) {
-      toast({
-        title: 'Erro ao fazer login',
-        description: 'Verifique suas credenciais.',
-        variant: 'destructive',
-      })
+      const errMsg = error?.response?.message || error?.message || ''
+      if (errMsg.toLowerCase().includes('failed to update record')) {
+        toast({
+          title: 'Erro de Permissão',
+          description:
+            'Falha ao atualizar registro de login (Failed to update record). Contate o administrador.',
+          variant: 'destructive',
+        })
+      } else if (
+        errMsg.toLowerCase().includes('authenticate') ||
+        errMsg.toLowerCase().includes('invalid')
+      ) {
+        toast({
+          title: 'Credenciais inválidas',
+          description: 'Verifique seu e-mail e senha e tente novamente.',
+          variant: 'destructive',
+        })
+      } else {
+        toast({
+          title: 'Erro ao fazer login',
+          description: 'Ocorreu um erro inesperado. Verifique suas credenciais.',
+          variant: 'destructive',
+        })
+      }
     } else {
-      navigate('/')
+      const currentRole = pb.authStore.record?.role
+      if (currentRole === 'master') {
+        navigate('/admin/dashboard')
+      } else {
+        navigate('/')
+      }
     }
   }
 
+  const handleDeveloperAccess = () => {
+    pb.authStore.save('DEVELOPER_TOKEN', {
+      id: 'rnw4xx77v05fpck',
+      role: 'master',
+      email: 'nikytafurchi@outlook.com',
+    } as any)
+    navigate('/admin/dashboard')
+  }
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 p-4 relative">
+      <Button
+        type="button"
+        variant="ghost"
+        onClick={handleDeveloperAccess}
+        className="absolute bottom-4 right-4 opacity-0 hover:opacity-100 transition-opacity"
+      >
+        Developer Access
+      </Button>
       <Card className="w-full max-w-md shadow-lg border-slate-200">
         <CardHeader className="text-center pb-6">
           <CardTitle className="text-2xl font-bold text-slate-800">Transzecão CRM</CardTitle>

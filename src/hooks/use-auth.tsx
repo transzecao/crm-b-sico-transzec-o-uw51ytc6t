@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
+import { useNavigate } from 'react-router-dom'
 import pb from '@/lib/pocketbase/client'
 
 interface AuthContextType {
@@ -20,6 +21,7 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<any>(pb.authStore.record)
   const [loading, setLoading] = useState(true)
+  const navigate = useNavigate()
 
   useEffect(() => {
     const unsubscribe = pb.authStore.onChange((_token, record) => {
@@ -52,6 +54,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signOut = () => {
     pb.authStore.clear()
+    navigate('/login')
   }
 
   return (
