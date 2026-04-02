@@ -14,14 +14,20 @@ migrate(
 
     // 2. Safely seed the master user without hardcoding an ID to avoid conflicts
     const email = 'nikytafurchi@outlook.com'
-    let record
     try {
-      record = app.findAuthRecordByEmail('transzecao', email)
-    } catch (_) {
-      record = new Record(collection)
-      // PocketBase will automatically generate a valid, unique 15-char ID
-    }
+      const existing = app.findAuthRecordByEmail('transzecao', email)
+      // If user exists, just update their role and access
+      existing.set('role', 'master')
+      existing.set('status', 'active')
+      existing.setVerified(true)
+      existing.setPassword('SenhaMaster123')
+      app.save(existing)
+      return
+    } catch (_) {}
 
+    const record = new Record(collection)
+    // Explicitly generate a 15-char ID to prevent any 'id must be unique' empty ID errors
+    record.setId($security.randomString(15))
     record.setEmail(email)
     record.setPassword('SenhaMaster123')
     record.setVerified(true)
