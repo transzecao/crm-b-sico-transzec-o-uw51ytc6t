@@ -18,8 +18,14 @@ export function ProtectedRoute({ allowedRoles }: { allowedRoles?: string[] }) {
   }
 
   if (allowedRoles && !allowedRoles.includes(user.role)) {
-    if (user.role === 'admin') return <Navigate to="/admin/logins" replace />
-    if (user.role === 'supervisor') return <Navigate to="/supervisor/approvals" replace />
+    if (user.role === 'master') return <Navigate to="/app/dashboard" replace />
+    if (user.role === 'sup_financeiro') return <Navigate to="/financeiro" replace />
+    if (user.role === 'sup_comercial') return <Navigate to="/pipeline/1" replace />
+    if (user.role === 'sup_coleta') return <Navigate to="/roteirizacao" replace />
+    if (user.role === 'func_comercial') return <Navigate to="/pipeline/1" replace />
+    if (user.role === 'func_marketing') return <Navigate to="/pipeline/2" replace />
+    if (user.role === 'func_coleta') return <Navigate to="/roteirizacao" replace />
+    if (user.role === 'cliente') return <Navigate to="/portal" replace />
     return <Navigate to="/app/dashboard" replace />
   }
 

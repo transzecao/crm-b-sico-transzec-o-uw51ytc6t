@@ -37,7 +37,7 @@ export const createInvitation = async (data: { email: string; role: string; seto
   const payload = {
     email: data.email.trim(),
     role: data.role,
-    setor: data.setor,
+    setor: data.setor || '',
     token: crypto.randomUUID(),
     status: 'sent',
   }
@@ -85,6 +85,15 @@ export const getAuditLogs = async () => {
       .getFullList({ sort: '-created', expand: 'user_id' })
   } catch (error) {
     console.error('Failed to fetch audit logs', error)
+    return []
+  }
+}
+
+export const getActionLogs = async () => {
+  try {
+    return await pb.collection('action_logs').getFullList({ sort: '-created', expand: 'user_id' })
+  } catch (error) {
+    console.error('Failed to fetch action logs', error)
     return []
   }
 }

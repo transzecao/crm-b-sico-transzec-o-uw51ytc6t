@@ -47,6 +47,7 @@ export default function Register() {
         name,
         role: invitation.role,
         setor: invitation.setor,
+        setor_slug: invitation.role,
         status: 'active',
       })
 

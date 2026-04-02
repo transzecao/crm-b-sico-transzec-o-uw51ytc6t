@@ -45,31 +45,68 @@ const App = () => (
               <Route element={<Layout />}>
                 <Route path="/" element={<NavigateToDashboard />} />
 
-                <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
+                <Route element={<ProtectedRoute allowedRoles={['master']} />}>
                   <Route path="/admin/logins" element={<LoginAdmin />} />
                   <Route path="/admin/portal" element={<PortalAdmin />} />
                 </Route>
 
-                <Route element={<ProtectedRoute allowedRoles={['admin', 'supervisor']} />}>
+                <Route
+                  element={
+                    <ProtectedRoute
+                      allowedRoles={['master', 'sup_financeiro', 'sup_comercial', 'sup_coleta']}
+                    />
+                  }
+                >
                   <Route path="/supervisor/approvals" element={<SupervisorApprovals />} />
+                  <Route path="/analytics" element={<Analytics />} />
+                  <Route path="/ia" element={<IA />} />
+                </Route>
+
+                <Route element={<ProtectedRoute allowedRoles={['master', 'sup_financeiro']} />}>
+                  <Route path="/financeiro" element={<Financeiro />} />
+                  <Route path="/financeiro/controle-gastos" element={<ControleGastos />} />
                 </Route>
 
                 <Route
-                  element={<ProtectedRoute allowedRoles={['admin', 'supervisor', 'employee']} />}
+                  element={
+                    <ProtectedRoute
+                      allowedRoles={['master', 'sup_comercial', 'func_comercial', 'func_marketing']}
+                    />
+                  }
                 >
-                  <Route path="/app/dashboard" element={<Index />} />
+                  <Route path="/pipeline/1" element={<Pipeline1 />} />
+                  <Route path="/pipeline/2" element={<Pipeline2 />} />
+                  <Route path="/contatos" element={<Contatos />} />
                   <Route path="/empresas" element={<Empresas />} />
                   <Route path="/empresa/nova" element={<EmpresaForm />} />
                   <Route path="/empresa/:id/editar" element={<EmpresaForm />} />
-                  <Route path="/contatos" element={<Contatos />} />
-                  <Route path="/pipeline/1" element={<Pipeline1 />} />
-                  <Route path="/pipeline/2" element={<Pipeline2 />} />
                   <Route path="/empresa/:id/360" element={<Company360 />} />
-                  <Route path="/financeiro" element={<Financeiro />} />
-                  <Route path="/financeiro/controle-gastos" element={<ControleGastos />} />
-                  <Route path="/analytics" element={<Analytics />} />
-                  <Route path="/ia" element={<IA />} />
+                </Route>
+
+                <Route
+                  element={
+                    <ProtectedRoute allowedRoles={['master', 'sup_coleta', 'func_coleta']} />
+                  }
+                >
                   <Route path="/roteirizacao" element={<Roteirizacao />} />
+                </Route>
+
+                <Route
+                  element={
+                    <ProtectedRoute
+                      allowedRoles={[
+                        'master',
+                        'sup_financeiro',
+                        'sup_comercial',
+                        'sup_coleta',
+                        'func_comercial',
+                        'func_marketing',
+                        'func_coleta',
+                      ]}
+                    />
+                  }
+                >
+                  <Route path="/app/dashboard" element={<Index />} />
                   <Route path="/profile" element={<Profile />} />
                 </Route>
               </Route>

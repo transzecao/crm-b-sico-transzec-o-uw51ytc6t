@@ -33,6 +33,7 @@ import {
 import useCrmStore, { Role } from '@/stores/useCrmStore'
 import { useRealtime } from '@/hooks/use-realtime'
 import { AdminPanelModal } from '@/components/fleet/AdminPanelModal'
+import { useAuth } from '@/hooks/use-auth'
 
 export function AppHeader() {
   const { state, updateState } = useCrmStore()
@@ -67,22 +68,18 @@ export function AppHeader() {
     }
   })
 
+  const { user, signOut } = useAuth()
+
   const handleRoleChange = (role: string) => {
     updateState({ role: role as Role })
   }
 
-  const canCreate = [
-    'Acesso Master',
-    'Supervisor Comercial',
-    'Funcionário Comercial',
-    'Funcionário Coleta',
-  ].includes(state.role)
-  const canSeeAnalytics = [
-    'Acesso Master',
-    'Supervisor Financeiro',
-    'Supervisor Comercial',
-    'Supervisor Coleta',
-  ].includes(state.role)
+  const userRole = user?.role || 'func_comercial'
+
+  const canCreate = ['master', 'sup_comercial', 'func_comercial'].includes(userRole)
+  const canSeeAnalytics = ['master', 'sup_financeiro', 'sup_comercial', 'sup_coleta'].includes(
+    userRole,
+  )
 
   return (
     <header className="sticky top-0 z-40 w-full bg-[#800020] text-white flex items-center h-14 px-4 justify-between shadow-md border-b border-[#5c0017]">
@@ -163,29 +160,18 @@ export function AppHeader() {
           <span className="text-[10px] text-white/60 uppercase font-bold tracking-widest">
             Perfil:
           </span>
-          <Select value={state.role} onValueChange={handleRoleChange}>
-            <SelectTrigger className="h-8 w-[180px] bg-white/10 border-white/20 text-xs text-white focus:ring-white/50">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Acesso Master">Acesso Master</SelectItem>
-              <SelectItem value="Supervisor Financeiro">Supervisor Financeiro</SelectItem>
-              <SelectItem value="Supervisor Comercial">Supervisor Comercial</SelectItem>
-              <SelectItem value="Supervisor Coleta">Supervisor Coleta</SelectItem>
-              <SelectItem value="Funcionário Comercial">Funcionário Comercial</SelectItem>
-              <SelectItem value="Funcionário Marketing">Funcionário Marketing</SelectItem>
-              <SelectItem value="Funcionário Coleta">Funcionário Coleta</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="h-8 px-3 flex items-center bg-white/10 border border-white/20 rounded-md text-xs text-white capitalize">
+            {userRole.replace('_', ' ')}
+          </div>
         </div>
 
         <div className="relative hidden md:block group">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/50 group-focus-within:text-white/80 transition-colors" />
           <input
             type="search"
-            placeholder={`Buscar como ${state.role}...`}
+            placeholder={`Buscar...`}
             className="bg-white/10 border border-white/20 text-white placeholder:text-white/50 rounded-full pl-9 pr-4 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-white/50 focus:w-64 w-48 transition-all"
-            title={`Buscar dados relevantes para ${state.role}`}
+            title={`Buscar no sistema`}
           />
         </div>
 
@@ -230,7 +216,7 @@ export function AppHeader() {
             <DropdownMenuTrigger asChild>
               <Avatar className="w-8 h-8 cursor-pointer ring-2 ring-white/20 hover:ring-white/50 transition-all shadow-sm">
                 <AvatarFallback className="bg-white text-[#800020] text-[10px] font-bold">
-                  {state.role.substring(0, 2).toUpperCase()}
+                  {user?.name ? user.name.substring(0, 2).toUpperCase() : 'US'}
                 </AvatarFallback>
               </Avatar>
             </DropdownMenuTrigger>
@@ -243,7 +229,13 @@ export function AppHeader() {
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-red-600 cursor-pointer">
+              <DropdownMenuItem
+                className="text-red-600 cursor-pointer"
+                onClick={() => {
+                  signOut()
+                  window.location.href = '/login'
+                }}
+              >
                 <LogOut className="w-4 h-4 mr-2" /> Sair
               </DropdownMenuItem>
             </DropdownMenuContent>

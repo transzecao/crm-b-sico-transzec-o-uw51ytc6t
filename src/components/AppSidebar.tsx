@@ -41,86 +41,94 @@ export function AppSidebar() {
 
   const items = [
     {
-      title: 'Tarefas',
+      title: 'Dashboard',
       url: '/app/dashboard',
       icon: CheckSquare,
-      roles: ['admin', 'supervisor', 'employee'],
+      roles: [
+        'master',
+        'sup_financeiro',
+        'sup_comercial',
+        'sup_coleta',
+        'func_comercial',
+        'func_marketing',
+        'func_coleta',
+      ],
     },
     {
       title: 'Lead Novo',
       url: '/empresa/nova',
       icon: Inbox,
-      roles: ['admin', 'supervisor', 'employee'],
+      roles: ['master', 'sup_comercial', 'func_comercial'],
     },
     {
       title: 'Pipeline',
       url: '/pipeline/1',
       icon: KanbanSquare,
-      roles: ['admin', 'supervisor', 'employee'],
+      roles: ['master', 'sup_comercial', 'func_comercial'],
     },
     {
       title: 'Nutrição',
       url: '/pipeline/2',
       icon: Sprout,
-      roles: ['admin', 'supervisor', 'employee'],
+      roles: ['master', 'sup_comercial', 'func_comercial', 'func_marketing'],
     },
     {
       title: 'Contatos',
       url: '/contatos',
       icon: Users,
-      roles: ['admin', 'supervisor', 'employee'],
+      roles: ['master', 'sup_comercial', 'func_comercial'],
     },
     {
       title: 'Empresas',
       url: '/empresas',
       icon: Building2,
-      roles: ['admin', 'supervisor', 'employee'],
+      roles: ['master', 'sup_comercial', 'func_comercial'],
     },
     {
       title: 'Propostas',
       url: '/financeiro',
       icon: FileText,
-      roles: ['admin', 'supervisor', 'employee'],
+      roles: ['master', 'sup_financeiro'],
     },
     {
       title: 'Controle de Gastos',
       url: '/financeiro/controle-gastos',
       icon: Wallet,
-      roles: ['admin', 'supervisor'],
+      roles: ['master', 'sup_financeiro'],
     },
     {
       title: 'Relatórios',
       url: '/analytics',
       icon: BarChart3,
-      roles: ['admin', 'supervisor'],
+      roles: ['master', 'sup_financeiro', 'sup_comercial', 'sup_coleta'],
     },
     {
       title: 'Roteirização',
       url: '/roteirizacao',
       icon: MapIcon,
-      roles: ['admin', 'supervisor', 'employee'],
+      roles: ['master', 'sup_coleta', 'func_coleta'],
     },
     {
       title: 'Aprovações',
       url: '/supervisor/approvals',
       icon: CheckSquare,
-      roles: ['admin', 'supervisor'],
+      roles: ['master', 'sup_financeiro', 'sup_comercial', 'sup_coleta'],
     },
     {
       title: 'Governança',
       url: '/admin/logins',
       icon: KeyRound,
-      roles: ['admin'],
+      roles: ['master'],
     },
     {
       title: 'The Brain (Global)',
       url: '/ia',
       icon: BrainCircuit,
-      roles: ['admin', 'supervisor'],
+      roles: ['master', 'sup_financeiro', 'sup_comercial', 'sup_coleta'],
     },
   ]
 
-  const userRole = user?.role || 'employee'
+  const userRole = user?.role || 'func_comercial'
   const visibleItems = items.filter((item) => item.roles.includes(userRole))
 
   return (
