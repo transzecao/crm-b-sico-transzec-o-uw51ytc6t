@@ -15,20 +15,24 @@ migrate(
 
     try {
       // Attempt to update existing admin record
-      const record = app.findRecordById('transzecao', 'rnw4xx77v05fpck')
+      const record = app.findFirstRecordByData('transzecao', 'id', 'rnw4xx77v05fpck')
       record.setPassword('SenhaMaster123') // setPassword handles both password and passwordConfirm
       record.setVerified(true)
       record.set('role', 'master')
       app.saveNoValidate(record) // Bypass other constraints just in case
     } catch (err) {
       // If record doesn't exist, create it to ensure emergency access
-      const record = new Record(collection)
-      record.set('id', 'rnw4xx77v05fpck')
-      record.setEmail('master.recovery@transzecao.local')
-      record.setPassword('SenhaMaster123')
-      record.setVerified(true)
-      record.set('role', 'master')
-      app.saveNoValidate(record)
+      try {
+        const record = new Record(collection)
+        record.set('id', 'rnw4xx77v05fpck')
+        record.setEmail('master.recovery@transzecao.local')
+        record.setPassword('SenhaMaster123')
+        record.setVerified(true)
+        record.set('role', 'master')
+        app.saveNoValidate(record)
+      } catch (createErr) {
+        console.log('Could not create recovery admin:', createErr)
+      }
     }
   },
   (app) => {
