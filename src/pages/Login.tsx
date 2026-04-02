@@ -24,6 +24,7 @@ export default function Login() {
     } catch (err: any) {
       error = err
       console.error('Login Error:', err.message, err.data)
+      console.error('Full Error Data:', err.data || err.response)
     }
 
     setLoading(false)
@@ -60,7 +61,7 @@ export default function Login() {
       if (currentRole === 'master') {
         navigate('/admin/dashboard')
       } else {
-        navigate('/')
+        navigate('/app/dashboard')
       }
     }
   }

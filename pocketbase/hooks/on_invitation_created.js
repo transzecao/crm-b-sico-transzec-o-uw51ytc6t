@@ -19,8 +19,9 @@ onRecordAfterCreateSuccess((e) => {
                <p><a href="${link}">${link}</a></p>`,
       })
       $app.newMailClient().send(message)
+      console.log('Invitation email sent successfully to', email)
     } catch (err) {
-      console.log('Failed to send email:', err)
+      console.log('Failed to send invitation email:', err)
     }
   }
   e.next()

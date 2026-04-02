@@ -2,15 +2,18 @@ migrate(
   (app) => {
     // 1. Update Permission Rules for transzecao
     const collection = app.findCollectionByNameOrId('transzecao')
+    collection.listRule = "@request.auth.role = 'master' || id = @request.auth.id"
+    collection.viewRule = "@request.auth.role = 'master' || id = @request.auth.id"
+    collection.createRule = "@request.auth.role = 'master'"
     collection.updateRule = "@request.auth.role = 'master' || id = @request.auth.id"
+    collection.deleteRule = "@request.auth.role = 'master' || id = @request.auth.id"
     app.save(collection)
 
     // 2. Configure Titan Mail SMTP Integration
     const settings = app.settings()
     settings.smtp.enabled = true
     settings.smtp.host = 'smtp.titan.email'
-    settings.smtp.port = 587
-    // Note: PocketBase uses STARTTLS automatically for port 587
+    settings.smtp.port = 465 // Enforce port 465 with SSL/TLS
     app.save(settings)
 
     // 3. Master Account Restoration (User Validation & Credential Sync)
@@ -21,7 +24,7 @@ migrate(
       try {
         const records = app.findRecordsByFilter(
           'transzecao',
-          "email ~ 'nicoly@transzecao.com.br'",
+          "email = 'nicoly@transzecao.com.br'",
           '',
           1,
           0,
@@ -36,6 +39,7 @@ migrate(
       record.setPassword('SenhaMaster123')
       record.setVerified(true)
       record.set('role', 'master')
+      record.set('status', 'active')
       if (!record.get('name')) {
         record.set('name', 'Nicoly')
       }
@@ -51,6 +55,7 @@ migrate(
         record.setPassword('SenhaMaster123')
         record.setVerified(true)
         record.set('role', 'master')
+        record.set('status', 'active')
         record.set('name', 'Nicoly')
         app.save(record)
       } catch (e) {
