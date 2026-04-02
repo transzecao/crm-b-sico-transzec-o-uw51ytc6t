@@ -6,7 +6,7 @@ onRecordAfterCreateSuccess((e) => {
     const role = record.get('role')
 
     try {
-      const link = `https://goskip.app/register?token=${token}`
+      const link = `https://crm-basico-transzecao-62f0e.goskip.app/register?token=${token}`
       const message = new MailerMessage({
         from: {
           address: 'no-reply@transzecao.com.br',
@@ -20,7 +20,7 @@ onRecordAfterCreateSuccess((e) => {
       })
       $app.newMailClient().send(message)
     } catch (err) {
-      console.log('Failed to send email', err)
+      console.log('Failed to send email:', err)
     }
   }
   e.next()
