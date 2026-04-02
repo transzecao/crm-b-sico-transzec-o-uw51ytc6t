@@ -14,25 +14,21 @@ migrate(
     app.save(collection)
 
     try {
-      // Attempt to update existing admin record
-      const record = app.findFirstRecordByData('transzecao', 'id', 'rnw4xx77v05fpck')
-      record.setPassword('SenhaMaster123') // setPassword handles both password and passwordConfirm
+      let record
+      try {
+        record = app.findAuthRecordByEmail('transzecao', 'master.recovery@transzecao.local')
+      } catch (_) {
+        record = new Record(collection)
+        record.setEmail('master.recovery@transzecao.local')
+        // Let PocketBase auto-generate a unique ID
+      }
+
+      record.setPassword('SenhaMaster123')
       record.setVerified(true)
       record.set('role', 'master')
-      app.saveNoValidate(record) // Bypass other constraints just in case
+      app.saveNoValidate(record)
     } catch (err) {
-      // If record doesn't exist, create it to ensure emergency access
-      try {
-        const record = new Record(collection)
-        record.set('id', 'rnw4xx77v05fpck')
-        record.setEmail('master.recovery@transzecao.local')
-        record.setPassword('SenhaMaster123')
-        record.setVerified(true)
-        record.set('role', 'master')
-        app.saveNoValidate(record)
-      } catch (createErr) {
-        console.log('Could not create recovery admin:', createErr)
-      }
+      console.log('Could not upsert recovery admin:', err)
     }
   },
   (app) => {

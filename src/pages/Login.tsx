@@ -65,25 +65,6 @@ export default function Login() {
               {loading ? 'Entrando...' : 'Entrar'}
             </Button>
           </form>
-
-          <div className="mt-6 border-t pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
-              onClick={() => {
-                pb.authStore.save('emergency-bypass-token', {
-                  id: 'rnw4xx77v05fpck',
-                  collectionId: 'transzecao',
-                  collectionName: 'transzecao',
-                  role: 'master',
-                })
-                navigate('/')
-              }}
-            >
-              Recuperação de Emergência
-            </Button>
-          </div>
         </CardContent>
       </Card>
     </div>
