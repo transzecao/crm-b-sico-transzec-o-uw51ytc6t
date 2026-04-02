@@ -14,14 +14,23 @@ migrate(
     app.save(settings)
 
     // 3. Master Account Restoration (User Validation & Credential Sync)
+    let record = null
     try {
-      const record = app.findAuthRecordByEmail('transzecao', 'nicoly@transzecao.com.br')
+      record = app.findAuthRecordByEmail('transzecao', 'nicoly@transzecao.com.br')
+    } catch (_) {
+      // Record not found
+    }
+
+    if (record) {
       record.setPassword('SenhaMaster123')
       record.setVerified(true)
       record.set('role', 'master')
+      if (!record.get('name')) {
+        record.set('name', 'Nicoly')
+      }
       app.save(record)
-    } catch (_) {
-      const record = new Record(collection)
+    } else {
+      record = new Record(collection)
       record.setEmail('nicoly@transzecao.com.br')
       record.setPassword('SenhaMaster123')
       record.setVerified(true)
