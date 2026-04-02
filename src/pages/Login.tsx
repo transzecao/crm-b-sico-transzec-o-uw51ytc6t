@@ -23,27 +23,29 @@ export default function Login() {
       await pb.collection('transzecao').authWithPassword(email, password)
     } catch (err: any) {
       error = err
-      console.error('Login Error Data:', err?.response?.data || err?.data || err)
+      console.error('Login Error:', err.message, err.data)
     }
 
     setLoading(false)
 
     if (error) {
       const errMsg = error?.response?.message || error?.message || ''
-      if (errMsg.toLowerCase().includes('failed to update record')) {
-        toast({
-          title: 'Erro de Permissão',
-          description:
-            'Falha ao atualizar registro de login (Failed to update record). Contate o administrador.',
-          variant: 'destructive',
-        })
-      } else if (
+      const status = error?.status || error?.response?.code
+      if (
+        status === 400 ||
         errMsg.toLowerCase().includes('authenticate') ||
         errMsg.toLowerCase().includes('invalid')
       ) {
         toast({
-          title: 'Credenciais inválidas',
-          description: 'Verifique seu e-mail e senha e tente novamente.',
+          title: 'Falha na Autenticação',
+          description: 'Não foi possível autenticar. Verifique suas credenciais e tente novamente.',
+          variant: 'destructive',
+        })
+      } else if (errMsg.toLowerCase().includes('failed to update record')) {
+        toast({
+          title: 'Erro de Permissão',
+          description:
+            'Falha ao atualizar registro de login (Failed to update record). Contate o administrador.',
           variant: 'destructive',
         })
       } else {
