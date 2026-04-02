@@ -4,7 +4,7 @@ migrate(
 
     const roleField = users.fields.getByName('role')
     if (roleField) {
-      roleField.selectValues = [
+      roleField.values = [
         'master',
         'sup_financeiro',
         'sup_comercial',
@@ -54,7 +54,7 @@ migrate(
     const invitations = app.findCollectionByNameOrId('invitations')
     const invRoleField = invitations.fields.getByName('role')
     if (invRoleField) {
-      invRoleField.selectValues = [
+      invRoleField.values = [
         'master',
         'sup_financeiro',
         'sup_comercial',
