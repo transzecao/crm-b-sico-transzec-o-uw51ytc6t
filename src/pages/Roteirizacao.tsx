@@ -95,7 +95,9 @@ export default function Roteirizacao() {
       setSchedules(sData)
       setVehicles(vData)
       setRoutePlans(rData)
-    } catch (e) {}
+    } catch (e) {
+      console.error(e)
+    }
   }
 
   useEffect(() => {
