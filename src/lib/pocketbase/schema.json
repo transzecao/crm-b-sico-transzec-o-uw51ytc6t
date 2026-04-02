@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-02T13:44:30.759Z",
+  "generatedAt": "2026-04-02T16:03:47.034Z",
   "collections": [
     {
       "name": "transzecao",
@@ -1417,6 +1417,245 @@
           "name": "data",
           "type": "json",
           "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "name": "collection_schedules",
+      "type": "base",
+      "apiRules": {
+        "list": "(@request.auth.role = 'Cliente' && creator_id = @request.auth.id) || (@request.auth.id != '' && @request.auth.role != 'Cliente')",
+        "view": "(@request.auth.role = 'Cliente' && creator_id = @request.auth.id) || (@request.auth.id != '' && @request.auth.role != 'Cliente')",
+        "create": "@request.auth.id != ''",
+        "update": "(@request.auth.role = 'Cliente' && creator_id = @request.auth.id) || (@request.auth.id != '' && @request.auth.role != 'Cliente')",
+        "delete": "@request.auth.role = 'Master' || @request.auth.role = 'Supervisor_Coleta' || creator_id = @request.auth.id"
+      },
+      "fields": [
+        {
+          "name": "creator_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "transzecao"
+        },
+        {
+          "name": "freight_type",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["CIF", "FOB"]
+        },
+        {
+          "name": "sender_cnpj",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "sender_name",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "sender_address",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "dest_cnpj",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "dest_name",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "dest_address",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "invoice_id",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "quantity",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "total_volume",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "total_weight",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "invoice_value",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "observations",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "status",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["pending", "routed"]
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE UNIQUE INDEX idx_collection_schedules_invoice_id ON collection_schedules (invoice_id)"
+      ]
+    },
+    {
+      "name": "route_plans",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != '' && @request.auth.role != 'Cliente'",
+        "view": "@request.auth.id != '' && @request.auth.role != 'Cliente'",
+        "create": "@request.auth.id != '' && @request.auth.role != 'Cliente'",
+        "update": "@request.auth.id != '' && @request.auth.role != 'Cliente'",
+        "delete": "@request.auth.id != '' && @request.auth.role != 'Cliente'"
+      },
+      "fields": [
+        {
+          "name": "schedule_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "collection_schedules"
+        },
+        {
+          "name": "vehicle_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "vehicles"
+        },
+        {
+          "name": "date",
+          "type": "date",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "cluster",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": [
+            "Campinas",
+            "Diadema",
+            "Guarulhos",
+            "Hortolandia",
+            "Louveira",
+            "Osasco",
+            "São Paulo",
+            "São Bernardo do Campo",
+            "São Caetano do Sul",
+            "Sumaré",
+            "Valinhos",
+            "Vinhedo",
+            "Itupeva"
+          ]
+        },
+        {
+          "name": "created_by",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "transzecao"
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "name": "routing_config",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != '' && @request.auth.role != 'Cliente'",
+        "view": "@request.auth.id != '' && @request.auth.role != 'Cliente'",
+        "create": "@request.auth.role = 'Master' || @request.auth.role = 'Supervisor_Coleta'",
+        "update": "@request.auth.role = 'Master' || @request.auth.role = 'Supervisor_Coleta'",
+        "delete": "@request.auth.role = 'Master' || @request.auth.role = 'Supervisor_Coleta'"
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "settings",
+          "type": "json",
+          "required": true,
           "system": false
         },
         {
