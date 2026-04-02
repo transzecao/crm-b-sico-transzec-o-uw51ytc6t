@@ -45,7 +45,7 @@ const App = () => (
               <Route element={<Layout />}>
                 <Route path="/" element={<NavigateToDashboard />} />
 
-                <Route element={<ProtectedRoute allowedRoles={['master']} />}>
+                <Route element={<ProtectedRoute allowedRoles={['Master']} />}>
                   <Route path="/admin/logins" element={<LoginAdmin />} />
                   <Route path="/admin/portal" element={<PortalAdmin />} />
                 </Route>
@@ -53,7 +53,12 @@ const App = () => (
                 <Route
                   element={
                     <ProtectedRoute
-                      allowedRoles={['master', 'sup_financeiro', 'sup_comercial', 'sup_coleta']}
+                      allowedRoles={[
+                        'Master',
+                        'Supervisor_Financeiro',
+                        'Supervisor_Comercial',
+                        'Supervisor_Coleta',
+                      ]}
                     />
                   }
                 >
@@ -62,7 +67,9 @@ const App = () => (
                   <Route path="/ia" element={<IA />} />
                 </Route>
 
-                <Route element={<ProtectedRoute allowedRoles={['master', 'sup_financeiro']} />}>
+                <Route
+                  element={<ProtectedRoute allowedRoles={['Master', 'Supervisor_Financeiro']} />}
+                >
                   <Route path="/financeiro" element={<Financeiro />} />
                   <Route path="/financeiro/controle-gastos" element={<ControleGastos />} />
                 </Route>
@@ -70,7 +77,12 @@ const App = () => (
                 <Route
                   element={
                     <ProtectedRoute
-                      allowedRoles={['master', 'sup_comercial', 'func_comercial', 'func_marketing']}
+                      allowedRoles={[
+                        'Master',
+                        'Supervisor_Comercial',
+                        'Funcionário_Comercial',
+                        'Funcionário_Marketing',
+                      ]}
                     />
                   }
                 >
@@ -85,7 +97,9 @@ const App = () => (
 
                 <Route
                   element={
-                    <ProtectedRoute allowedRoles={['master', 'sup_coleta', 'func_coleta']} />
+                    <ProtectedRoute
+                      allowedRoles={['Master', 'Supervisor_Coleta', 'Funcionário_Coleta']}
+                    />
                   }
                 >
                   <Route path="/roteirizacao" element={<Roteirizacao />} />
@@ -95,13 +109,14 @@ const App = () => (
                   element={
                     <ProtectedRoute
                       allowedRoles={[
-                        'master',
-                        'sup_financeiro',
-                        'sup_comercial',
-                        'sup_coleta',
-                        'func_comercial',
-                        'func_marketing',
-                        'func_coleta',
+                        'Master',
+                        'Supervisor_Financeiro',
+                        'Supervisor_Comercial',
+                        'Supervisor_Coleta',
+                        'Funcionário_Comercial',
+                        'Funcionário_Marketing',
+                        'Funcionário_Coleta',
+                        'Cliente',
                       ]}
                     />
                   }
