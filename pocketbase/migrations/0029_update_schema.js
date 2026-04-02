@@ -5,7 +5,7 @@ migrate(
 
     const roleField = transzecao.fields.getByName('role')
     if (roleField) {
-      roleField.selectValues = [
+      roleField.values = [
         'Master',
         'Supervisor_Financeiro',
         'Supervisor_Comercial',
@@ -19,7 +19,7 @@ migrate(
 
     const statusField = transzecao.fields.getByName('status')
     if (statusField) {
-      statusField.selectValues = ['Ativo', 'Inativo', 'Pendente']
+      statusField.values = ['Ativo', 'Inativo', 'Pendente']
     }
 
     transzecao.listRule = "@request.auth.role = 'Master' || id = @request.auth.id"
@@ -45,8 +45,8 @@ migrate(
         { name: 'address', type: 'text' },
         { name: 'phone', type: 'text' },
         { name: 'email', type: 'email' },
-        { name: 'status', type: 'select', selectValues: ['Ativo', 'Inativo'] },
-        { name: 'created', type: 'autodate', onCreate: true },
+        { name: 'status', type: 'select', values: ['Ativo', 'Inativo'], maxSelect: 1 },
+        { name: 'created', type: 'autodate', onCreate: true, onUpdate: false },
         { name: 'updated', type: 'autodate', onCreate: true, onUpdate: true },
       ],
       indexes: ['CREATE UNIQUE INDEX idx_companies_cnpj ON companies (cnpj)'],
@@ -72,7 +72,8 @@ migrate(
     leads.fields.add(
       new SelectField({
         name: 'status',
-        selectValues: ['Prospect', 'Qualificado', 'Negociando', 'Ganho', 'Perda'],
+        values: ['Prospect', 'Qualificado', 'Negociando', 'Ganho', 'Perda'],
+        maxSelect: 1,
       }),
     )
 
@@ -116,7 +117,7 @@ migrate(
         { name: 'name', type: 'text', required: true },
         { name: 'stages', type: 'json' },
         { name: 'rules', type: 'json' },
-        { name: 'created', type: 'autodate', onCreate: true },
+        { name: 'created', type: 'autodate', onCreate: true, onUpdate: false },
         { name: 'updated', type: 'autodate', onCreate: true, onUpdate: true },
       ],
     })
@@ -132,11 +133,11 @@ migrate(
       updateRule: "@request.auth.role = 'Master' || @request.auth.role = 'Supervisor_Financeiro'",
       deleteRule: "@request.auth.role = 'Master'",
       fields: [
-        { name: 'cluster', type: 'select', selectValues: ['Campinas', 'Sumaré'] },
+        { name: 'cluster', type: 'select', values: ['Campinas', 'Sumaré'], maxSelect: 1 },
         { name: 'item', type: 'text' },
         { name: 'value', type: 'number' },
         { name: 'currency', type: 'text' },
-        { name: 'created', type: 'autodate', onCreate: true },
+        { name: 'created', type: 'autodate', onCreate: true, onUpdate: false },
         { name: 'updated', type: 'autodate', onCreate: true, onUpdate: true },
       ],
     })
@@ -159,9 +160,9 @@ migrate(
           collectionId: transzecao.id,
           maxSelect: 1,
         },
-        { name: 'type', type: 'select', selectValues: ['CPK', 'Gastos', 'Manutenção'] },
+        { name: 'type', type: 'select', values: ['CPK', 'Gastos', 'Manutenção'], maxSelect: 1 },
         { name: 'data', type: 'json' },
-        { name: 'created', type: 'autodate', onCreate: true },
+        { name: 'created', type: 'autodate', onCreate: true, onUpdate: false },
         { name: 'updated', type: 'autodate', onCreate: true, onUpdate: true },
       ],
     })
