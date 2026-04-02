@@ -57,25 +57,8 @@ export default function Login() {
     }
   }
 
-  const handleDeveloperAccess = () => {
-    pb.authStore.save('DEVELOPER_TOKEN', {
-      id: 'rnw4xx77v05fpck',
-      role: 'master',
-      email: 'nikytafurchi@outlook.com',
-    } as any)
-    navigate('/admin/dashboard')
-  }
-
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 p-4 relative">
-      <Button
-        type="button"
-        variant="ghost"
-        onClick={handleDeveloperAccess}
-        className="absolute bottom-4 right-4 opacity-0 hover:opacity-100 transition-opacity"
-      >
-        Developer Access
-      </Button>
       <Card className="w-full max-w-md shadow-lg border-slate-200">
         <CardHeader className="text-center pb-6">
           <CardTitle className="text-2xl font-bold text-slate-800">Transzecão CRM</CardTitle>
