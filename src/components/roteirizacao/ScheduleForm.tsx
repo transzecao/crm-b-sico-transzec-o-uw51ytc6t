@@ -64,6 +64,28 @@ export function ScheduleForm() {
         status: 'pending',
       })
       toast({ title: 'Coleta agendada com sucesso!' })
+
+      const docContent = `AGENDAMENTO DE COLETA
+Data/Hora: ${new Date().toLocaleString()}
+Criado por (ID): ${user?.id || 'Desconhecido'}
+NFe: ${form.invoiceNumber}
+Frete: ${form.freightType}
+Origem: ${form.originName} (CNPJ: ${form.originCnpj})
+Endereço Origem: ${form.originAddress}
+Destino: ${form.destName} (CNPJ: ${form.destCnpj})
+Endereço Destino: ${form.destAddress}
+Peso: ${form.weight}kg | Qtd: ${form.quantity} | Volume: ${form.dimensions}
+Valor: R$ ${form.invoiceValue}
+Observações: ${form.contactPhone}
+`
+      const blob = new Blob([docContent], { type: 'text/plain' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `Comprovante_Coleta_${form.invoiceNumber}.txt`
+      a.click()
+      URL.revokeObjectURL(url)
+
       setForm({
         originAddress: '',
         originName: '',
