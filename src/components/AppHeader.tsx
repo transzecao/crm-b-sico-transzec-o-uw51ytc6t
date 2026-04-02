@@ -1,27 +1,9 @@
-import {
-  Search,
-  Bell,
-  Plus,
-  BarChart3,
-  HelpCircle,
-  Kanban,
-  User,
-  Settings,
-  LogOut,
-  Bot,
-} from 'lucide-react'
+import { Search, Bell, Plus, BarChart3, HelpCircle, Kanban, Settings, Bot } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { SidebarTrigger } from '@/components/ui/sidebar'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -30,13 +12,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import useCrmStore, { Role } from '@/stores/useCrmStore'
+import useCrmStore from '@/stores/useCrmStore'
 import { useRealtime } from '@/hooks/use-realtime'
 import { AdminPanelModal } from '@/components/fleet/AdminPanelModal'
-import { useAuth } from '@/hooks/use-auth'
 
 export function AppHeader() {
-  const { state, updateState } = useCrmStore()
+  const { updateState } = useCrmStore()
   const [isAdminModalOpen, setIsAdminModalOpen] = useState(false)
   const [notifications, setNotifications] = useState<
     { id: string; title: string; text: string; icon?: React.ReactNode }[]
@@ -68,18 +49,8 @@ export function AppHeader() {
     }
   })
 
-  const { user, signOut } = useAuth()
-
-  const handleRoleChange = (role: string) => {
-    updateState({ role: role as Role })
-  }
-
-  const userRole = user?.role || 'func_comercial'
-
-  const canCreate = ['master', 'sup_comercial', 'func_comercial'].includes(userRole)
-  const canSeeAnalytics = ['master', 'sup_financeiro', 'sup_comercial', 'sup_coleta'].includes(
-    userRole,
-  )
+  const canCreate = true
+  const canSeeAnalytics = true
 
   return (
     <header className="sticky top-0 z-40 w-full bg-[#800020] text-white flex items-center h-14 px-4 justify-between shadow-md border-b border-[#5c0017]">
@@ -158,10 +129,10 @@ export function AppHeader() {
       <div className="flex items-center gap-2 sm:gap-4">
         <div className="hidden md:flex items-center gap-2 mr-2">
           <span className="text-[10px] text-white/60 uppercase font-bold tracking-widest">
-            Perfil:
+            Modo:
           </span>
           <div className="h-8 px-3 flex items-center bg-white/10 border border-white/20 rounded-md text-xs text-white capitalize">
-            {userRole.replace('_', ' ')}
+            Acesso Público
           </div>
         </div>
 
@@ -212,34 +183,11 @@ export function AppHeader() {
         </div>
 
         <div className="flex items-center gap-3 pl-2 sm:pl-4 border-l border-white/20">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Avatar className="w-8 h-8 cursor-pointer ring-2 ring-white/20 hover:ring-white/50 transition-all shadow-sm">
-                <AvatarFallback className="bg-white text-[#800020] text-[10px] font-bold">
-                  {user?.name ? user.name.substring(0, 2).toUpperCase() : 'US'}
-                </AvatarFallback>
-              </Avatar>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem className="cursor-pointer" asChild>
-                <Link to="/profile">
-                  <User className="w-4 h-4 mr-2" /> Meu Perfil
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                className="text-red-600 cursor-pointer"
-                onClick={() => {
-                  signOut()
-                  window.location.href = '/login'
-                }}
-              >
-                <LogOut className="w-4 h-4 mr-2" /> Sair
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <Avatar className="w-8 h-8 ring-2 ring-white/20 shadow-sm">
+            <AvatarFallback className="bg-white text-[#800020] text-[10px] font-bold">
+              US
+            </AvatarFallback>
+          </Avatar>
         </div>
       </div>
       <AdminPanelModal open={isAdminModalOpen} onOpenChange={setIsAdminModalOpen} />

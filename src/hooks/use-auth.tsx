@@ -1,6 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
-import { useNavigate } from 'react-router-dom'
-import pb from '@/lib/pocketbase/client'
+import { createContext, useContext, ReactNode } from 'react'
 
 interface AuthContextType {
   user: any
@@ -19,46 +17,19 @@ export const useAuth = () => {
 }
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<any>(pb.authStore.record)
-  const [loading, setLoading] = useState(true)
-  const navigate = useNavigate()
-
-  useEffect(() => {
-    const unsubscribe = pb.authStore.onChange((_token, record) => {
-      setUser(record)
-    })
-    setLoading(false)
-    return () => {
-      unsubscribe()
-    }
-  }, [])
-
-  const signUp = async (email: string, password: string) => {
-    try {
-      await pb.collection('transzecao').create({ email, password, passwordConfirm: password })
-      await pb.collection('transzecao').authWithPassword(email, password)
-      return { error: null }
-    } catch (error) {
-      return { error }
-    }
+  const dummyUser = {
+    id: 'public000000000',
+    name: 'Usuário Público',
+    email: 'public@transzecao.com',
+    role: 'master',
   }
 
-  const signIn = async (email: string, password: string) => {
-    try {
-      await pb.collection('transzecao').authWithPassword(email, password)
-      return { error: null }
-    } catch (error) {
-      return { error }
-    }
-  }
-
-  const signOut = () => {
-    pb.authStore.clear()
-    navigate('/login')
-  }
+  const signUp = async () => ({ error: null })
+  const signIn = async () => ({ error: null })
+  const signOut = () => {}
 
   return (
-    <AuthContext.Provider value={{ user, signUp, signIn, signOut, loading }}>
+    <AuthContext.Provider value={{ user: dummyUser, signUp, signIn, signOut, loading: false }}>
       {children}
     </AuthContext.Provider>
   )

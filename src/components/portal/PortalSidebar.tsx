@@ -1,18 +1,8 @@
-import {
-  LayoutDashboard,
-  Truck,
-  Calculator,
-  FileText,
-  MessageSquare,
-  LogOut,
-  History,
-  Newspaper,
-  Menu,
-} from 'lucide-react'
+import { LayoutDashboard, Truck, Calculator, Menu } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet'
 
-export function PortalSidebar({ activeTab, setActiveTab, onLogout }: any) {
+export function PortalSidebar({ activeTab, setActiveTab }: any) {
   const items = [
     { id: 'home', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'coleta', label: 'Agendar Coleta', icon: Truck },
@@ -38,15 +28,6 @@ export function PortalSidebar({ activeTab, setActiveTab, onLogout }: any) {
             {item.label}
           </button>
         ))}
-      </div>
-      <div className="p-4 border-t border-slate-200 mt-auto">
-        <button
-          onClick={onLogout}
-          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-slate-600 hover:bg-rose-50 hover:text-rose-600 transition-colors text-sm"
-        >
-          <LogOut className="w-5 h-5" />
-          Sair do Portal
-        </button>
       </div>
     </>
   )

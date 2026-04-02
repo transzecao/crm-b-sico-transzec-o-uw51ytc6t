@@ -16,7 +16,6 @@ import {
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -24,112 +23,26 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar'
-import { Button } from '@/components/ui/button'
-import { LogOut } from 'lucide-react'
-import { useAuth } from '@/hooks/use-auth'
-import useCrmStore from '@/stores/useCrmStore'
 import { cn } from '@/lib/utils'
 
 export function AppSidebar() {
   const location = useLocation()
-  const { user, signOut } = useAuth()
-
-  const handleLogout = () => {
-    signOut()
-    window.location.href = '/login'
-  }
 
   const items = [
-    {
-      title: 'Dashboard',
-      url: '/app/dashboard',
-      icon: CheckSquare,
-      roles: [
-        'master',
-        'sup_financeiro',
-        'sup_comercial',
-        'sup_coleta',
-        'func_comercial',
-        'func_marketing',
-        'func_coleta',
-      ],
-    },
-    {
-      title: 'Lead Novo',
-      url: '/empresa/nova',
-      icon: Inbox,
-      roles: ['master', 'sup_comercial', 'func_comercial'],
-    },
-    {
-      title: 'Pipeline',
-      url: '/pipeline/1',
-      icon: KanbanSquare,
-      roles: ['master', 'sup_comercial', 'func_comercial'],
-    },
-    {
-      title: 'Nutrição',
-      url: '/pipeline/2',
-      icon: Sprout,
-      roles: ['master', 'sup_comercial', 'func_comercial', 'func_marketing'],
-    },
-    {
-      title: 'Contatos',
-      url: '/contatos',
-      icon: Users,
-      roles: ['master', 'sup_comercial', 'func_comercial'],
-    },
-    {
-      title: 'Empresas',
-      url: '/empresas',
-      icon: Building2,
-      roles: ['master', 'sup_comercial', 'func_comercial'],
-    },
-    {
-      title: 'Propostas',
-      url: '/financeiro',
-      icon: FileText,
-      roles: ['master', 'sup_financeiro'],
-    },
-    {
-      title: 'Controle de Gastos',
-      url: '/financeiro/controle-gastos',
-      icon: Wallet,
-      roles: ['master', 'sup_financeiro'],
-    },
-    {
-      title: 'Relatórios',
-      url: '/analytics',
-      icon: BarChart3,
-      roles: ['master', 'sup_financeiro', 'sup_comercial', 'sup_coleta'],
-    },
-    {
-      title: 'Roteirização',
-      url: '/roteirizacao',
-      icon: MapIcon,
-      roles: ['master', 'sup_coleta', 'func_coleta'],
-    },
-    {
-      title: 'Aprovações',
-      url: '/supervisor/approvals',
-      icon: CheckSquare,
-      roles: ['master', 'sup_financeiro', 'sup_comercial', 'sup_coleta'],
-    },
-    {
-      title: 'Governança',
-      url: '/admin/logins',
-      icon: KeyRound,
-      roles: ['master'],
-    },
-    {
-      title: 'The Brain (Global)',
-      url: '/ia',
-      icon: BrainCircuit,
-      roles: ['master', 'sup_financeiro', 'sup_comercial', 'sup_coleta'],
-    },
+    { title: 'Dashboard', url: '/app/dashboard', icon: CheckSquare },
+    { title: 'Lead Novo', url: '/empresa/nova', icon: Inbox },
+    { title: 'Pipeline', url: '/pipeline/1', icon: KanbanSquare },
+    { title: 'Nutrição', url: '/pipeline/2', icon: Sprout },
+    { title: 'Contatos', url: '/contatos', icon: Users },
+    { title: 'Empresas', url: '/empresas', icon: Building2 },
+    { title: 'Propostas', url: '/financeiro', icon: FileText },
+    { title: 'Controle de Gastos', url: '/financeiro/controle-gastos', icon: Wallet },
+    { title: 'Relatórios', url: '/analytics', icon: BarChart3 },
+    { title: 'Roteirização', url: '/roteirizacao', icon: MapIcon },
+    { title: 'Aprovações', url: '/supervisor/approvals', icon: CheckSquare },
+    { title: 'Governança', url: '/admin/logins', icon: KeyRound },
+    { title: 'The Brain (Global)', url: '/ia', icon: BrainCircuit },
   ]
-
-  const userRole = user?.role || 'func_comercial'
-  const visibleItems = items.filter((item) => item.roles.includes(userRole))
 
   return (
     <Sidebar className="border-r border-slate-200 bg-white">
@@ -140,7 +53,7 @@ export function AppSidebar() {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {visibleItems.map((item) => {
+              {items.map((item) => {
                 const isActive =
                   location.pathname === item.url ||
                   (location.pathname.startsWith('/empresa/') &&
@@ -173,15 +86,6 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter className="p-4 border-t border-slate-200">
-        <Button
-          variant="ghost"
-          className="w-full justify-start text-rose-500 hover:text-rose-600 hover:bg-rose-50"
-          onClick={handleLogout}
-        >
-          <LogOut className="w-4 h-4 mr-2" /> Sair
-        </Button>
-      </SidebarFooter>
     </Sidebar>
   )
 }

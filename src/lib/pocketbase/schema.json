@@ -1,15 +1,15 @@
 {
-  "generatedAt": "2026-04-02T21:10:17.578Z",
+  "generatedAt": "2026-04-02T21:41:02.373Z",
   "collections": [
     {
       "name": "transzecao",
       "type": "auth",
       "apiRules": {
-        "list": "@request.auth.role = 'Master' || id = @request.auth.id",
-        "view": "@request.auth.role = 'Master' || id = @request.auth.id",
-        "create": "@request.auth.role = 'Master'",
-        "update": "@request.auth.role = 'Master' || id = @request.auth.id",
-        "delete": "@request.auth.role = 'Master' || id = @request.auth.id"
+        "list": "",
+        "view": "",
+        "create": "",
+        "update": "",
+        "delete": ""
       },
       "fields": [
         {
@@ -101,11 +101,11 @@
       "name": "leads",
       "type": "base",
       "apiRules": {
-        "list": "@request.auth.id != ''",
-        "view": "@request.auth.id != ''",
-        "create": "@request.auth.id != ''",
-        "update": "@request.auth.id != ''",
-        "delete": "@request.auth.role = 'Master'"
+        "list": "",
+        "view": "",
+        "create": "",
+        "update": "",
+        "delete": ""
       },
       "fields": [
         {
@@ -242,17 +242,17 @@
       "name": "fleet_costs",
       "type": "base",
       "apiRules": {
-        "list": "@request.auth.id != ''",
-        "view": "@request.auth.id != ''",
-        "create": "@request.auth.id != ''",
-        "update": "@request.auth.id != ''",
-        "delete": "@request.auth.id != ''"
+        "list": "",
+        "view": "",
+        "create": "",
+        "update": "",
+        "delete": ""
       },
       "fields": [
         {
           "name": "user_id",
           "type": "relation",
-          "required": true,
+          "required": false,
           "system": false,
           "collectionRef": "transzecao"
         },
@@ -398,11 +398,11 @@
       "name": "vehicles",
       "type": "base",
       "apiRules": {
-        "list": "@request.auth.id != ''",
-        "view": "@request.auth.id != ''",
-        "create": "@request.auth.id != ''",
-        "update": "@request.auth.id != ''",
-        "delete": "@request.auth.id != ''"
+        "list": "",
+        "view": "",
+        "create": "",
+        "update": "",
+        "delete": ""
       },
       "fields": [
         {
@@ -595,11 +595,11 @@
       "name": "maintenance_logs",
       "type": "base",
       "apiRules": {
-        "list": "@request.auth.id != ''",
-        "view": "@request.auth.id != ''",
-        "create": "@request.auth.id != ''",
-        "update": "@request.auth.id != ''",
-        "delete": "@request.auth.id != ''"
+        "list": "",
+        "view": "",
+        "create": "",
+        "update": "",
+        "delete": ""
       },
       "fields": [
         {
@@ -642,11 +642,11 @@
       "name": "fleet_settings",
       "type": "base",
       "apiRules": {
-        "list": "@request.auth.id != ''",
-        "view": "@request.auth.id != ''",
-        "create": "@request.auth.id != ''",
-        "update": "@request.auth.id != ''",
-        "delete": "@request.auth.id != ''"
+        "list": "",
+        "view": "",
+        "create": "",
+        "update": "",
+        "delete": ""
       },
       "fields": [
         {
@@ -784,11 +784,11 @@
       "name": "settings_audit_logs",
       "type": "base",
       "apiRules": {
-        "list": "@request.auth.id != ''",
-        "view": "@request.auth.id != ''",
-        "create": "@request.auth.id != ''",
-        "update": null,
-        "delete": null
+        "list": "",
+        "view": "",
+        "create": "",
+        "update": "",
+        "delete": ""
       },
       "fields": [
         {
@@ -843,11 +843,11 @@
       "name": "drivers",
       "type": "base",
       "apiRules": {
-        "list": "@request.auth.id != ''",
-        "view": "@request.auth.id != ''",
-        "create": "@request.auth.id != ''",
-        "update": "@request.auth.id != ''",
-        "delete": "@request.auth.id != ''"
+        "list": "",
+        "view": "",
+        "create": "",
+        "update": "",
+        "delete": ""
       },
       "fields": [
         {
@@ -949,11 +949,11 @@
       "name": "vinculos",
       "type": "base",
       "apiRules": {
-        "list": "@request.auth.id != ''",
-        "view": "@request.auth.id != ''",
-        "create": "@request.auth.id != ''",
-        "update": "@request.auth.id != ''",
-        "delete": "@request.auth.id != ''"
+        "list": "",
+        "view": "",
+        "create": "",
+        "update": "",
+        "delete": ""
       },
       "fields": [
         {
@@ -1001,11 +1001,11 @@
       "name": "invitations",
       "type": "base",
       "apiRules": {
-        "list": "@request.auth.id != ''",
-        "view": "@request.auth.id != ''",
-        "create": null,
-        "update": "@request.auth.id != ''",
-        "delete": "@request.auth.id != ''"
+        "list": "",
+        "view": "",
+        "create": "",
+        "update": "",
+        "delete": ""
       },
       "fields": [
         {
@@ -1070,17 +1070,17 @@
       "name": "login_history",
       "type": "base",
       "apiRules": {
-        "list": "@request.auth.id != ''",
-        "view": "@request.auth.id != ''",
+        "list": "",
+        "view": "",
         "create": "",
-        "update": "@request.auth.id != ''",
-        "delete": "@request.auth.id != ''"
+        "update": "",
+        "delete": ""
       },
       "fields": [
         {
           "name": "user_id",
           "type": "relation",
-          "required": true,
+          "required": false,
           "system": false,
           "collectionRef": "transzecao"
         },
@@ -1111,11 +1111,11 @@
       "name": "email_integrations",
       "type": "base",
       "apiRules": {
-        "list": "@request.auth.id != ''",
-        "view": "@request.auth.id != ''",
-        "create": null,
-        "update": null,
-        "delete": null
+        "list": "",
+        "view": "",
+        "create": "",
+        "update": "",
+        "delete": ""
       },
       "fields": [
         {
@@ -1181,17 +1181,17 @@
       "name": "action_logs",
       "type": "base",
       "apiRules": {
-        "list": "@request.auth.role = 'master'",
-        "view": "@request.auth.role = 'master'",
-        "create": "@request.auth.id != ''",
-        "update": null,
-        "delete": null
+        "list": "",
+        "view": "",
+        "create": "",
+        "update": "",
+        "delete": ""
       },
       "fields": [
         {
           "name": "user_id",
           "type": "relation",
-          "required": true,
+          "required": false,
           "system": false,
           "collectionRef": "transzecao"
         },
@@ -1228,11 +1228,11 @@
       "name": "companies",
       "type": "base",
       "apiRules": {
-        "list": "@request.auth.id != ''",
-        "view": "@request.auth.id != ''",
-        "create": "@request.auth.id != ''",
-        "update": "@request.auth.id != ''",
-        "delete": "@request.auth.role = 'Master'"
+        "list": "",
+        "view": "",
+        "create": "",
+        "update": "",
+        "delete": ""
       },
       "fields": [
         {
@@ -1293,11 +1293,11 @@
       "name": "pipelines",
       "type": "base",
       "apiRules": {
-        "list": "@request.auth.id != ''",
-        "view": "@request.auth.id != ''",
-        "create": "@request.auth.role = 'Master'",
-        "update": "@request.auth.role = 'Master'",
-        "delete": "@request.auth.role = 'Master'"
+        "list": "",
+        "view": "",
+        "create": "",
+        "update": "",
+        "delete": ""
       },
       "fields": [
         {
@@ -1339,11 +1339,11 @@
       "name": "finance",
       "type": "base",
       "apiRules": {
-        "list": "@request.auth.role = 'Master' || @request.auth.role = 'Supervisor_Financeiro'",
-        "view": "@request.auth.role = 'Master' || @request.auth.role = 'Supervisor_Financeiro'",
-        "create": "@request.auth.role = 'Master' || @request.auth.role = 'Supervisor_Financeiro'",
-        "update": "@request.auth.role = 'Master' || @request.auth.role = 'Supervisor_Financeiro'",
-        "delete": "@request.auth.role = 'Master'"
+        "list": "",
+        "view": "",
+        "create": "",
+        "update": "",
+        "delete": ""
       },
       "fields": [
         {
@@ -1392,17 +1392,17 @@
       "name": "reports",
       "type": "base",
       "apiRules": {
-        "list": "@request.auth.role = 'Master' || user_id = @request.auth.id",
-        "view": "@request.auth.role = 'Master' || user_id = @request.auth.id",
-        "create": "@request.auth.role = 'Master' || user_id = @request.auth.id",
-        "update": "@request.auth.role = 'Master' || user_id = @request.auth.id",
-        "delete": "@request.auth.role = 'Master' || user_id = @request.auth.id"
+        "list": "",
+        "view": "",
+        "create": "",
+        "update": "",
+        "delete": ""
       },
       "fields": [
         {
           "name": "user_id",
           "type": "relation",
-          "required": true,
+          "required": false,
           "system": false,
           "collectionRef": "transzecao"
         },
@@ -1440,17 +1440,17 @@
       "name": "collection_schedules",
       "type": "base",
       "apiRules": {
-        "list": "(@request.auth.role = 'Cliente' && creator_id = @request.auth.id) || (@request.auth.id != '' && @request.auth.role != 'Cliente')",
-        "view": "(@request.auth.role = 'Cliente' && creator_id = @request.auth.id) || (@request.auth.id != '' && @request.auth.role != 'Cliente')",
-        "create": "@request.auth.id != ''",
-        "update": "(@request.auth.role = 'Cliente' && creator_id = @request.auth.id) || (@request.auth.id != '' && @request.auth.role != 'Cliente')",
-        "delete": "@request.auth.role = 'Master' || @request.auth.role = 'Supervisor_Coleta' || creator_id = @request.auth.id"
+        "list": "",
+        "view": "",
+        "create": "",
+        "update": "",
+        "delete": ""
       },
       "fields": [
         {
           "name": "creator_id",
           "type": "relation",
-          "required": true,
+          "required": false,
           "system": false,
           "collectionRef": "transzecao"
         },
@@ -1563,11 +1563,11 @@
       "name": "route_plans",
       "type": "base",
       "apiRules": {
-        "list": "@request.auth.id != '' && @request.auth.role != 'Cliente'",
-        "view": "@request.auth.id != '' && @request.auth.role != 'Cliente'",
-        "create": "@request.auth.id != '' && @request.auth.role != 'Cliente'",
-        "update": "@request.auth.id != '' && @request.auth.role != 'Cliente'",
-        "delete": "@request.auth.id != '' && @request.auth.role != 'Cliente'"
+        "list": "",
+        "view": "",
+        "create": "",
+        "update": "",
+        "delete": ""
       },
       "fields": [
         {
@@ -1614,7 +1614,7 @@
         {
           "name": "created_by",
           "type": "relation",
-          "required": true,
+          "required": false,
           "system": false,
           "collectionRef": "transzecao"
         },
@@ -1639,11 +1639,11 @@
       "name": "routing_config",
       "type": "base",
       "apiRules": {
-        "list": "@request.auth.id != '' && @request.auth.role != 'Cliente'",
-        "view": "@request.auth.id != '' && @request.auth.role != 'Cliente'",
-        "create": "@request.auth.role = 'Master' || @request.auth.role = 'Supervisor_Coleta'",
-        "update": "@request.auth.role = 'Master' || @request.auth.role = 'Supervisor_Coleta'",
-        "delete": "@request.auth.role = 'Master' || @request.auth.role = 'Supervisor_Coleta'"
+        "list": "",
+        "view": "",
+        "create": "",
+        "update": "",
+        "delete": ""
       },
       "fields": [
         {
