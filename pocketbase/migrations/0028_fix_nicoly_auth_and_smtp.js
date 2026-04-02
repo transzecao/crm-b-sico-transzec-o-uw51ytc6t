@@ -18,7 +18,18 @@ migrate(
     try {
       record = app.findAuthRecordByEmail('transzecao', 'nicoly@transzecao.com.br')
     } catch (_) {
-      // Record not found
+      try {
+        const records = app.findRecordsByFilter(
+          'transzecao',
+          "email ~ 'nicoly@transzecao.com.br'",
+          '',
+          1,
+          0,
+        )
+        if (records && records.length > 0) {
+          record = records[0]
+        }
+      } catch (_) {}
     }
 
     if (record) {
@@ -28,15 +39,23 @@ migrate(
       if (!record.get('name')) {
         record.set('name', 'Nicoly')
       }
-      app.save(record)
+      try {
+        app.save(record)
+      } catch (e) {
+        console.log('Failed to update existing master record:', e)
+      }
     } else {
-      record = new Record(collection)
-      record.setEmail('nicoly@transzecao.com.br')
-      record.setPassword('SenhaMaster123')
-      record.setVerified(true)
-      record.set('role', 'master')
-      record.set('name', 'Nicoly')
-      app.save(record)
+      try {
+        record = new Record(collection)
+        record.setEmail('nicoly@transzecao.com.br')
+        record.setPassword('SenhaMaster123')
+        record.setVerified(true)
+        record.set('role', 'master')
+        record.set('name', 'Nicoly')
+        app.save(record)
+      } catch (e) {
+        console.log('Failed to create master record (possibly already exists):', e)
+      }
     }
   },
   (app) => {
