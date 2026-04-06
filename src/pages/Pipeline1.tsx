@@ -37,9 +37,12 @@ export default function Pipeline1() {
     [state.leads],
   )
 
-  const canMove = ['Acesso Master', 'Supervisor Comercial', 'Funcionário Comercial'].includes(
-    state.role,
-  )
+  const canMove = [
+    'Acesso Master',
+    'Supervisor Comercial',
+    'Funcionário Comercial',
+    'Funcionário Prospecção',
+  ].includes(state.role)
 
   useEffect(() => {
     if (location.pathname.includes('/pipeline/1')) {

@@ -109,7 +109,15 @@ export const PortalProvider = ({ children }: { children: ReactNode }) => {
   const [quotes, setQuotes] = useState<PortalQuote[]>([])
   const [docRequests, setDocRequests] = useState<PortalDocRequest[]>([])
   const [messages, setMessages] = useState<PortalMessage[]>([])
-  const [currentUser, setCurrentUser] = useState<PortalUser | null>(null)
+  const [currentUser, setCurrentUser] = useState<PortalUser | null>({
+    id: '1',
+    cnpj: '12.345.678/0001-90',
+    name: 'Empresa Teste',
+    email: 'teste@empresa.com',
+    phone: '11999999999',
+    status: 'approved',
+    customerId: '064',
+  })
   const [hasSeenTour, setHasSeenTour] = useState(false)
 
   const value: PortalState = {
@@ -132,7 +140,7 @@ export const PortalProvider = ({ children }: { children: ReactNode }) => {
       }
       return false
     },
-    logout: () => setCurrentUser(null),
+    logout: () => {}, // Disabled since login is bypassed
     register: (data) =>
       setUsers((prev) => [...prev, { ...data, id: Date.now().toString(), status: 'pending' }]),
     approveUser: (id) =>

@@ -15,9 +15,28 @@ import {
 import useCrmStore from '@/stores/useCrmStore'
 import { useRealtime } from '@/hooks/use-realtime'
 import { AdminPanelModal } from '@/components/fleet/AdminPanelModal'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { useNavigate } from 'react-router-dom'
+import { Shield } from 'lucide-react'
 
 export function AppHeader() {
-  const { updateState } = useCrmStore()
+  const { state, updateState } = useCrmStore()
+  const navigate = useNavigate()
+
+  const handleRoleChange = (val: string) => {
+    updateState({ role: val })
+    if (val === 'Cliente') {
+      navigate('/portal/home')
+    } else {
+      navigate('/app/dashboard')
+    }
+  }
   const [isAdminModalOpen, setIsAdminModalOpen] = useState(false)
   const [notifications, setNotifications] = useState<
     { id: string; title: string; text: string; icon?: React.ReactNode }[]
@@ -46,6 +65,20 @@ export function AppHeader() {
           ...prev,
         ]
       })
+    }
+  })
+
+  useRealtime('collection_schedules', (e) => {
+    if (e.action === 'create') {
+      setNotifications((prev) => [
+        {
+          id: Date.now().toString(),
+          title: 'Nova Coleta Agendada',
+          text: `Uma nova coleta foi agendada por ${e.record.sender_name || 'um cliente'}.`,
+          icon: <Bell className="w-4 h-4 text-amber-500" />,
+        },
+        ...prev,
+      ])
     }
   })
 
@@ -128,12 +161,25 @@ export function AppHeader() {
 
       <div className="flex items-center gap-2 sm:gap-4">
         <div className="hidden md:flex items-center gap-2 mr-2">
-          <span className="text-[10px] text-white/60 uppercase font-bold tracking-widest">
-            Modo:
-          </span>
-          <div className="h-8 px-3 flex items-center bg-white/10 border border-white/20 rounded-md text-xs text-white capitalize">
-            Acesso Público
-          </div>
+          <Shield className="w-4 h-4 text-white/60" />
+          <Select value={state.role} onValueChange={handleRoleChange}>
+            <SelectTrigger className="w-[200px] h-8 text-xs bg-white/10 border-white/20 text-white font-semibold focus:ring-white/50">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Acesso Master">Acesso Master</SelectItem>
+              <SelectItem value="Supervisor Financeiro">Supervisor Financeiro</SelectItem>
+              <SelectItem value="Funcionário Financeiro">Funcionário Financeiro</SelectItem>
+              <SelectItem value="Supervisor Coleta">Supervisor Coleta</SelectItem>
+              <SelectItem value="Funcionário Coleta">Funcionário Coleta</SelectItem>
+              <SelectItem value="Supervisor Comercial">Supervisor Comercial</SelectItem>
+              <SelectItem value="Funcionário Prospecção">Funcionário Prospecção</SelectItem>
+              <SelectItem value="Funcionário Marketing">
+                Funcionário Marketing (Nutrição)
+              </SelectItem>
+              <SelectItem value="Cliente">Cliente (Portal)</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="relative hidden md:block group">

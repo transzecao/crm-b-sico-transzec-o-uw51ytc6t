@@ -74,7 +74,12 @@ export default function Roteirizacao() {
   const { user } = useAuth()
   const { toast } = useToast()
 
-  const isSupervisor = ['Master', 'Supervisor_Coleta'].includes(user?.role || state.role)
+  const isSupervisor = [
+    'Master',
+    'Acesso Master',
+    'Supervisor Coleta',
+    'Supervisor_Coleta',
+  ].includes(user?.role || state.role)
 
   const [activeTab, setActiveTab] = useState('agendamentos')
   const [schedules, setSchedules] = useState<any[]>([])

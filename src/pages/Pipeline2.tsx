@@ -2,8 +2,9 @@ import { useMemo } from 'react'
 import { KanbanBoard } from '@/components/KanbanBoard'
 import useCrmStore from '@/stores/useCrmStore'
 import { useToast } from '@/hooks/use-toast'
-import { Sprout, Reply, DollarSign } from 'lucide-react'
+import { Sprout, Reply, DollarSign, Rss } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Link } from 'react-router-dom'
 
 const COLUMNS = [
   'Nutrição – Aquecimento',
@@ -24,6 +25,8 @@ export default function Pipeline2() {
   const canMove = ['Acesso Master', 'Supervisor Comercial', 'Funcionário Marketing'].includes(
     state.role,
   )
+
+  const isMarketing = ['Acesso Master', 'Funcionário Marketing'].includes(state.role)
 
   const handleMove = (id: string, stage: string) => {
     if (!canMove) {
@@ -97,6 +100,17 @@ export default function Pipeline2() {
           </p>
         </div>
         <div className="flex gap-2">
+          {isMarketing && (
+            <Button
+              asChild
+              variant="default"
+              className="bg-purple-600 hover:bg-purple-700 text-white font-bold"
+            >
+              <Link to="/marketing/conteudo">
+                <Rss className="w-4 h-4 mr-2" /> Criar Card de Conteúdo
+              </Link>
+            </Button>
+          )}
           <Button
             variant="outline"
             onClick={() =>

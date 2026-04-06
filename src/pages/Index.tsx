@@ -216,6 +216,8 @@ export default function Index() {
     'Funcionário Comercial',
     'Funcionário Marketing',
     'Funcionário Coleta',
+    'Funcionário Financeiro',
+    'Funcionário Prospecção',
   ].includes(state.role)
   const visibleLeads = isRestrictedView
     ? state.leads.filter((l) => l.owner === state.currentUser.name)

@@ -24,6 +24,16 @@ import PortalCliente from './pages/PortalCliente'
 import PortalAdmin from './pages/PortalAdmin'
 import SupervisorApprovals from './pages/SupervisorApprovals'
 import Profile from './pages/Profile'
+import MarketingConteudo from './pages/MarketingConteudo'
+import FinanceiroNovaCotacao from './pages/FinanceiroNovaCotacao'
+import FinanceiroCotacoes from './pages/FinanceiroCotacoes'
+import RoteirizacaoAgendar from './pages/RoteirizacaoAgendar'
+import RoteirizacaoHistorico from './pages/RoteirizacaoHistorico'
+import PortalHomeInt from './pages/PortalHomeInt'
+import PortalCotacaoInt from './pages/PortalCotacaoInt'
+import PortalConteudoInt from './pages/PortalConteudoInt'
+import PortalColetaInt from './pages/PortalColetaInt'
+import PortalDocumentosInt from './pages/PortalDocumentosInt'
 import { PortalProvider } from '@/stores/usePortalStore'
 import { AuthProvider } from '@/hooks/use-auth'
 
@@ -52,6 +62,21 @@ const App = () => (
 
                 <Route path="/financeiro" element={<Financeiro />} />
                 <Route path="/financeiro/controle-gastos" element={<ControleGastos />} />
+                <Route path="/financeiro/nova-cotacao" element={<FinanceiroNovaCotacao />} />
+                <Route path="/financeiro/cotacoes" element={<FinanceiroCotacoes />} />
+
+                <Route path="/roteirizacao/agendar" element={<RoteirizacaoAgendar />} />
+                <Route path="/roteirizacao/historico" element={<RoteirizacaoHistorico />} />
+                <Route path="/roteirizacao/regras" element={<Roteirizacao />} />
+                <Route path="/roteirizacao/equipe" element={<Roteirizacao />} />
+                <Route path="/marketing/conteudo" element={<MarketingConteudo />} />
+
+                <Route path="/portal/home" element={<PortalHomeInt />} />
+                <Route path="/portal/pedidos" element={<PortalColetaInt />} />
+                <Route path="/portal/cotacao" element={<PortalCotacaoInt />} />
+                <Route path="/portal/coleta" element={<PortalColetaInt />} />
+                <Route path="/portal/conteudo" element={<PortalConteudoInt />} />
+                <Route path="/portal/documentos" element={<PortalDocumentosInt />} />
 
                 <Route path="/pipeline/1" element={<Pipeline1 />} />
                 <Route path="/pipeline/2" element={<Pipeline2 />} />
