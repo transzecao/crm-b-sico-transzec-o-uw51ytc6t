@@ -30,7 +30,9 @@ export default function FinanceiroCotacoes() {
     try {
       const res = await pb.collection('documentos_cotacao').getFullList({ sort: '-created' })
       setDocs(res)
-    } catch (e) {}
+    } catch (e) {
+      console.error('Error loading docs:', e)
+    }
   }
 
   const updateStatus = async (id: string, status: string) => {
