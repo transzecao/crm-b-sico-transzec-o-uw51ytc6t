@@ -11,16 +11,26 @@ import {
 import { Badge } from '@/components/ui/badge'
 import pb from '@/lib/pocketbase/client'
 import { MapIcon } from 'lucide-react'
+import { format } from 'date-fns'
 
 export default function RoteirizacaoHistorico() {
   const [schedules, setSchedules] = useState<any[]>([])
 
   useEffect(() => {
     pb.collection('collection_schedules')
-      .getFullList({ sort: '-created' })
+      .getFullList({ sort: '-created', expand: 'creator_id' })
       .then(setSchedules)
       .catch(console.error)
   }, [])
+
+  const getCreatorDesc = (s: any) => {
+    const creator = s.expand?.creator_id
+    if (!creator) return 'Origem Desconhecida'
+    const role = creator.role?.toLowerCase() || ''
+    if (role.includes('cliente')) return `ID Cliente: ${creator.id}`
+    if (role.includes('supervisor')) return `ID Supervisor: ${creator.id}`
+    return `ID Funcionário: ${creator.id}`
+  }
 
   return (
     <div className="space-y-6 animate-fade-in-up">
@@ -40,6 +50,8 @@ export default function RoteirizacaoHistorico() {
             <TableHeader>
               <TableRow>
                 <TableHead>NF</TableHead>
+                <TableHead>Data</TableHead>
+                <TableHead>Criador</TableHead>
                 <TableHead>Origem</TableHead>
                 <TableHead>Destino</TableHead>
                 <TableHead>Status</TableHead>
@@ -47,19 +59,28 @@ export default function RoteirizacaoHistorico() {
             </TableHeader>
             <TableBody>
               {schedules.map((s) => (
-                <TableRow key={s.id}>
-                  <TableCell className="font-medium">{s.invoice_id}</TableCell>
+                <TableRow key={s.id} className="hover:bg-slate-50">
+                  <TableCell className="font-medium text-primary">{s.invoice_id}</TableCell>
+                  <TableCell>{format(new Date(s.created), 'dd/MM/yyyy')}</TableCell>
+                  <TableCell className="text-slate-500 text-sm font-medium">
+                    {getCreatorDesc(s)}
+                  </TableCell>
                   <TableCell>{s.sender_name}</TableCell>
                   <TableCell>{s.dest_name}</TableCell>
                   <TableCell>
-                    <Badge variant="outline">{s.status}</Badge>
+                    <Badge
+                      variant="outline"
+                      className="uppercase font-bold tracking-wider text-[10px]"
+                    >
+                      {s.status}
+                    </Badge>
                   </TableCell>
                 </TableRow>
               ))}
               {schedules.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center py-6 text-slate-500">
-                    Nenhum agendamento encontrado.
+                  <TableCell colSpan={6} className="text-center py-10 text-slate-500">
+                    Nenhum agendamento encontrado no histórico.
                   </TableCell>
                 </TableRow>
               )}

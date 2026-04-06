@@ -41,56 +41,63 @@ export function AppSidebar() {
   const getMenuItems = () => {
     switch (state.role) {
       case 'Supervisor Financeiro':
+      case 'Supervisor_Financeiro':
         return [
           { title: 'Dashboard Financeiro', url: '/app/dashboard', icon: LayoutDashboard },
-          { title: 'Gerenciamento de Fretes', url: '/financeiro', icon: Calculator },
-          { title: 'Controle da Frota', url: '/financeiro/controle-gastos', icon: Wallet },
           { title: 'Cotações Pendentes', url: '/financeiro/cotacoes', icon: FileText },
-          { title: 'Relatórios Financeiros', url: '/analytics', icon: BarChart3 },
+          { title: 'Requisições de Documentos', url: '/portal/documentos', icon: FolderOpen },
+          { title: 'Gerenciamento de Fretes', url: '/financeiro', icon: Calculator },
         ]
       case 'Funcionário Financeiro':
+      case 'Funcionario_Financeiro':
         return [
-          { title: 'Minha Área', url: '/app/dashboard', icon: LayoutDashboard },
-          { title: 'COTAÇÃO', url: '/financeiro/nova-cotacao', icon: Calculator },
+          { title: 'Dashboard', url: '/app/dashboard', icon: LayoutDashboard },
+          { title: 'COTAÇÃO', url: '/financeiro', icon: Calculator },
+          { title: 'Solicitações de Documentação', url: '/portal/documentos', icon: FolderOpen },
           { title: 'Histórico de Cotações', url: '/financeiro/cotacoes', icon: FileText },
-          { title: 'Clientes Atribuídos', url: '/empresas', icon: Users2 },
         ]
       case 'Supervisor Coleta':
+      case 'Supervisor_Coleta':
         return [
-          { title: 'Dashboard Operacional', url: '/app/dashboard', icon: LayoutDashboard },
-          { title: 'Roteirização e Agendamentos', url: '/roteirizacao', icon: MapIcon },
-          { title: 'Regras de Agendamento', url: '/roteirizacao/regras', icon: Settings },
-          { title: 'Equipe de Coleta', url: '/roteirizacao/equipe', icon: Users2 },
+          { title: 'Dashboard', url: '/app/dashboard', icon: LayoutDashboard },
+          { title: 'Agendamento de Coleta', url: '/roteirizacao/agendar', icon: CalendarClock },
+          { title: 'Roteirização', url: '/roteirizacao', icon: MapIcon },
         ]
       case 'Funcionário Coleta':
+      case 'Funcionário_Coleta':
+      case 'Funcionario_Coleta':
         return [
-          { title: 'Minhas Coletas', url: '/app/dashboard', icon: LayoutDashboard },
-          { title: 'AGENDAR COLETA', url: '/roteirizacao/agendar', icon: CalendarClock },
-          { title: 'Roteiro do Dia', url: '/roteirizacao', icon: Truck },
+          { title: 'Dashboard', url: '/app/dashboard', icon: LayoutDashboard },
+          { title: 'Roteirização', url: '/roteirizacao', icon: Truck },
+          { title: 'COTAÇÃO', url: '/financeiro', icon: Calculator },
           { title: 'Histórico de Coletas', url: '/roteirizacao/historico', icon: MapIcon },
         ]
       case 'Supervisor Comercial':
+      case 'Supervisor_Comercial':
         return [
-          { title: 'Dashboard Comercial', url: '/app/dashboard', icon: LayoutDashboard },
-          { title: 'Cadastro Lead Novo', url: '/empresa/nova', icon: Inbox },
-          { title: 'Pipeline Prospecção', url: '/pipeline/1', icon: KanbanSquare },
-          { title: 'Pipeline Nutrição', url: '/pipeline/2', icon: Sprout },
-          { title: 'Contatos', url: '/contatos', icon: Users },
-          { title: 'Empresas', url: '/empresas', icon: Building2 },
+          { title: 'Dashboard', url: '/app/dashboard', icon: LayoutDashboard },
           { title: 'Aprovações Pendentes', url: '/supervisor/approvals', icon: CheckSquare },
+          { title: 'Pipeline Prospecção', url: '/pipeline/1', icon: KanbanSquare },
+          { title: 'COTAÇÃO', url: '/financeiro', icon: Calculator },
+          { title: 'Histórico de Propostas', url: '/financeiro/cotacoes', icon: FileText },
         ]
       case 'Funcionário Prospecção':
+      case 'Funcionário_Comercial':
+      case 'Funcionario_Comercial':
         return [
-          { title: 'Minha Prospecção', url: '/app/dashboard', icon: LayoutDashboard },
-          { title: 'CADASTRO NOVO', url: '/empresa/nova', icon: Inbox },
-          { title: 'Pipeline Prospecção', url: '/pipeline/1', icon: KanbanSquare },
-          { title: 'Meus Contatos', url: '/contatos', icon: Users },
+          { title: 'Dashboard', url: '/app/dashboard', icon: LayoutDashboard },
+          { title: 'Tarefas', url: '/tarefas', icon: CalendarClock },
+          { title: 'Histórico de Propostas', url: '/financeiro/cotacoes', icon: FileText },
+          { title: 'Empresas', url: '/empresas', icon: Building2 },
+          { title: 'Novos Cadastros', url: '/empresa/nova', icon: Inbox },
         ]
       case 'Funcionário Marketing':
+      case 'Funcionário_Marketing':
+      case 'Funcionario_Marketing':
         return [
-          { title: 'Minha Nutrição', url: '/app/dashboard', icon: LayoutDashboard },
+          { title: 'Dashboard', url: '/app/dashboard', icon: LayoutDashboard },
+          { title: 'Cadastro de Lead Novo', url: '/empresa/nova', icon: Inbox },
           { title: 'Pipeline Nutrição', url: '/pipeline/2', icon: Sprout },
-          { title: 'CARD ESPECIAL', url: '/marketing/conteudo', icon: FileText },
         ]
       case 'Cliente':
         return [

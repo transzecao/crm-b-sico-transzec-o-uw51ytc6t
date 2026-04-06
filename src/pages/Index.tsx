@@ -207,10 +207,36 @@ function LeadRecoveryAutomation() {
   )
 }
 
+import {
+  DashboardSupFinanceiro,
+  DashboardFuncFinanceiro,
+  DashboardSupColeta,
+  DashboardFuncColeta,
+  DashboardFuncProspeccao,
+  DashboardFuncMarketing,
+  DashboardSupComercial,
+} from '@/components/dashboards/RoleDashboards'
+
 export default function Index() {
   const { state } = useCrmStore()
   const [pipelineFilter, setPipelineFilter] = useState<string>('all')
   const [searchTerm, setSearchTerm] = useState('')
+
+  const role = state.role || ''
+
+  if (['Supervisor Financeiro', 'Supervisor_Financeiro'].includes(role))
+    return <DashboardSupFinanceiro />
+  if (['Funcionário Financeiro', 'Funcionario_Financeiro'].includes(role))
+    return <DashboardFuncFinanceiro />
+  if (['Supervisor Coleta', 'Supervisor_Coleta'].includes(role)) return <DashboardSupColeta />
+  if (['Funcionário Coleta', 'Funcionário_Coleta', 'Funcionario_Coleta'].includes(role))
+    return <DashboardFuncColeta />
+  if (['Supervisor Comercial', 'Supervisor_Comercial'].includes(role))
+    return <DashboardSupComercial />
+  if (['Funcionário Prospecção', 'Funcionário_Comercial', 'Funcionario_Comercial'].includes(role))
+    return <DashboardFuncProspeccao />
+  if (['Funcionário Marketing', 'Funcionário_Marketing', 'Funcionario_Marketing'].includes(role))
+    return <DashboardFuncMarketing />
 
   const isRestrictedView = [
     'Funcionário Comercial',

@@ -34,6 +34,7 @@ import PortalCotacaoInt from './pages/PortalCotacaoInt'
 import PortalConteudoInt from './pages/PortalConteudoInt'
 import PortalColetaInt from './pages/PortalColetaInt'
 import PortalDocumentosInt from './pages/PortalDocumentosInt'
+import Tarefas from './pages/Tarefas'
 import { PortalProvider } from '@/stores/usePortalStore'
 import { AuthProvider } from '@/hooks/use-auth'
 
@@ -77,6 +78,7 @@ const App = () => (
                 <Route path="/portal/coleta" element={<PortalColetaInt />} />
                 <Route path="/portal/conteudo" element={<PortalConteudoInt />} />
                 <Route path="/portal/documentos" element={<PortalDocumentosInt />} />
+                <Route path="/tarefas" element={<Tarefas />} />
 
                 <Route path="/pipeline/1" element={<Pipeline1 />} />
                 <Route path="/pipeline/2" element={<Pipeline2 />} />

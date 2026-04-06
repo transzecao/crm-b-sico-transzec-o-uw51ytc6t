@@ -20,6 +20,7 @@ import { FinanceQuotesTab } from '@/components/finance/FinanceQuotesTab'
 import { useEngineStore } from '@/stores/useEngineStore'
 import { FileText, Download } from 'lucide-react'
 import { formatCnpj } from '@/utils/formatters'
+import pb from '@/lib/pocketbase/client'
 
 export default function Financeiro() {
   const { state } = useCrmStore()
@@ -435,12 +436,35 @@ export default function Financeiro() {
                         date: now.toLocaleDateString('pt-BR'),
                         time: now.toLocaleTimeString('pt-BR'),
                         customerCnpj: calc.data.customerCnpj,
-                        employeeName: state.user,
+                        employeeName: state.currentUser?.name || 'Sistema',
                         department: state.role,
                         originalValue: calc.calculatedOriginalValue,
                         discountValue: calc.discountValue,
                         finalValue: calc.finalValue,
                       })
+
+                      pb.collection('documentos_cotacao')
+                        .create({
+                          origem: ['Funcionário Financeiro', 'Funcionario_Financeiro'].includes(
+                            state.role,
+                          )
+                            ? 'Funcionario_Financeiro'
+                            : [
+                                  'Funcionário Coleta',
+                                  'Funcionário_Coleta',
+                                  'Funcionario_Coleta',
+                                ].includes(state.role)
+                              ? 'Coleta'
+                              : state.role.includes('Comercial')
+                                ? 'Comercial'
+                                : 'Interno',
+                          numero_cotacao: quoteId,
+                          valor: calc.finalValue,
+                          status: 'pendente',
+                          cliente_id: state.currentUser?.id,
+                        })
+                        .catch(console.error)
+
                       toast({
                         title: 'Cotação Gerada e Salva',
                         description: `Cotação ${quoteId} salva no histórico com sucesso. Gerando PDF...`,

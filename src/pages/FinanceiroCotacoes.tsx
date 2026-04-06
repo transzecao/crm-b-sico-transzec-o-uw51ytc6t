@@ -14,13 +14,18 @@ import pb from '@/lib/pocketbase/client'
 import useCrmStore from '@/stores/useCrmStore'
 import { useToast } from '@/hooks/use-toast'
 import { Check, X, FileText } from 'lucide-react'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 export default function FinanceiroCotacoes() {
   const { state } = useCrmStore()
   const { toast } = useToast()
   const [docs, setDocs] = useState<any[]>([])
+  const [tab, setTab] = useState('todas')
 
-  const isSupervisor = ['Supervisor Financeiro', 'Acesso Master'].includes(state.role)
+  const isSupervisor = ['Supervisor Financeiro', 'Acesso Master', 'Supervisor_Financeiro'].includes(
+    state.role,
+  )
+  const isFuncFinanceiro = ['Funcionário Financeiro', 'Funcionario_Financeiro'].includes(state.role)
 
   useEffect(() => {
     loadDocs()
@@ -28,7 +33,9 @@ export default function FinanceiroCotacoes() {
 
   const loadDocs = async () => {
     try {
-      const res = await pb.collection('documentos_cotacao').getFullList({ sort: '-created' })
+      const res = await pb
+        .collection('documentos_cotacao')
+        .getFullList({ sort: '-created', expand: 'funcionario_financeiro_id,cliente_id' })
       setDocs(res)
     } catch (e) {
       console.error('Error loading docs:', e)
@@ -44,6 +51,17 @@ export default function FinanceiroCotacoes() {
       toast({ title: 'Erro', variant: 'destructive' })
     }
   }
+
+  const getFilteredDocs = () => {
+    if (!isFuncFinanceiro) return docs
+    if (tab === 'minhas') return docs.filter((d) => d.origem === 'Funcionario_Financeiro')
+    if (tab === 'portal') return docs.filter((d) => d.origem === 'Cliente')
+    if (tab === 'comercial') return docs.filter((d) => d.origem === 'Comercial')
+    if (tab === 'coleta') return docs.filter((d) => d.origem === 'Coleta')
+    return docs
+  }
+
+  const filteredDocs = getFilteredDocs()
 
   return (
     <div className="space-y-6 animate-fade-in-up">
@@ -64,18 +82,40 @@ export default function FinanceiroCotacoes() {
           <CardTitle>Documentos Gerados</CardTitle>
         </CardHeader>
         <CardContent>
+          {isFuncFinanceiro && (
+            <Tabs value={tab} onValueChange={setTab} className="mb-4">
+              <TabsList className="flex flex-wrap h-auto bg-slate-50 border border-slate-200">
+                <TabsTrigger value="todas">Todas</TabsTrigger>
+                <TabsTrigger value="minhas">Feitas por mim</TabsTrigger>
+                <TabsTrigger value="portal">Portal do Cliente</TabsTrigger>
+                <TabsTrigger value="comercial">Comercial</TabsTrigger>
+                <TabsTrigger value="coleta">Coleta</TabsTrigger>
+              </TabsList>
+            </Tabs>
+          )}
+
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Data</TableHead>
+                <TableHead>Cliente ID / Documento</TableHead>
+                <TableHead>Origem</TableHead>
                 <TableHead>Status</TableHead>
                 {isSupervisor && <TableHead className="text-right">Ações</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
-              {docs.map((d) => (
+              {filteredDocs.map((d) => (
                 <TableRow key={d.id}>
                   <TableCell>{new Date(d.created).toLocaleDateString()}</TableCell>
+                  <TableCell className="font-mono text-sm">
+                    {d.numero_cotacao || d.cliente_id || 'N/A'}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="secondary" className="font-medium text-slate-600 bg-slate-100">
+                      {d.origem || 'Interno'}
+                    </Badge>
+                  </TableCell>
                   <TableCell>
                     <Badge
                       variant={
@@ -85,6 +125,7 @@ export default function FinanceiroCotacoes() {
                             ? 'destructive'
                             : 'outline'
                       }
+                      className="uppercase text-[10px] tracking-wider"
                     >
                       {d.status}
                     </Badge>
@@ -96,7 +137,7 @@ export default function FinanceiroCotacoes() {
                           <Button
                             size="sm"
                             variant="outline"
-                            className="text-green-600 hover:bg-green-50"
+                            className="text-green-600 border-green-200 hover:bg-green-50"
                             onClick={() => updateStatus(d.id, 'aprovada')}
                           >
                             <Check className="w-4 h-4" />
@@ -104,7 +145,7 @@ export default function FinanceiroCotacoes() {
                           <Button
                             size="sm"
                             variant="outline"
-                            className="text-red-600 hover:bg-red-50"
+                            className="text-red-600 border-red-200 hover:bg-red-50"
                             onClick={() => updateStatus(d.id, 'rejeitada')}
                           >
                             <X className="w-4 h-4" />
@@ -115,10 +156,13 @@ export default function FinanceiroCotacoes() {
                   )}
                 </TableRow>
               ))}
-              {docs.length === 0 && (
+              {filteredDocs.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={3} className="text-center py-6 text-slate-500">
-                    Nenhuma cotação encontrada.
+                  <TableCell
+                    colSpan={isSupervisor ? 5 : 4}
+                    className="text-center py-6 text-slate-500"
+                  >
+                    Nenhuma cotação encontrada neste filtro.
                   </TableCell>
                 </TableRow>
               )}
