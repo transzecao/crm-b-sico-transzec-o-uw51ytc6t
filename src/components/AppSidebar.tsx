@@ -47,12 +47,14 @@ export function AppSidebar() {
           { title: 'Cotações Pendentes', url: '/financeiro/cotacoes', icon: FileText },
           { title: 'Requisições de Documentos', url: '/portal/documentos', icon: FolderOpen },
           { title: 'Gerenciamento de Fretes', url: '/financeiro', icon: Calculator },
+          { title: 'Controle da Frota e Gastos', url: '/financeiro/controle-gastos', icon: Wallet },
+          { title: 'Configurador de Cotação', url: '/financeiro/configurador', icon: Settings },
         ]
       case 'Funcionário Financeiro':
       case 'Funcionario_Financeiro':
         return [
           { title: 'Dashboard', url: '/app/dashboard', icon: LayoutDashboard },
-          { title: 'COTAÇÃO', url: '/financeiro', icon: Calculator },
+          { title: 'COTAÇÃO', url: '/cotacao-dinamica', icon: Calculator },
           { title: 'Solicitações de Documentação', url: '/portal/documentos', icon: FolderOpen },
           { title: 'Histórico de Cotações', url: '/financeiro/cotacoes', icon: FileText },
         ]
@@ -60,16 +62,21 @@ export function AppSidebar() {
       case 'Supervisor_Coleta':
         return [
           { title: 'Dashboard', url: '/app/dashboard', icon: LayoutDashboard },
+          { title: 'Cadastro de Cliente', url: '/empresa/nova', icon: Building2 },
           { title: 'Agendamento de Coleta', url: '/roteirizacao/agendar', icon: CalendarClock },
-          { title: 'Roteirização', url: '/roteirizacao', icon: MapIcon },
+          { title: 'Histórico de Agendamento', url: '/roteirizacao/historico', icon: MapIcon },
+          { title: 'Histórico Roteirização', url: '/roteirizacao/planos', icon: Truck },
+          { title: 'COTAÇÃO', url: '/cotacao-dinamica', icon: Calculator },
         ]
       case 'Funcionário Coleta':
       case 'Funcionário_Coleta':
       case 'Funcionario_Coleta':
         return [
           { title: 'Dashboard', url: '/app/dashboard', icon: LayoutDashboard },
-          { title: 'Roteirização', url: '/roteirizacao', icon: Truck },
-          { title: 'COTAÇÃO', url: '/financeiro', icon: Calculator },
+          { title: 'Cadastrar Cliente', url: '/empresa/nova', icon: Building2 },
+          { title: 'Roteirização', url: '/roteirizacao', icon: MapIcon },
+          { title: 'Histórico Roteirização', url: '/roteirizacao/planos', icon: Truck },
+          { title: 'COTAÇÃO', url: '/cotacao-dinamica', icon: Calculator },
           { title: 'Histórico de Coletas', url: '/roteirizacao/historico', icon: MapIcon },
         ]
       case 'Supervisor Comercial':
@@ -78,7 +85,7 @@ export function AppSidebar() {
           { title: 'Dashboard', url: '/app/dashboard', icon: LayoutDashboard },
           { title: 'Aprovações Pendentes', url: '/supervisor/approvals', icon: CheckSquare },
           { title: 'Pipeline Prospecção', url: '/pipeline/1', icon: KanbanSquare },
-          { title: 'COTAÇÃO', url: '/financeiro', icon: Calculator },
+          { title: 'COTAÇÃO', url: '/cotacao-dinamica', icon: Calculator },
           { title: 'Histórico de Propostas', url: '/financeiro/cotacoes', icon: FileText },
         ]
       case 'Funcionário Prospecção':
@@ -89,7 +96,9 @@ export function AppSidebar() {
           { title: 'Tarefas', url: '/tarefas', icon: CalendarClock },
           { title: 'Histórico de Propostas', url: '/financeiro/cotacoes', icon: FileText },
           { title: 'Empresas', url: '/empresas', icon: Building2 },
-          { title: 'Novos Cadastros', url: '/empresa/nova', icon: Inbox },
+          { title: 'Novo Cadastro', url: '/empresa/nova', icon: Inbox },
+          { title: 'Cadastros de Terceiros', url: '/empresas/terceiros', icon: Users },
+          { title: 'COTAÇÃO', url: '/cotacao-dinamica', icon: Calculator },
         ]
       case 'Funcionário Marketing':
       case 'Funcionário_Marketing':
@@ -103,7 +112,7 @@ export function AppSidebar() {
         return [
           { title: 'Meu Dashboard', url: '/portal/home', icon: LayoutDashboard },
           { title: 'Meus Pedidos', url: '/portal/pedidos', icon: Truck },
-          { title: 'COTAÇÃO', url: '/portal/cotacao', icon: Calculator },
+          { title: 'COTAÇÃO', url: '/portal/cotacao-dinamica', icon: Calculator },
           { title: 'AGENDAR COLETA', url: '/portal/coleta', icon: CalendarClock },
           { title: 'VER CONTEÚDO', url: '/portal/conteudo', icon: Rss },
           { title: 'Meus Documentos', url: '/portal/documentos', icon: FolderOpen },

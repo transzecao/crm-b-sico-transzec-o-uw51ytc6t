@@ -32,12 +32,32 @@ export default function EmpresaForm() {
   const existingCompany = id ? state.companies.find((c) => c.id === id) : undefined
   const existingContacts = id ? state.contacts.filter((c) => c.companyId === id) : []
 
-  const isReadOnly = ![
-    'Acesso Master',
-    'Supervisor Comercial',
-    'Funcionário Comercial',
-    'Funcionário Coleta',
-  ].includes(state.role)
+  const isReadOnly = existingCompany
+    ? ![
+        'Acesso Master',
+        'Supervisor Comercial',
+        'Funcionário Comercial',
+        'Funcionário_Comercial',
+        'Funcionario_Comercial',
+        'Funcionário Prospecção',
+        'Funcionário Coleta',
+        'Funcionário_Coleta',
+        'Funcionario_Coleta',
+      ].includes(state.role)
+    : ![
+        'Acesso Master',
+        'Supervisor Comercial',
+        'Funcionário Comercial',
+        'Funcionário_Comercial',
+        'Funcionario_Comercial',
+        'Funcionário Prospecção',
+        'Funcionário Coleta',
+        'Funcionário_Coleta',
+        'Funcionario_Coleta',
+        'Funcionário Marketing',
+        'Funcionário_Marketing',
+        'Funcionario_Marketing',
+      ].includes(state.role)
 
   const [formData, setFormData] = useState<Partial<Company>>({
     cnpj: '',

@@ -35,6 +35,10 @@ import PortalConteudoInt from './pages/PortalConteudoInt'
 import PortalColetaInt from './pages/PortalColetaInt'
 import PortalDocumentosInt from './pages/PortalDocumentosInt'
 import Tarefas from './pages/Tarefas'
+import FinanceiroConfigurador from './pages/FinanceiroConfigurador'
+import CotacaoDinamica from './pages/CotacaoDinamica'
+import RoutePlansList from './pages/RoutePlansList'
+import ThirdPartyLeads from './pages/ThirdPartyLeads'
 import { PortalProvider } from '@/stores/usePortalStore'
 import { AuthProvider } from '@/hooks/use-auth'
 
@@ -63,11 +67,14 @@ const App = () => (
 
                 <Route path="/financeiro" element={<Financeiro />} />
                 <Route path="/financeiro/controle-gastos" element={<ControleGastos />} />
+                <Route path="/financeiro/configurador" element={<FinanceiroConfigurador />} />
                 <Route path="/financeiro/nova-cotacao" element={<FinanceiroNovaCotacao />} />
                 <Route path="/financeiro/cotacoes" element={<FinanceiroCotacoes />} />
+                <Route path="/cotacao-dinamica" element={<CotacaoDinamica />} />
 
                 <Route path="/roteirizacao/agendar" element={<RoteirizacaoAgendar />} />
                 <Route path="/roteirizacao/historico" element={<RoteirizacaoHistorico />} />
+                <Route path="/roteirizacao/planos" element={<RoutePlansList />} />
                 <Route path="/roteirizacao/regras" element={<Roteirizacao />} />
                 <Route path="/roteirizacao/equipe" element={<Roteirizacao />} />
                 <Route path="/marketing/conteudo" element={<MarketingConteudo />} />
@@ -75,6 +82,7 @@ const App = () => (
                 <Route path="/portal/home" element={<PortalHomeInt />} />
                 <Route path="/portal/pedidos" element={<PortalColetaInt />} />
                 <Route path="/portal/cotacao" element={<PortalCotacaoInt />} />
+                <Route path="/portal/cotacao-dinamica" element={<CotacaoDinamica />} />
                 <Route path="/portal/coleta" element={<PortalColetaInt />} />
                 <Route path="/portal/conteudo" element={<PortalConteudoInt />} />
                 <Route path="/portal/documentos" element={<PortalDocumentosInt />} />
@@ -84,6 +92,7 @@ const App = () => (
                 <Route path="/pipeline/2" element={<Pipeline2 />} />
                 <Route path="/contatos" element={<Contatos />} />
                 <Route path="/empresas" element={<Empresas />} />
+                <Route path="/empresas/terceiros" element={<ThirdPartyLeads />} />
                 <Route path="/empresa/nova" element={<EmpresaForm />} />
                 <Route path="/empresa/:id/editar" element={<EmpresaForm />} />
                 <Route path="/empresa/:id/360" element={<Company360 />} />
