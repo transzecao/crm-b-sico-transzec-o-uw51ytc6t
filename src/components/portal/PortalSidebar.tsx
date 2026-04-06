@@ -1,12 +1,25 @@
-import { LayoutDashboard, Truck, Calculator, Menu } from 'lucide-react'
+import {
+  LayoutDashboard,
+  Truck,
+  Calculator,
+  Menu,
+  ClipboardList,
+  History,
+  BookOpen,
+  FileText,
+} from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet'
 
 export function PortalSidebar({ activeTab, setActiveTab }: any) {
   const items = [
-    { id: 'home', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'coleta', label: 'Agendar Coleta', icon: Truck },
-    { id: 'cotacao', label: 'Cotação', icon: Calculator },
+    { id: 'home', label: 'Meu Dashboard', icon: LayoutDashboard },
+    { id: 'pedidos', label: 'Meus Pedidos', icon: ClipboardList },
+    { id: 'cotacao', label: 'COTAÇÃO', icon: Calculator },
+    { id: 'cotacao-hist', label: 'Histórico de Cotações', icon: History },
+    { id: 'coleta', label: 'AGENDAR COLETA', icon: Truck },
+    { id: 'conteudo', label: 'VER CONTEÚDO', icon: BookOpen },
+    { id: 'docs', label: 'Meus Documentos', icon: FileText },
   ]
 
   const SidebarContent = () => (

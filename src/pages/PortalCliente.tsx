@@ -8,7 +8,8 @@ import { PortalCotacao } from '@/components/portal/PortalCotacao'
 import { PortalCotacaoHist } from '@/components/portal/PortalCotacaoHist'
 import { PortalDocs } from '@/components/portal/PortalDocs'
 import { PortalMessages } from '@/components/portal/PortalMessages'
-import { PortalBlog } from '@/components/portal/PortalBlog'
+import { PortalConteudo } from '@/components/portal/PortalConteudo'
+import { PortalPedidos } from '@/components/portal/PortalPedidos'
 import { PortalTour } from '@/components/portal/PortalTour'
 import { Package } from 'lucide-react'
 
@@ -39,12 +40,13 @@ export default function PortalCliente() {
         </header>
         <main className="flex-1 overflow-auto p-6">
           {activeTab === 'home' && <PortalHome />}
+          {activeTab === 'pedidos' && <PortalPedidos />}
           {activeTab === 'coleta' && <PortalColeta />}
           {activeTab === 'cotacao' && <PortalCotacao />}
           {activeTab === 'cotacao-hist' && <PortalCotacaoHist />}
           {activeTab === 'docs' && <PortalDocs />}
           {activeTab === 'messages' && <PortalMessages />}
-          {activeTab === 'blog' && <PortalBlog />}
+          {activeTab === 'conteudo' && <PortalConteudo />}
         </main>
       </div>
       <PortalTour />

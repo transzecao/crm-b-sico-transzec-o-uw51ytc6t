@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-06T21:29:05.585Z",
+  "generatedAt": "2026-04-06T22:12:44.529Z",
   "collections": [
     {
       "name": "transzecao",
@@ -1818,6 +1818,42 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "numero_cotacao",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "origem",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "destino",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "peso",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "valor",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "detalhes",
+          "type": "json",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": []
