@@ -17,6 +17,7 @@ import { FinanceKpiTab } from '@/components/finance/FinanceKpiTab'
 import { FinanceDocsTab } from '@/components/finance/FinanceDocsTab'
 import { FinanceEngineTab } from '@/components/finance/FinanceEngineTab'
 import { FinanceQuotesTab } from '@/components/finance/FinanceQuotesTab'
+import { FinanceDynamicFieldsTab } from '@/components/finance/FinanceDynamicFieldsTab'
 import { useEngineStore } from '@/stores/useEngineStore'
 import { FileText, Download } from 'lucide-react'
 import { formatCnpj } from '@/utils/formatters'
@@ -36,7 +37,12 @@ export default function Financeiro() {
   const fmt = (v: number) =>
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(isNaN(v) ? 0 : v)
 
-  const canEditParams = ['Acesso Master', 'Supervisor Financeiro'].includes(state.role)
+  const canEditParams = [
+    'Acesso Master',
+    'Supervisor Financeiro',
+    'Master',
+    'Supervisor_Financeiro',
+  ].includes(state.role)
 
   useEffect(() => {
     if (calc.data.zmrc) {
@@ -103,16 +109,24 @@ export default function Financeiro() {
                 EDI
               </TabsTrigger>
               <TabsTrigger
-                value="kpi"
-                className="flex-1 py-2 text-sm font-semibold data-[state=active]:bg-primary data-[state=active]:text-white"
-              >
-                KPIs
-              </TabsTrigger>
-              <TabsTrigger
                 value="quotes"
                 className="flex-1 py-2 text-sm font-semibold data-[state=active]:bg-primary data-[state=active]:text-white"
               >
                 Cotações Geradas
+              </TabsTrigger>
+              {canEditParams && (
+                <TabsTrigger
+                  value="dynamic_fields"
+                  className="flex-1 py-2 text-sm font-semibold data-[state=active]:bg-primary data-[state=active]:text-white"
+                >
+                  Campos Dinâmicos
+                </TabsTrigger>
+              )}
+              <TabsTrigger
+                value="kpi"
+                className="flex-1 py-2 text-sm font-semibold data-[state=active]:bg-primary data-[state=active]:text-white"
+              >
+                KPIs
               </TabsTrigger>
             </TabsList>
 
@@ -133,11 +147,16 @@ export default function Financeiro() {
             <TabsContent value="integ" className="mt-0">
               <FinanceIntegTab calc={calc} />
             </TabsContent>
-            <TabsContent value="kpi" className="mt-0">
-              <FinanceKpiTab calc={calc} />
-            </TabsContent>
             <TabsContent value="quotes" className="mt-0">
               <FinanceQuotesTab />
+            </TabsContent>
+            {canEditParams && (
+              <TabsContent value="dynamic_fields" className="mt-0">
+                <FinanceDynamicFieldsTab />
+              </TabsContent>
+            )}
+            <TabsContent value="kpi" className="mt-0">
+              <FinanceKpiTab calc={calc} />
             </TabsContent>
             <TabsContent value="docs" className="mt-0">
               <FinanceDocsTab />

@@ -1,32 +1,47 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '@/hooks/use-auth'
 import { useToast } from '@/hooks/use-toast'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Label } from '@/components/ui/label'
 import { createDocumentoCotacao } from '@/services/documentos_cotacao'
+import pb from '@/lib/pocketbase/client'
 
 export function PortalCotacao() {
   const { user } = useAuth()
   const { toast } = useToast()
 
-  const [form, setForm] = useState({
-    cnpj_remetente: '',
-    endereco_remetente: '',
-    peso_total: '',
-    quantidade_total: '',
-    volume_total: '',
-    valor_nf: '',
-    numero_nf: '',
-    tipo_frete: 'CIF',
-    cnpj_destino: '',
-    endereco_destino: '',
-  })
+  const [fields, setFields] = useState<any[]>([])
+  const [form, setForm] = useState<Record<string, any>>({})
+  const [loadingFields, setLoadingFields] = useState(true)
 
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<any>(null)
+
+  useEffect(() => {
+    pb.collection('routing_config')
+      .getFirstListItem('name="quote_dynamic_fields"')
+      .then((rec) => {
+        const f = rec.settings?.fields || []
+        setFields(f)
+        const initial: Record<string, any> = {}
+        f.forEach((field: any) => {
+          initial[field.id] =
+            field.type === 'select' && field.options?.length ? field.options[0] : ''
+        })
+        setForm(initial)
+      })
+      .catch(console.error)
+      .finally(() => setLoadingFields(false))
+  }, [])
 
   const handleSimulateAndSave = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -34,16 +49,24 @@ export function PortalCotacao() {
 
     setLoading(true)
     try {
-      const val = Number(form.peso_total) * 1.5 + 150
+      const weightField = fields.find((f) => f.mappedParam === 'weight')
+      const weightVal = weightField ? Number(form[weightField.id]) : Number(form.peso_total) || 10
+
+      const val = weightVal * 1.5 + 150
       const timestamp = new Date().getTime()
       const quoteCode = `${user.id}-${timestamp}`
+
+      const origemField = fields.find(
+        (f) => f.id.includes('origem') || (f.id.includes('remetente') && f.id.includes('endereco')),
+      )
+      const destinoField = fields.find((f) => f.id.includes('destino') && f.id.includes('endereco'))
 
       const payload = {
         cliente_id: user.id,
         numero_cotacao: quoteCode,
-        origem: form.endereco_remetente,
-        destino: form.endereco_destino,
-        peso: Number(form.peso_total),
+        origem: origemField ? form[origemField.id] : '',
+        destino: destinoField ? form[destinoField.id] : '',
+        peso: weightVal,
         valor: val,
         status: 'pendente',
         data_geracao: new Date().toISOString(),
@@ -54,18 +77,12 @@ export function PortalCotacao() {
 
       setResult({ ...form, value: val, quoteCode, timestamp: new Date().toLocaleString() })
       toast({ title: 'Cotação gerada e salva com sucesso!' })
-      setForm({
-        cnpj_remetente: '',
-        endereco_remetente: '',
-        peso_total: '',
-        quantidade_total: '',
-        volume_total: '',
-        valor_nf: '',
-        numero_nf: '',
-        tipo_frete: 'CIF',
-        cnpj_destino: '',
-        endereco_destino: '',
+
+      const initial: Record<string, any> = {}
+      fields.forEach((field: any) => {
+        initial[field.id] = field.type === 'select' && field.options?.length ? field.options[0] : ''
       })
+      setForm(initial)
     } catch (err) {
       console.error(err)
       toast({ title: 'Erro ao gerar cotação', variant: 'destructive' })
@@ -74,123 +91,55 @@ export function PortalCotacao() {
     }
   }
 
+  if (loadingFields) {
+    return (
+      <div className="p-8 text-center text-slate-500 animate-pulse">Carregando formulário...</div>
+    )
+  }
+
   return (
     <div className="grid md:grid-cols-2 gap-6 animate-fade-in-up">
       <Card>
         <CardHeader>
-          <CardTitle>Nova Cotação</CardTitle>
+          <CardTitle>Nova Cotação Dinâmica</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSimulateAndSave} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2 col-span-2 md:col-span-1">
-                <Label>CNPJ Remetente</Label>
-                <Input
-                  required
-                  placeholder="Ex: 00.000.000/0000-00"
-                  value={form.cnpj_remetente}
-                  onChange={(e) => setForm({ ...form, cnpj_remetente: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2 col-span-2 md:col-span-1">
-                <Label>Endereço Remetente</Label>
-                <Input
-                  required
-                  placeholder="Rua, Número, Cidade - UF"
-                  value={form.endereco_remetente}
-                  onChange={(e) => setForm({ ...form, endereco_remetente: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2 col-span-2 md:col-span-1">
-                <Label>CNPJ Destino</Label>
-                <Input
-                  required
-                  placeholder="Ex: 00.000.000/0000-00"
-                  value={form.cnpj_destino}
-                  onChange={(e) => setForm({ ...form, cnpj_destino: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2 col-span-2 md:col-span-1">
-                <Label>Endereço Destino</Label>
-                <Input
-                  required
-                  placeholder="Rua, Número, Cidade - UF"
-                  value={form.endereco_destino}
-                  onChange={(e) => setForm({ ...form, endereco_destino: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Peso Total (kg)</Label>
-                <Input
-                  type="number"
-                  required
-                  min="0.1"
-                  step="0.1"
-                  value={form.peso_total}
-                  onChange={(e) => setForm({ ...form, peso_total: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Quantidade Total</Label>
-                <Input
-                  type="number"
-                  required
-                  min="1"
-                  value={form.quantidade_total}
-                  onChange={(e) => setForm({ ...form, quantidade_total: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Volume Total (m³)</Label>
-                <Input
-                  type="number"
-                  required
-                  min="0.01"
-                  step="0.01"
-                  value={form.volume_total}
-                  onChange={(e) => setForm({ ...form, volume_total: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Valor da NF (R$)</Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  required
-                  value={form.valor_nf}
-                  onChange={(e) => setForm({ ...form, valor_nf: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2 col-span-2">
-                <Label>Número da NF</Label>
-                <Input
-                  required
-                  value={form.numero_nf}
-                  onChange={(e) => setForm({ ...form, numero_nf: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2 col-span-2">
-                <Label>Tipo de Frete</Label>
-                <RadioGroup
-                  value={form.tipo_frete}
-                  onValueChange={(v) => setForm({ ...form, tipo_frete: v })}
-                  className="flex gap-6 mt-2"
+              {fields.map((field) => (
+                <div
+                  key={field.id}
+                  className={`space-y-2 ${field.type === 'select' || field.id.includes('endereco') ? 'col-span-2' : 'col-span-2 md:col-span-1'}`}
                 >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="CIF" id="cif" />
-                    <Label htmlFor="cif" className="cursor-pointer font-normal">
-                      CIF (Pago na Origem)
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="FOB" id="fob" />
-                    <Label htmlFor="fob" className="cursor-pointer font-normal">
-                      FOB (Pago no Destino)
-                    </Label>
-                  </div>
-                </RadioGroup>
-              </div>
+                  <Label>{field.label}</Label>
+                  {field.type === 'select' ? (
+                    <Select
+                      required={field.required}
+                      value={form[field.id] || ''}
+                      onValueChange={(v) => setForm({ ...form, [field.id]: v })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {(field.options || []).map((opt: string) => (
+                          <SelectItem key={opt} value={opt}>
+                            {opt}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Input
+                      type={field.type === 'number' ? 'number' : 'text'}
+                      required={field.required}
+                      value={form[field.id] || ''}
+                      onChange={(e) => setForm({ ...form, [field.id]: e.target.value })}
+                      placeholder={field.label}
+                    />
+                  )}
+                </div>
+              ))}
             </div>
             <Button
               type="submit"
