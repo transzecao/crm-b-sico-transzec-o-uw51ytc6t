@@ -110,100 +110,64 @@ export function FinanceEngineTab() {
             <Plus className="w-4 h-4" /> [NEW] Criar Regra
           </Button>
         </CardHeader>
-        <CardContent className="p-0 overflow-x-auto">
-          <table className="w-full text-sm text-left whitespace-nowrap">
-            <thead className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200 text-xs uppercase tracking-wider">
-              <tr>
-                <th className="px-4 py-3 text-center w-16">Status</th>
-                <th className="px-4 py-3">Rótulo (Variável)</th>
-                <th className="px-4 py-3 min-w-[150px]">Base (Gatilho)</th>
-                <th className="px-4 py-3">Faixa (De - Até)</th>
-                <th className="px-4 py-3 w-40">Operação</th>
-                <th className="px-4 py-3 w-32">Fator / Valor</th>
-                <th className="px-4 py-3 min-w-[200px]">Memorial Descritivo</th>
-                <th className="px-4 py-3 w-20 text-center">Ações</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {stackableRules.length === 0 && (
-                <tr>
-                  <td colSpan={8} className="px-4 py-8 text-center text-slate-500 italic">
-                    O motor está limpo. Adicione uma regra para começar a empilhar custos.
-                  </td>
-                </tr>
-              )}
-              {stackableRules.map((rule) => (
-                <tr key={rule.id} className="hover:bg-slate-50/50 transition-colors">
-                  <td className="px-4 py-3 text-center">
+        <CardContent className="p-0">
+          <div className="md:hidden divide-y divide-slate-100">
+            {stackableRules.length === 0 && (
+              <div className="p-6 text-center text-slate-500 italic">O motor está limpo.</div>
+            )}
+            {stackableRules.map((rule) => (
+              <div key={rule.id} className="p-4 space-y-4 bg-white">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
                     <Switch
                       checked={rule.isActive}
                       onCheckedChange={(checked) => updateRule(rule.id, { isActive: checked })}
                     />
-                  </td>
-                  <td className="px-4 py-3">
-                    <Input
-                      value={rule.name}
-                      onChange={(e) => updateRule(rule.id, { name: e.target.value })}
-                      className="h-9 font-medium min-w-[160px] bg-white border-slate-300"
-                      placeholder="Ex: GRIS, Ad Valorem..."
-                    />
-                  </td>
-                  <td className="px-4 py-3">
+                    <span className="font-bold text-slate-700">{rule.name || 'Nova Regra'}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => duplicateRule(rule.id)}
+                      className="h-8 w-8"
+                    >
+                      <Copy className="w-4 h-4 text-slate-500" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => deleteRule(rule.id)}
+                      className="h-8 w-8"
+                    >
+                      <Trash2 className="w-4 h-4 text-rose-500" />
+                    </Button>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <span className="text-xs text-slate-500 uppercase font-bold">Gatilho</span>
                     <Select
                       value={rule.trigger}
-                      onValueChange={(val: 'fixed' | 'nfValue' | 'weight') =>
-                        updateRule(rule.id, { trigger: val })
-                      }
+                      onValueChange={(val: any) => updateRule(rule.id, { trigger: val })}
                     >
-                      <SelectTrigger className="h-9 bg-white border-slate-300">
+                      <SelectTrigger className="h-8 text-xs bg-white">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="nfValue">Valor NF (R$)</SelectItem>
-                        <SelectItem value="weight">Peso Bruto (Kg)</SelectItem>
-                        <SelectItem value="fixed">Sempre Fixo</SelectItem>
+                        <SelectItem value="nfValue">Valor NF</SelectItem>
+                        <SelectItem value="weight">Peso</SelectItem>
+                        <SelectItem value="fixed">Fixo</SelectItem>
                       </SelectContent>
                     </Select>
-                  </td>
-                  <td className="px-4 py-3">
-                    {rule.trigger !== 'fixed' ? (
-                      <div className="flex items-center gap-2">
-                        <Input
-                          type="number"
-                          value={rule.minRange}
-                          onChange={(e) =>
-                            updateRule(rule.id, { minRange: Number(e.target.value) })
-                          }
-                          className="h-9 w-20 text-right bg-white border-slate-300"
-                          placeholder="Mín"
-                        />
-                        <span className="text-slate-400 font-bold">-</span>
-                        <Input
-                          type="number"
-                          value={rule.maxRange ?? ''}
-                          onChange={(e) =>
-                            updateRule(rule.id, {
-                              maxRange: e.target.value ? Number(e.target.value) : null,
-                            })
-                          }
-                          className="h-9 w-20 text-right bg-white border-slate-300"
-                          placeholder="Máx/Livre"
-                        />
-                      </div>
-                    ) : (
-                      <span className="text-slate-400 text-xs italic block text-center">
-                        Incondicional
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3">
+                  </div>
+                  <div className="space-y-1">
+                    <span className="text-xs text-slate-500 uppercase font-bold">Operação</span>
                     <Select
                       value={rule.type}
-                      onValueChange={(val: 'fixed' | 'percentage') =>
-                        updateRule(rule.id, { type: val })
-                      }
+                      onValueChange={(val: any) => updateRule(rule.id, { type: val })}
                     >
-                      <SelectTrigger className="h-9 bg-white border-slate-300">
+                      <SelectTrigger className="h-8 text-xs bg-white">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -211,56 +175,176 @@ export function FinanceEngineTab() {
                         <SelectItem value="percentage">Multiplica (%)</SelectItem>
                       </SelectContent>
                     </Select>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-medium">
-                        {rule.type === 'fixed' ? 'R$' : '%'}
-                      </span>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        value={rule.value}
-                        onChange={(e) => updateRule(rule.id, { value: Number(e.target.value) })}
-                        className="h-9 w-full pl-8 pr-3 text-right bg-white border-slate-300 font-bold text-slate-700"
-                      />
-                    </div>
-                  </td>
-                  <td className="px-4 py-3">
-                    <Input
-                      value={rule.logic}
-                      onChange={(e) => updateRule(rule.id, { logic: e.target.value })}
-                      className="h-9 min-w-[220px] bg-white border-slate-300"
-                      placeholder="Ex: Justificativa para faturamento..."
-                      title={rule.logic}
-                    />
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    <div className="flex items-center justify-center gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => duplicateRule(rule.id)}
-                        className="text-slate-500 hover:text-primary hover:bg-primary/10 h-8 w-8 transition-colors"
-                        title="Duplicar regra"
-                      >
-                        <Copy className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => deleteRule(rule.id)}
-                        className="text-rose-400 hover:text-rose-600 hover:bg-rose-50 h-8 w-8 transition-colors"
-                        title="Deletar regra"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </td>
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <span className="text-xs text-slate-500 uppercase font-bold">
+                    Valor ({rule.type === 'fixed' ? 'R$' : '%'})
+                  </span>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={rule.value}
+                    onChange={(e) => updateRule(rule.id, { value: Number(e.target.value) })}
+                    className="h-8 text-sm"
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="hidden md:block overflow-x-auto">
+            <table className="w-full text-sm text-left whitespace-nowrap">
+              <thead className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200 text-xs uppercase tracking-wider">
+                <tr>
+                  <th className="px-4 py-3 text-center w-16">Status</th>
+                  <th className="px-4 py-3">Rótulo (Variável)</th>
+                  <th className="px-4 py-3 min-w-[150px]">Base (Gatilho)</th>
+                  <th className="px-4 py-3">Faixa (De - Até)</th>
+                  <th className="px-4 py-3 w-40">Operação</th>
+                  <th className="px-4 py-3 w-32">Fator / Valor</th>
+                  <th className="px-4 py-3 min-w-[200px]">Memorial Descritivo</th>
+                  <th className="px-4 py-3 w-20 text-center">Ações</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {stackableRules.length === 0 && (
+                  <tr>
+                    <td colSpan={8} className="px-4 py-8 text-center text-slate-500 italic">
+                      O motor está limpo. Adicione uma regra para começar a empilhar custos.
+                    </td>
+                  </tr>
+                )}
+                {stackableRules.map((rule) => (
+                  <tr key={rule.id} className="hover:bg-slate-50/50 transition-colors">
+                    <td className="px-4 py-3 text-center">
+                      <Switch
+                        checked={rule.isActive}
+                        onCheckedChange={(checked) => updateRule(rule.id, { isActive: checked })}
+                      />
+                    </td>
+                    <td className="px-4 py-3">
+                      <Input
+                        value={rule.name}
+                        onChange={(e) => updateRule(rule.id, { name: e.target.value })}
+                        className="h-9 font-medium min-w-[160px] bg-white border-slate-300"
+                        placeholder="Ex: GRIS, Ad Valorem..."
+                      />
+                    </td>
+                    <td className="px-4 py-3">
+                      <Select
+                        value={rule.trigger}
+                        onValueChange={(val: 'fixed' | 'nfValue' | 'weight') =>
+                          updateRule(rule.id, { trigger: val })
+                        }
+                      >
+                        <SelectTrigger className="h-9 bg-white border-slate-300">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="nfValue">Valor NF (R$)</SelectItem>
+                          <SelectItem value="weight">Peso Bruto (Kg)</SelectItem>
+                          <SelectItem value="fixed">Sempre Fixo</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </td>
+                    <td className="px-4 py-3">
+                      {rule.trigger !== 'fixed' ? (
+                        <div className="flex items-center gap-2">
+                          <Input
+                            type="number"
+                            value={rule.minRange}
+                            onChange={(e) =>
+                              updateRule(rule.id, { minRange: Number(e.target.value) })
+                            }
+                            className="h-9 w-20 text-right bg-white border-slate-300"
+                            placeholder="Mín"
+                          />
+                          <span className="text-slate-400 font-bold">-</span>
+                          <Input
+                            type="number"
+                            value={rule.maxRange ?? ''}
+                            onChange={(e) =>
+                              updateRule(rule.id, {
+                                maxRange: e.target.value ? Number(e.target.value) : null,
+                              })
+                            }
+                            className="h-9 w-20 text-right bg-white border-slate-300"
+                            placeholder="Máx/Livre"
+                          />
+                        </div>
+                      ) : (
+                        <span className="text-slate-400 text-xs italic block text-center">
+                          Incondicional
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      <Select
+                        value={rule.type}
+                        onValueChange={(val: 'fixed' | 'percentage') =>
+                          updateRule(rule.id, { type: val })
+                        }
+                      >
+                        <SelectTrigger className="h-9 bg-white border-slate-300">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="fixed">Soma Fixo (R$)</SelectItem>
+                          <SelectItem value="percentage">Multiplica (%)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-medium">
+                          {rule.type === 'fixed' ? 'R$' : '%'}
+                        </span>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={rule.value}
+                          onChange={(e) => updateRule(rule.id, { value: Number(e.target.value) })}
+                          className="h-9 w-full pl-8 pr-3 text-right bg-white border-slate-300 font-bold text-slate-700"
+                        />
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <Input
+                        value={rule.logic}
+                        onChange={(e) => updateRule(rule.id, { logic: e.target.value })}
+                        className="h-9 min-w-[220px] bg-white border-slate-300"
+                        placeholder="Ex: Justificativa para faturamento..."
+                        title={rule.logic}
+                      />
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <div className="flex items-center justify-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => duplicateRule(rule.id)}
+                          className="text-slate-500 hover:text-primary hover:bg-primary/10 h-8 w-8 transition-colors"
+                          title="Duplicar regra"
+                        >
+                          <Copy className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => deleteRule(rule.id)}
+                          className="text-rose-400 hover:text-rose-600 hover:bg-rose-50 h-8 w-8 transition-colors"
+                          title="Deletar regra"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </CardContent>
       </Card>
     </div>

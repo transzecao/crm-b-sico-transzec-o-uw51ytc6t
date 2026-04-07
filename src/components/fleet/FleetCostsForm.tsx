@@ -48,7 +48,6 @@ export function FleetCostsForm() {
 
   const syncMastersToDB = async () => {
     try {
-      // Upsert drivers
       for (const d of data?.drivers || []) {
         const payload = {
           local_id: d.id,
@@ -77,7 +76,6 @@ export function FleetCostsForm() {
         }
       }
 
-      // Upsert vehicles
       for (const v of data?.vehicles || []) {
         const payload = {
           local_id: v.id,
@@ -116,7 +114,6 @@ export function FleetCostsForm() {
         }
       }
 
-      // Upsert vinculos
       for (const l of data?.links || []) {
         const payload = {
           local_id: l.id,

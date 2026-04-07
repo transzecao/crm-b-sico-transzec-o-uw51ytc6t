@@ -12,9 +12,45 @@ import { FileText, CheckCircle2, AlertCircle } from 'lucide-react'
 import { useFinanceCalculator } from '@/hooks/useFinanceCalculator'
 import { cn } from '@/lib/utils'
 import useCrmStore from '@/stores/useCrmStore'
+import { validateCIOT, validateRNTRC } from '@/utils/fiscalValidators'
+import { useToast } from '@/hooks/use-toast'
+import { useEffect, useState } from 'react'
+import { useDebouncedUpdate } from '@/hooks/useDebouncedUpdate'
 
 export function FinanceFiscalTab({ calc }: { calc: ReturnType<typeof useFinanceCalculator> }) {
   const { state } = useCrmStore()
+  const { toast } = useToast()
+
+  const debouncedCiot = useDebouncedUpdate(calc.data.ciot, 500)
+  const debouncedRntrc = useDebouncedUpdate(calc.data.rntrc, 500)
+  const [ciotValid, setCiotValid] = useState(true)
+  const [rntrcValid, setRntrcValid] = useState(true)
+
+  useEffect(() => {
+    if (debouncedCiot && !validateCIOT(debouncedCiot)) {
+      setCiotValid(false)
+      toast({
+        title: 'Erro de Validação',
+        description: 'O código CIOT informado é inválido.',
+        variant: 'destructive',
+      })
+    } else {
+      setCiotValid(true)
+    }
+  }, [debouncedCiot, toast])
+
+  useEffect(() => {
+    if (debouncedRntrc && !validateRNTRC(debouncedRntrc)) {
+      setRntrcValid(false)
+      toast({
+        title: 'Erro de Validação',
+        description: 'O registro RNTRC informado é inválido.',
+        variant: 'destructive',
+      })
+    } else {
+      setRntrcValid(true)
+    }
+  }, [debouncedRntrc, toast])
   const canEdit = [
     'Acesso Master',
     'Supervisor Financeiro',
@@ -114,13 +150,13 @@ export function FinanceFiscalTab({ calc }: { calc: ReturnType<typeof useFinanceC
               onChange={(e) => calc.update({ ciot: e.target.value })}
               className={cn(
                 'border-slate-200 focus-visible:ring-primary font-mono',
-                !calc.isCiotValid && calc.data.ciot && 'border-rose-400 text-rose-600',
+                !ciotValid && calc.data.ciot && 'border-rose-400 text-rose-600',
               )}
               placeholder="000000000000"
             />
             {calc.data.ciot && (
               <span className="absolute right-3 top-8">
-                {calc.isCiotValid ? (
+                {ciotValid ? (
                   <CheckCircle2 className="w-4 h-4 text-emerald-500" />
                 ) : (
                   <AlertCircle className="w-4 h-4 text-rose-500" />
@@ -138,13 +174,13 @@ export function FinanceFiscalTab({ calc }: { calc: ReturnType<typeof useFinanceC
               onChange={(e) => calc.update({ rntrc: e.target.value })}
               className={cn(
                 'border-slate-200 focus-visible:ring-primary font-mono',
-                !calc.isRntrcValid && calc.data.rntrc && 'border-rose-400 text-rose-600',
+                !rntrcValid && calc.data.rntrc && 'border-rose-400 text-rose-600',
               )}
               placeholder="00000000"
             />
             {calc.data.rntrc && (
               <span className="absolute right-3 top-8">
-                {calc.isRntrcValid ? (
+                {rntrcValid ? (
                   <CheckCircle2 className="w-4 h-4 text-emerald-500" />
                 ) : (
                   <AlertCircle className="w-4 h-4 text-rose-500" />

@@ -14,8 +14,11 @@ import { Switch } from '@/components/ui/switch'
 import { Trash2, Plus, Save } from 'lucide-react'
 import pb from '@/lib/pocketbase/client'
 import { useToast } from '@/hooks/use-toast'
+import { useSafeFetch } from '@/hooks/useSafeFetch'
+import { DynamicField } from '@/types/fleet'
 
-interface DynamicField {
+interface _DynamicField {
+  // Kept to avoid syntax errors if needed, but removed original
   id: string
   label: string
   type: string
@@ -27,32 +30,27 @@ interface DynamicField {
 export function FinanceDynamicFieldsTab() {
   const [fields, setFields] = useState<DynamicField[]>([])
   const [recordId, setRecordId] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
+  const { execute, loading } = useSafeFetch()
   const { toast } = useToast()
 
   useEffect(() => {
-    pb.collection('routing_config')
-      .getFirstListItem('name="quote_dynamic_fields"')
-      .then((rec) => {
-        setRecordId(rec.id)
-        setFields(rec.settings?.fields || [])
-      })
-      .catch(console.error)
-  }, [])
+    execute(async () => {
+      const rec = await pb
+        .collection('routing_config')
+        .getFirstListItem('name="quote_dynamic_fields"')
+      setRecordId(rec.id)
+      setFields(rec.settings?.fields || [])
+      return rec
+    })
+  }, [execute])
 
   const handleSave = async () => {
     if (!recordId) return
-    setLoading(true)
-    try {
+    await execute(async () => {
       await pb.collection('routing_config').update(recordId, {
         settings: { fields },
       })
-      toast({ title: 'Campos salvos com sucesso!' })
-    } catch (err) {
-      toast({ title: 'Erro ao salvar', variant: 'destructive' })
-    } finally {
-      setLoading(false)
-    }
+    }, 'Campos salvos com sucesso!')
   }
 
   const addField = () => {
