@@ -34,8 +34,7 @@ export function PortalCotacao() {
         setFields(f)
         const initial: Record<string, any> = {}
         f.forEach((field: any) => {
-          initial[field.id] =
-            field.type === 'select' && field.options?.length ? field.options[0] : ''
+          initial[field.id] = field.type === 'select' && field.values?.length ? field.values[0] : ''
         })
         setForm(initial)
       })
@@ -80,7 +79,7 @@ export function PortalCotacao() {
 
       const initial: Record<string, any> = {}
       fields.forEach((field: any) => {
-        initial[field.id] = field.type === 'select' && field.options?.length ? field.options[0] : ''
+        initial[field.id] = field.type === 'select' && field.values?.length ? field.values[0] : ''
       })
       setForm(initial)
     } catch (err) {
@@ -122,7 +121,7 @@ export function PortalCotacao() {
                         <SelectValue placeholder="Selecione..." />
                       </SelectTrigger>
                       <SelectContent>
-                        {(field.options || []).map((opt: string) => (
+                        {(field.values || []).map((opt: string) => (
                           <SelectItem key={opt} value={opt}>
                             {opt}
                           </SelectItem>

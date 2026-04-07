@@ -21,7 +21,7 @@ interface DynamicField {
   type: string
   required: boolean
   mappedParam: string
-  options?: string[]
+  values?: string[]
 }
 
 export function FinanceDynamicFieldsTab() {
@@ -185,10 +185,10 @@ export function FinanceDynamicFieldsTab() {
                 <div className="space-y-2 lg:col-span-4">
                   <Label>Opções (separadas por vírgula)</Label>
                   <Input
-                    value={(f.options || []).join(', ')}
+                    value={(f.values || []).join(', ')}
                     onChange={(e) =>
                       updateField(i, {
-                        options: e.target.value
+                        values: e.target.value
                           .split(',')
                           .map((s) => s.trim())
                           .filter(Boolean),

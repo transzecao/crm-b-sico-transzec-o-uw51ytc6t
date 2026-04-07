@@ -70,7 +70,7 @@ migrate(
             label: 'Tipo de Frete',
             type: 'select',
             required: true,
-            options: ['CIF', 'FOB'],
+            values: ['CIF', 'FOB'],
             mappedParam: '',
           },
         ],
