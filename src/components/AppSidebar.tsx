@@ -48,7 +48,6 @@ export function AppSidebar() {
           { title: 'Requisições de Documentos', url: '/portal/documentos', icon: FolderOpen },
           { title: 'Gerenciamento de Fretes', url: '/financeiro', icon: Calculator },
           { title: 'Controle da Frota e Gastos', url: '/financeiro/controle-gastos', icon: Wallet },
-          { title: 'Configurador de Cotação', url: '/financeiro/configurador', icon: Settings },
         ]
       case 'Funcionário Financeiro':
       case 'Funcionario_Financeiro':

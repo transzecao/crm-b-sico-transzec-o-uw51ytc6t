@@ -35,7 +35,6 @@ import PortalConteudoInt from './pages/PortalConteudoInt'
 import PortalColetaInt from './pages/PortalColetaInt'
 import PortalDocumentosInt from './pages/PortalDocumentosInt'
 import Tarefas from './pages/Tarefas'
-import FinanceiroConfigurador from './pages/FinanceiroConfigurador'
 import CotacaoDinamica from './pages/CotacaoDinamica'
 import RoutePlansList from './pages/RoutePlansList'
 import ThirdPartyLeads from './pages/ThirdPartyLeads'
@@ -67,7 +66,6 @@ const App = () => (
 
                 <Route path="/financeiro" element={<Financeiro />} />
                 <Route path="/financeiro/controle-gastos" element={<ControleGastos />} />
-                <Route path="/financeiro/configurador" element={<FinanceiroConfigurador />} />
                 <Route path="/financeiro/nova-cotacao" element={<FinanceiroNovaCotacao />} />
                 <Route path="/financeiro/cotacoes" element={<FinanceiroCotacoes />} />
                 <Route path="/cotacao-dinamica" element={<CotacaoDinamica />} />
