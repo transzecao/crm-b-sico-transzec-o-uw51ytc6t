@@ -27,7 +27,7 @@ migrate(
         { name: 'showInUserInterface', type: 'bool' },
         { name: 'placeholder', type: 'text' },
         { name: 'order', type: 'number' },
-        { name: 'values', type: 'text' },
+        { name: 'values', type: 'json' },
         { name: 'created', type: 'autodate', onCreate: true, onUpdate: false },
         { name: 'updated', type: 'autodate', onCreate: true, onUpdate: true },
       ],

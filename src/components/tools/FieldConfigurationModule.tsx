@@ -30,7 +30,7 @@ interface FieldConfig {
   showInUserInterface: boolean
   placeholder: string
   order: number
-  values: string
+  values: string | string[]
 }
 
 export function FieldConfigurationModule({ toolId }: { toolId: string }) {
@@ -40,6 +40,7 @@ export function FieldConfigurationModule({ toolId }: { toolId: string }) {
 
   const loadFields = async () => {
     try {
+      setIsLoading(true)
       const records = await pb
         .collection('tool_fields')
         .getFullList({ filter: `tool="${toolId}"`, sort: 'order' })
@@ -71,46 +72,55 @@ export function FieldConfigurationModule({ toolId }: { toolId: string }) {
     ])
   }
 
-  const handleSave = async (index: number) => {
-    const field = fields[index]
+  const handleSaveAll = async () => {
     try {
-      if (field.id) {
-        await pb.collection('tool_fields').update(field.id, field)
-      } else {
-        const created = await pb.collection('tool_fields').create(field)
-        const newFields = [...fields]
-        newFields[index] = created as any
-        setFields(newFields)
+      setIsLoading(true)
+      const existing = await pb
+        .collection('tool_fields')
+        .getFullList({ filter: `tool="${toolId}"` })
+      for (const record of existing) {
+        await pb.collection('tool_fields').delete(record.id)
       }
-      toast({ title: 'Campo salvo com sucesso!' })
+
+      for (let i = 0; i < fields.length; i++) {
+        const field: any = { ...fields[i], order: i }
+        delete field.id
+        if (typeof field.values === 'string') {
+          field.values = field.values
+            .split(',')
+            .map((v: string) => v.trim())
+            .filter(Boolean)
+        }
+        await pb.collection('tool_fields').create(field)
+      }
+
+      toast({ title: 'Configurações salvas com sucesso!' })
+      await loadFields()
     } catch (e) {
       toast({ title: 'Erro ao salvar', variant: 'destructive' })
+    } finally {
+      setIsLoading(false)
     }
   }
 
-  const handleDelete = async (index: number) => {
-    const field = fields[index]
-    if (field.id) {
-      try {
-        await pb.collection('tool_fields').delete(field.id)
-        toast({ title: 'Campo excluído!' })
-      } catch (e) {
-        toast({ title: 'Erro ao excluir', variant: 'destructive' })
-        return
-      }
-    }
+  const handleDelete = (index: number) => {
     setFields(fields.filter((_, i) => i !== index))
   }
 
-  if (isLoading) return <div>Carregando...</div>
+  if (isLoading) return <div className="p-4 text-center">Carregando...</div>
 
   return (
     <div className="space-y-4 bg-white p-6 rounded-lg shadow-sm border border-slate-200">
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-bold text-slate-800">Configuração de Campos</h2>
-        <Button onClick={handleAdd} size="sm" className="bg-primary">
-          <Plus className="w-4 h-4 mr-2" /> Adicionar Campo
-        </Button>
+        <div className="space-x-2">
+          <Button onClick={handleAdd} size="sm" variant="outline">
+            <Plus className="w-4 h-4 mr-2" /> Adicionar Campo
+          </Button>
+          <Button onClick={handleSaveAll} size="sm" className="bg-primary">
+            <Save className="w-4 h-4 mr-2" /> Salvar Tudo
+          </Button>
+        </div>
       </div>
       <div className="border rounded-md overflow-x-auto">
         <Table>
@@ -163,7 +173,7 @@ export function FieldConfigurationModule({ toolId }: { toolId: string }) {
                 <TableCell>
                   <Input
                     disabled={f.type !== 'select'}
-                    value={f.values}
+                    value={Array.isArray(f.values) ? f.values.join(', ') : f.values}
                     placeholder="Opção 1, Opção 2"
                     onChange={(e) => {
                       const arr = [...fields]
@@ -192,12 +202,9 @@ export function FieldConfigurationModule({ toolId }: { toolId: string }) {
                     }}
                   />
                 </TableCell>
-                <TableCell className="text-right space-x-2">
-                  <Button variant="outline" size="sm" onClick={() => handleSave(i)}>
-                    <Save className="w-4 h-4" />
-                  </Button>
-                  <Button variant="destructive" size="sm" onClick={() => handleDelete(i)}>
-                    <Trash2 className="w-4 h-4" />
+                <TableCell className="text-right">
+                  <Button variant="ghost" size="sm" onClick={() => handleDelete(i)}>
+                    <Trash2 className="w-4 h-4 text-rose-500" />
                   </Button>
                 </TableCell>
               </TableRow>
@@ -205,7 +212,9 @@ export function FieldConfigurationModule({ toolId }: { toolId: string }) {
           </TableBody>
         </Table>
         {fields.length === 0 && (
-          <div className="p-4 text-center text-slate-500">Nenhum campo configurado.</div>
+          <div className="p-4 text-center text-slate-500">
+            Nenhum campo configurado. Clique em "Adicionar Campo".
+          </div>
         )}
       </div>
     </div>

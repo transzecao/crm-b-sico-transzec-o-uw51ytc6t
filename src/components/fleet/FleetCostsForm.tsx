@@ -67,7 +67,7 @@ export function FleetCostsForm() {
         try {
           const existing = await pb
             .collection('drivers')
-            .getFirstListItem(`local_id="${d.id}"`)
+            .getFirstListItem(`local_id='${d.id}'`)
             .catch(() => null)
           if (existing) await pb.collection('drivers').update(existing.id, payload)
           else await pb.collection('drivers').create(payload)
@@ -105,7 +105,7 @@ export function FleetCostsForm() {
         try {
           const existing = await pb
             .collection('vehicles')
-            .getFirstListItem(`local_id="${v.id}"`)
+            .getFirstListItem(`local_id='${v.id}'`)
             .catch(() => null)
           if (existing) await pb.collection('vehicles').update(existing.id, payload)
           else await pb.collection('vehicles').create(payload)
@@ -124,7 +124,7 @@ export function FleetCostsForm() {
         try {
           const existing = await pb
             .collection('vinculos')
-            .getFirstListItem(`local_id="${l.id}"`)
+            .getFirstListItem(`local_id='${l.id}'`)
             .catch(() => null)
           if (existing) await pb.collection('vinculos').update(existing.id, payload)
           else await pb.collection('vinculos').create(payload)

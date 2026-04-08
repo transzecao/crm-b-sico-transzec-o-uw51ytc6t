@@ -14,3 +14,13 @@ export function validateCPF(cpf: string): boolean {
   if (rest !== parseInt(cleanCPF.substring(10, 11))) return false
   return true
 }
+
+export function validateCIOT(ciot: string): boolean {
+  const cleanCIOT = ciot.replace(/[^\d]+/g, '')
+  return cleanCIOT.length === 12
+}
+
+export function validateRNTRC(rntrc: string): boolean {
+  const cleanRNTRC = rntrc.replace(/[^\d]+/g, '')
+  return cleanRNTRC.length === 8
+}
