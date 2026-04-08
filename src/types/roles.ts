@@ -9,6 +9,7 @@ export type Role =
   | 'FUNCIONARIO_PROSPECCAO'
   | 'FUNCIONARIO_MARKETING'
   | 'CLIENTE'
+  | 'Cliente'
   | 'SUPORTE_TECNICO'
 
 export const ROLE_HIERARCHY: Record<Role, Role[]> = {
@@ -22,6 +23,7 @@ export const ROLE_HIERARCHY: Record<Role, Role[]> = {
     'FUNCIONARIO_PROSPECCAO',
     'FUNCIONARIO_MARKETING',
     'CLIENTE',
+    'Cliente',
     'SUPORTE_TECNICO',
   ],
   DIRETOR: [
@@ -33,6 +35,7 @@ export const ROLE_HIERARCHY: Record<Role, Role[]> = {
     'FUNCIONARIO_PROSPECCAO',
     'FUNCIONARIO_MARKETING',
     'CLIENTE',
+    'Cliente',
     'SUPORTE_TECNICO',
   ],
   SUPERVISOR_FINANCEIRO: ['FUNCIONARIO_FINANCEIRO'],
@@ -43,6 +46,7 @@ export const ROLE_HIERARCHY: Record<Role, Role[]> = {
   FUNCIONARIO_PROSPECCAO: [],
   FUNCIONARIO_MARKETING: [],
   CLIENTE: [],
+  Cliente: [],
   SUPORTE_TECNICO: [],
 }
 
