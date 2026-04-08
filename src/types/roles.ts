@@ -8,7 +8,7 @@ export type UserRole =
   | 'FUNCIONARIO_COLETA'
   | 'FUNCIONARIO_PROSPECCAO'
   | 'FUNCIONARIO_MARKETING'
-  | 'CLIENTE'
+  | 'Cliente'
   | 'Cliente'
   | 'SUPORTE_TECNICO'
 
@@ -22,7 +22,7 @@ export const ROLE_HIERARCHY: Record<UserRole, UserRole[]> = {
     'FUNCIONARIO_COLETA',
     'FUNCIONARIO_PROSPECCAO',
     'FUNCIONARIO_MARKETING',
-    'CLIENTE',
+    'Cliente',
     'Cliente',
     'SUPORTE_TECNICO',
   ],
@@ -34,7 +34,7 @@ export const ROLE_HIERARCHY: Record<UserRole, UserRole[]> = {
     'FUNCIONARIO_COLETA',
     'FUNCIONARIO_PROSPECCAO',
     'FUNCIONARIO_MARKETING',
-    'CLIENTE',
+    'Cliente',
     'Cliente',
     'SUPORTE_TECNICO',
   ],
@@ -45,8 +45,8 @@ export const ROLE_HIERARCHY: Record<UserRole, UserRole[]> = {
   FUNCIONARIO_COLETA: [],
   FUNCIONARIO_PROSPECCAO: [],
   FUNCIONARIO_MARKETING: [],
-  CLIENTE: [],
   Cliente: [],
+
   SUPORTE_TECNICO: [],
 }
 
