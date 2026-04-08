@@ -2,11 +2,14 @@ import { ReactNode } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import useCrmStore from '@/stores/useCrmStore'
+import { Code2, User } from 'lucide-react'
 
 export const TOOL_NAMES: Record<string, { user: string; dev: string }> = {
   finance_cpk: { user: 'Calculadora CPK', dev: 'Configuração CPK' },
   freight_calculation: { user: 'Cálculo de Frete', dev: 'Regras de Frete' },
   prospeccao: { user: 'Pipeline de Vendas', dev: 'Configuração de Campos' },
+  collection_scheduling: { user: 'Agendamento de Coleta', dev: 'Configuração de Coleta' },
+  lead_registration: { user: 'Cadastro de Leads', dev: 'Configuração de Leads' },
 }
 
 interface ToolBaseProps {
@@ -34,8 +37,14 @@ export function ToolBase({ toolId, UserComponent, DeveloperComponent }: ToolBase
     return (
       <Tabs defaultValue="user" className="w-full">
         <TabsList className="mb-6">
-          <TabsTrigger value="user">{names.user}</TabsTrigger>
-          <TabsTrigger value="developer">{names.dev}</TabsTrigger>
+          <TabsTrigger value="user" className="flex items-center gap-2">
+            <User className="w-4 h-4" />
+            {names.user}
+          </TabsTrigger>
+          <TabsTrigger value="developer" className="flex items-center gap-2">
+            <Code2 className="w-4 h-4" />
+            {names.dev}
+          </TabsTrigger>
         </TabsList>
         <TabsContent value="user" className="m-0">
           {UserComponent}

@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/table'
 import { useToast } from '@/hooks/use-toast'
 import { Trash2, Plus, Save } from 'lucide-react'
+import useCrmStore from '@/stores/useCrmStore'
 
 interface FieldConfig {
   id?: string
@@ -29,14 +30,24 @@ interface FieldConfig {
   required: boolean
   showInUserInterface: boolean
   placeholder: string
+  defaultValue: string
   order: number
   values: string | string[]
 }
 
 export function FieldConfigurationModule({ toolId }: { toolId: string }) {
   const { toast } = useToast()
+  const { state } = useCrmStore()
   const [fields, setFields] = useState<FieldConfig[]>([])
   const [isLoading, setIsLoading] = useState(true)
+
+  if (!state.permissions.canManageFields(toolId)) {
+    return (
+      <div className="p-4 text-center text-rose-500 font-medium">
+        Sem permissão para configurar campos.
+      </div>
+    )
+  }
 
   const loadFields = async () => {
     try {
@@ -66,6 +77,7 @@ export function FieldConfigurationModule({ toolId }: { toolId: string }) {
         required: false,
         showInUserInterface: true,
         placeholder: '',
+        defaultValue: '',
         order: fields.length,
         values: '',
       },
@@ -115,7 +127,7 @@ export function FieldConfigurationModule({ toolId }: { toolId: string }) {
         <h2 className="text-xl font-bold text-slate-800">Configuração de Campos</h2>
         <div className="space-x-2">
           <Button onClick={handleAdd} size="sm" variant="outline">
-            <Plus className="w-4 h-4 mr-2" /> Adicionar Campo
+            <Plus className="w-4 h-4 mr-2" /> Adicionar
           </Button>
           <Button onClick={handleSaveAll} size="sm" className="bg-primary">
             <Save className="w-4 h-4 mr-2" /> Salvar Tudo
@@ -126,23 +138,32 @@ export function FieldConfigurationModule({ toolId }: { toolId: string }) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="min-w-[150px]">Label</TableHead>
+              <TableHead className="min-w-[150px]">Label / Placeholder</TableHead>
               <TableHead className="min-w-[150px]">Tipo</TableHead>
               <TableHead className="min-w-[150px]">Valores (Vírgula)</TableHead>
               <TableHead>Obrigatório</TableHead>
-              <TableHead>Mostrar UI</TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {fields.map((f, i) => (
               <TableRow key={f.id || i}>
-                <TableCell>
+                <TableCell className="space-y-2">
                   <Input
+                    placeholder="Label"
                     value={f.label}
                     onChange={(e) => {
                       const arr = [...fields]
                       arr[i].label = e.target.value
+                      setFields(arr)
+                    }}
+                  />
+                  <Input
+                    placeholder="Placeholder"
+                    value={f.placeholder}
+                    onChange={(e) => {
+                      const arr = [...fields]
+                      arr[i].placeholder = e.target.value
                       setFields(arr)
                     }}
                   />
@@ -192,16 +213,6 @@ export function FieldConfigurationModule({ toolId }: { toolId: string }) {
                     }}
                   />
                 </TableCell>
-                <TableCell>
-                  <Switch
-                    checked={f.showInUserInterface}
-                    onCheckedChange={(v) => {
-                      const arr = [...fields]
-                      arr[i].showInUserInterface = v
-                      setFields(arr)
-                    }}
-                  />
-                </TableCell>
                 <TableCell className="text-right">
                   <Button variant="ghost" size="sm" onClick={() => handleDelete(i)}>
                     <Trash2 className="w-4 h-4 text-rose-500" />
@@ -212,9 +223,7 @@ export function FieldConfigurationModule({ toolId }: { toolId: string }) {
           </TableBody>
         </Table>
         {fields.length === 0 && (
-          <div className="p-4 text-center text-slate-500">
-            Nenhum campo configurado. Clique em "Adicionar Campo".
-          </div>
+          <div className="p-4 text-center text-slate-500">Nenhum campo configurado.</div>
         )}
       </div>
     </div>

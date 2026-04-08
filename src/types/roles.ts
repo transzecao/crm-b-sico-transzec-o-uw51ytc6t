@@ -1,4 +1,4 @@
-export type Role =
+export type UserRole =
   | 'DESENVOLVEDOR'
   | 'DIRETOR'
   | 'SUPERVISOR_FINANCEIRO'
@@ -12,7 +12,7 @@ export type Role =
   | 'Cliente'
   | 'SUPORTE_TECNICO'
 
-export const ROLE_HIERARCHY: Record<Role, Role[]> = {
+export const ROLE_HIERARCHY: Record<UserRole, UserRole[]> = {
   DESENVOLVEDOR: [
     'DIRETOR',
     'SUPERVISOR_FINANCEIRO',
@@ -50,10 +50,12 @@ export const ROLE_HIERARCHY: Record<Role, Role[]> = {
   SUPORTE_TECNICO: [],
 }
 
-export const TOOL_RESPONSIBILITIES: Record<string, Role[]> = {
+export const TOOL_RESPONSIBILITIES: Record<string, UserRole[]> = {
   finance_cpk: ['SUPERVISOR_FINANCEIRO', 'FUNCIONARIO_FINANCEIRO'],
   freight_calculation: ['SUPERVISOR_COLETA', 'FUNCIONARIO_COLETA'],
   prospeccao: ['SUPERVISOR_COMERCIAL', 'FUNCIONARIO_PROSPECCAO'],
+  collection_scheduling: ['SUPERVISOR_COLETA', 'FUNCIONARIO_COLETA'],
+  lead_registration: ['SUPERVISOR_COMERCIAL', 'FUNCIONARIO_PROSPECCAO', 'FUNCIONARIO_MARKETING'],
 }
 
 export type Permissions = {
@@ -63,19 +65,34 @@ export type Permissions = {
   canManageRules: (toolId: string) => boolean
 }
 
-export function createPermissions(role: Role): Permissions {
+export function createPermissions(
+  role: UserRole,
+  dbPermissions: Record<string, any> = {},
+): Permissions {
   const userRoles = [role, ...(ROLE_HIERARCHY[role] || [])]
 
   const canAccessTool = (toolId: string) => {
     if (role === 'DESENVOLVEDOR' || role === 'DIRETOR') return true
+
+    if (dbPermissions[toolId]) {
+      return dbPermissions[toolId].can_access === true
+    }
+
     const allowedRoles = TOOL_RESPONSIBILITIES[toolId] || []
-    return allowedRoles.some((r) => userRoles.includes(r as Role))
+    return allowedRoles.some((r) => userRoles.includes(r as UserRole))
   }
 
   const isDeveloperOf = (toolId: string) => {
     if (role === 'DESENVOLVEDOR' || role === 'DIRETOR') return true
+
+    if (dbPermissions[toolId]) {
+      return dbPermissions[toolId].is_developer === true
+    }
+
     const allowedRoles = TOOL_RESPONSIBILITIES[toolId] || []
-    return allowedRoles.some((r) => r.startsWith('SUPERVISOR_') && userRoles.includes(r as Role))
+    return allowedRoles.some(
+      (r) => r.startsWith('SUPERVISOR_') && userRoles.includes(r as UserRole),
+    )
   }
 
   return {

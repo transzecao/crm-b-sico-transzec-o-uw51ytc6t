@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { Role, Permissions, createPermissions } from '@/types/roles'
+import { UserRole, Permissions, createPermissions } from '@/types/roles'
+import pb from '@/lib/pocketbase/client'
 
 export type Lead = {
   id: string
@@ -87,7 +88,7 @@ export type AuditLog = {
 }
 
 type CrmState = {
-  role: Role
+  role: UserRole
   permissions: Permissions
   currentUser: { name: string; avatar: string }
   companies: Company[]
@@ -131,8 +132,27 @@ export default function useCrmStore() {
     }
   }, [])
 
+  useEffect(() => {
+    const fetchPerms = async () => {
+      try {
+        const records = await pb.collection('tool_permissions').getFullList({
+          filter: `role="${state.role}"`,
+        })
+        const map: Record<string, any> = {}
+        records.forEach((r) => {
+          map[r.tool] = r
+        })
+        const newPerms = createPermissions(state.role, map)
+        updateState({ permissions: newPerms })
+      } catch (e) {
+        // silent fallback to default
+      }
+    }
+    fetchPerms()
+  }, [state.role])
+
   const updateState = (newState: Partial<CrmState>) => {
-    if (newState.role) {
+    if (newState.role && !newState.permissions) {
       newState.permissions = createPermissions(newState.role)
     }
     globalState = { ...globalState, ...newState }
