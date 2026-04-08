@@ -1,8 +1,26 @@
 migrate(
   (app) => {
     const transzecao = app.findCollectionByNameOrId('transzecao')
+    let needsSave = false
+
+    const roleField = transzecao.fields.getByName('role')
+    if (roleField && roleField.type === 'select') {
+      const currentValues = roleField.values || []
+      const missing = ['Cliente', 'CLIENTE', 'SUPORTE_TECNICO'].filter(
+        (v) => !currentValues.includes(v),
+      )
+      if (missing.length > 0) {
+        missing.forEach((v) => currentValues.push(v))
+        needsSave = true
+      }
+    }
+
     if (!transzecao.fields.getByName('requires_password_setup')) {
       transzecao.fields.add(new BoolField({ name: 'requires_password_setup' }))
+      needsSave = true
+    }
+
+    if (needsSave) {
       app.save(transzecao)
     }
 

@@ -41,14 +41,6 @@ export function FieldConfigurationModule({ toolId }: { toolId: string }) {
   const [fields, setFields] = useState<FieldConfig[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
-  if (!state.permissions.canManageFields(toolId)) {
-    return (
-      <div className="p-4 text-center text-rose-500 font-medium">
-        Sem permissão para configurar campos.
-      </div>
-    )
-  }
-
   const loadFields = async () => {
     try {
       setIsLoading(true)
@@ -64,8 +56,20 @@ export function FieldConfigurationModule({ toolId }: { toolId: string }) {
   }
 
   useEffect(() => {
-    loadFields()
-  }, [toolId])
+    if (state.permissions.canManageFields(toolId)) {
+      loadFields()
+    } else {
+      setIsLoading(false)
+    }
+  }, [toolId, state.permissions])
+
+  if (!state.permissions.canManageFields(toolId)) {
+    return (
+      <div className="p-4 text-center text-rose-500 font-medium">
+        Sem permissão para configurar campos.
+      </div>
+    )
+  }
 
   const handleAdd = () => {
     setFields([
