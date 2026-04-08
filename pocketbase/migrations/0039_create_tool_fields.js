@@ -5,12 +5,12 @@ migrate(
 
     const roleField = transzecao.fields.getByName('role')
     if (roleField && roleField.type === 'select') {
-      const currentValues = roleField.values || []
+      const currentValues = roleField.values ? Array.from(roleField.values) : []
       const missing = ['Cliente', 'CLIENTE', 'SUPORTE_TECNICO'].filter(
         (v) => !currentValues.includes(v),
       )
       if (missing.length > 0) {
-        missing.forEach((v) => currentValues.push(v))
+        roleField.values = [...currentValues, ...missing]
         needsSave = true
       }
     }
