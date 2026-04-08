@@ -2,11 +2,6 @@ migrate(
   (app) => {
     const transzecao = app.findCollectionByNameOrId('transzecao')
 
-    if (!transzecao.fields.getByName('requires_password_setup')) {
-      transzecao.fields.add(new BoolField({ name: 'requires_password_setup' }))
-      app.save(transzecao)
-    }
-
     const usersToSeed = [
       {
         email: 'master@transzecao.com',
@@ -50,7 +45,6 @@ migrate(
         record.set('role', u.role)
         record.set('status', u.status)
         record.set('position', u.position)
-        record.set('requires_password_setup', true)
         record.set(
           'last_activity',
           new Date().toISOString().replace('T', ' ').substring(0, 19) + 'Z',
