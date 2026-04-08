@@ -2,11 +2,6 @@ migrate(
   (app) => {
     const transzecao = app.findCollectionByNameOrId('transzecao')
 
-    if (!transzecao.fields.getByName('requires_password_setup')) {
-      transzecao.fields.add(new BoolField({ name: 'requires_password_setup' }))
-      app.save(transzecao)
-    }
-
     const usersToSeed = [
       {
         email: 'master@transzecao.com',
@@ -45,7 +40,6 @@ migrate(
         let record = new Record(transzecao)
         record.setEmail(u.email)
         record.setPassword($security.randomString(16))
-        record.set('requires_password_setup', true)
         record.setVerified(true)
         record.set('name', u.name)
         record.set('role', u.role)
