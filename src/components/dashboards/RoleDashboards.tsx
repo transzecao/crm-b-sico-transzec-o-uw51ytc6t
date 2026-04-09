@@ -59,27 +59,21 @@ export function DashboardFuncColeta() {
 
 export function DashboardSupColeta() {
   const data = [
-    { name: 'Semana 1', rotas: 12 },
-    { name: 'Semana 2', rotas: 15 },
-    { name: 'Semana 3', rotas: 14 },
+    { name: 'Semana 1', coletas: 32 },
+    { name: 'Semana 2', coletas: 45 },
+    { name: 'Semana 3', coletas: 41 },
   ]
   return (
     <div className="space-y-6 animate-fade-in-up">
       <h1 className="text-3xl font-bold tracking-tight text-slate-900">
         Dashboard Operacional (Coleta)
       </h1>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card>
           <CardHeader>
-            <CardTitle>Rotas Ativas</CardTitle>
+            <CardTitle>Coletas Realizadas</CardTitle>
           </CardHeader>
-          <CardContent className="text-3xl font-bold">12</CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Agendamentos Pendentes</CardTitle>
-          </CardHeader>
-          <CardContent className="text-3xl font-bold text-amber-500">8</CardContent>
+          <CardContent className="text-3xl font-bold">118</CardContent>
         </Card>
         <Card>
           <CardHeader>
@@ -90,7 +84,7 @@ export function DashboardSupColeta() {
       </div>
       <Card>
         <CardHeader>
-          <CardTitle>Rotas Executadas por Semana</CardTitle>
+          <CardTitle>Coletas Executadas por Semana</CardTitle>
         </CardHeader>
         <CardContent className="h-64">
           <ResponsiveContainer width="100%" height="100%">
@@ -99,7 +93,7 @@ export function DashboardSupColeta() {
               <XAxis dataKey="name" />
               <YAxis />
               <Tooltip cursor={{ fill: 'transparent' }} />
-              <Bar dataKey="rotas" fill="#800020" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="coletas" fill="#800020" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </CardContent>

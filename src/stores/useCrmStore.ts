@@ -66,17 +66,6 @@ export type ConsultantGoal = {
   period: string
 }
 
-export type FreightOrder = {
-  id: string
-  companyId: string
-  trackingCode: string
-  status: 'Pendente' | 'Em Coleta' | 'Em Trânsito' | 'Entregue'
-  origin: string
-  destination: string
-  updatedAt: string
-  invoiceUrl?: string
-}
-
 export type AuditLog = {
   id: string
   timestamp: string
@@ -98,7 +87,6 @@ type CrmState = {
   accessLogs: { date: string; user: string; role: string; module: string }[]
   auditLogs: AuditLog[]
   consultantGoals: ConsultantGoal[]
-  freightOrders: FreightOrder[]
   tourOpen: boolean
 }
 
@@ -116,7 +104,6 @@ let globalState: CrmState = {
   accessLogs: [],
   auditLogs: [],
   consultantGoals: [],
-  freightOrders: [],
   tourOpen: false,
 }
 

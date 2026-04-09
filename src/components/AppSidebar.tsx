@@ -62,9 +62,6 @@ export function AppSidebar() {
         return [
           { title: 'Dashboard', url: '/app/dashboard', icon: LayoutDashboard },
           { title: 'Cadastro de Cliente', url: '/empresa/nova', icon: Building2 },
-          { title: 'Agendamento de Coleta', url: '/roteirizacao/agendar', icon: CalendarClock },
-          { title: 'Histórico de Agendamento', url: '/roteirizacao/historico', icon: MapIcon },
-          { title: 'Histórico Roteirização', url: '/roteirizacao/planos', icon: Truck },
           { title: 'COTAÇÃO', url: '/cotacao-dinamica', icon: Calculator },
         ]
       case 'Funcionário Coleta':
@@ -73,10 +70,7 @@ export function AppSidebar() {
         return [
           { title: 'Dashboard', url: '/app/dashboard', icon: LayoutDashboard },
           { title: 'Cadastrar Cliente', url: '/empresa/nova', icon: Building2 },
-          { title: 'Roteirização', url: '/roteirizacao', icon: MapIcon },
-          { title: 'Histórico Roteirização', url: '/roteirizacao/planos', icon: Truck },
           { title: 'COTAÇÃO', url: '/cotacao-dinamica', icon: Calculator },
-          { title: 'Histórico de Coletas', url: '/roteirizacao/historico', icon: MapIcon },
         ]
       case 'Supervisor Comercial':
       case 'Supervisor_Comercial':
@@ -110,9 +104,7 @@ export function AppSidebar() {
       case 'Cliente':
         return [
           { title: 'Meu Dashboard', url: '/portal/home', icon: LayoutDashboard },
-          { title: 'Meus Pedidos', url: '/portal/pedidos', icon: Truck },
           { title: 'COTAÇÃO', url: '/portal/cotacao-dinamica', icon: Calculator },
-          { title: 'AGENDAR COLETA', url: '/portal/coleta', icon: CalendarClock },
           { title: 'VER CONTEÚDO', url: '/portal/conteudo', icon: Rss },
           { title: 'Meus Documentos', url: '/portal/documentos', icon: FolderOpen },
         ]
@@ -127,7 +119,6 @@ export function AppSidebar() {
           { title: 'Propostas', url: '/financeiro', icon: FileText },
           { title: 'Controle de Gastos', url: '/financeiro/controle-gastos', icon: Wallet },
           { title: 'Relatórios', url: '/analytics', icon: BarChart3 },
-          { title: 'Roteirização', url: '/roteirizacao', icon: MapIcon },
           { title: 'Aprovações', url: '/supervisor/approvals', icon: CheckSquare },
           { title: 'Marketing Content', url: '/marketing/conteudo', icon: Rss },
           { title: 'Governança', url: '/admin/logins', icon: KeyRound },
