@@ -1,4 +1,4 @@
-import { Search, Bell, Plus, BarChart3, HelpCircle, Kanban, Settings, Bot } from 'lucide-react'
+import { Search, Bell, Plus, HelpCircle, Kanban, Bot } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { SidebarTrigger } from '@/components/ui/sidebar'
@@ -14,7 +14,6 @@ import {
 } from '@/components/ui/dropdown-menu'
 import useCrmStore from '@/stores/useCrmStore'
 import { useRealtime } from '@/hooks/use-realtime'
-import { AdminPanelModal } from '@/components/fleet/AdminPanelModal'
 import {
   Select,
   SelectContent,
@@ -37,7 +36,7 @@ export function AppHeader() {
       navigate('/app/dashboard')
     }
   }
-  const [isAdminModalOpen, setIsAdminModalOpen] = useState(false)
+
   const [notifications, setNotifications] = useState<
     { id: string; title: string; text: string; icon?: React.ReactNode }[]
   >([
@@ -83,7 +82,6 @@ export function AppHeader() {
   })
 
   const canCreate = true
-  const canSeeAnalytics = true
 
   return (
     <header className="sticky top-0 z-40 w-full bg-[#800020] text-white flex items-center h-14 px-4 justify-between shadow-md border-b border-[#5c0017]">
@@ -132,30 +130,6 @@ export function AppHeader() {
               Pipeline
             </Link>
           </Button>
-          {canSeeAnalytics && (
-            <Button
-              variant="outline"
-              size="sm"
-              asChild
-              className="text-white border-white/30 hover:bg-white/10 hover:text-white h-8 px-3 bg-transparent"
-            >
-              <Link to="/analytics">
-                <BarChart3 className="w-3.5 h-3.5 mr-1" />
-                Relatórios
-              </Link>
-            </Button>
-          )}
-          {canSeeAnalytics && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsAdminModalOpen(true)}
-              className="text-white border-white/30 hover:bg-white/10 hover:text-white h-8 px-3 bg-transparent"
-            >
-              <Settings className="w-3.5 h-3.5 mr-1" />
-              Modo Administrador
-            </Button>
-          )}
         </nav>
       </div>
 
@@ -236,7 +210,6 @@ export function AppHeader() {
           </Avatar>
         </div>
       </div>
-      <AdminPanelModal open={isAdminModalOpen} onOpenChange={setIsAdminModalOpen} />
     </header>
   )
 }
