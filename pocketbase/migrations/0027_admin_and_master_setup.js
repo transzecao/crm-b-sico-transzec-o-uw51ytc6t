@@ -20,7 +20,7 @@ migrate(
       existing.set('role', 'master')
       existing.set('status', 'active')
       existing.setVerified(true)
-      existing.setPassword($secrets.get('MASTER_PASSWORD') || $security.randomString(16))
+      existing.setPassword($os.getenv('MASTER_PASSWORD') || $security.randomString(16))
       app.save(existing)
       return
     } catch (_) {}
@@ -29,7 +29,7 @@ migrate(
     // Explicitly generate a 15-char ID to prevent any 'id must be unique' empty ID errors
     record.set('id', $security.randomString(15))
     record.setEmail(email)
-    record.setPassword($secrets.get('MASTER_PASSWORD') || $security.randomString(16))
+    record.setPassword($os.getenv('MASTER_PASSWORD') || $security.randomString(16))
     record.setVerified(true)
     record.set('role', 'master')
     record.set('status', 'active')

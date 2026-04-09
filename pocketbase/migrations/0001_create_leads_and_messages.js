@@ -14,12 +14,15 @@ migrate(
         { name: 'cnpj_id', type: 'text' },
         { name: 'ai_diagnosis', type: 'text' },
         { name: 'status', type: 'text' },
+        { name: 'company_id', type: 'text' },
         { name: 'created', type: 'autodate', onCreate: true, onUpdate: false },
         { name: 'updated', type: 'autodate', onCreate: true, onUpdate: true },
       ],
       indexes: [
         'CREATE INDEX idx_leads_status ON leads (status)',
         'CREATE INDEX idx_leads_segment ON leads (segment)',
+        'CREATE INDEX idx_leads_company ON leads (company_id)',
+        'CREATE INDEX idx_leads_created ON leads (created DESC)',
       ],
     })
     app.save(leads)
@@ -51,7 +54,11 @@ migrate(
     app.save(messages)
   },
   (app) => {
-    app.delete(app.findCollectionByNameOrId('whatsapp_messages'))
-    app.delete(app.findCollectionByNameOrId('leads'))
+    try {
+      app.delete(app.findCollectionByNameOrId('whatsapp_messages'))
+    } catch (_) {}
+    try {
+      app.delete(app.findCollectionByNameOrId('leads'))
+    } catch (_) {}
   },
 )

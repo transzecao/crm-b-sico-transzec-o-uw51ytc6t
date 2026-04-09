@@ -21,7 +21,12 @@ onRecordAfterCreateSuccess((e) => {
       $app.newMailClient().send(message)
       console.log('Invitation email sent successfully to', email)
     } catch (err) {
-      console.log('Failed to send invitation email:', err)
+      console.error(
+        JSON.stringify({
+          error: 'SMTP_AUTH_ERROR',
+          timestamp: new Date().toISOString(),
+        }),
+      )
     }
   }
   e.next()

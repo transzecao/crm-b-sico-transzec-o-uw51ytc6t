@@ -2,11 +2,14 @@ migrate(
   (app) => {
     // 1. Update Permission Rules for transzecao
     const collection = app.findCollectionByNameOrId('transzecao')
-    collection.listRule = "@request.auth.role = 'master' || id = @request.auth.id"
-    collection.viewRule = "@request.auth.role = 'master' || id = @request.auth.id"
-    collection.createRule = "@request.auth.role = 'master'"
-    collection.updateRule = "@request.auth.role = 'master' || id = @request.auth.id"
-    collection.deleteRule = "@request.auth.role = 'master' || id = @request.auth.id"
+    collection.listRule =
+      "@request.auth.role = 'Master' || @request.auth.role ~ 'Supervisor' || id = @request.auth.id"
+    collection.viewRule =
+      "@request.auth.role = 'Master' || @request.auth.role ~ 'Supervisor' || id = @request.auth.id"
+    collection.createRule = "@request.auth.role = 'Master'"
+    collection.updateRule =
+      "(@request.auth.role = 'Master' || id = @request.auth.id) && @request.auth.role != 'Cliente'"
+    collection.deleteRule = "@request.auth.role = 'Master'"
     app.save(collection)
 
     // 2. Configure Titan Mail SMTP Integration

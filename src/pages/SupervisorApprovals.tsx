@@ -22,20 +22,11 @@ import { ptBR } from 'date-fns/locale'
 interface PendingLead {
   id: string
   name: string
+  email: string
   cnpj_id: string
   segment: string
   created: string
   status: string
-}
-
-interface PendingLeadResponse {
-  id?: string
-  name?: string
-  cnpj_id?: string
-  segment?: string
-  created?: string
-  status?: string
-  [key: string]: any
 }
 
 export default function SupervisorApprovals() {
@@ -52,13 +43,14 @@ export default function SupervisorApprovals() {
       const data = await getPendingApprovals()
       if (Array.isArray(data)) {
         const mapped = data.map(
-          (item: PendingLeadResponse): PendingLead => ({
-            id: item.id || '',
-            name: item.name || '',
-            cnpj_id: item.cnpj_id || '',
-            segment: item.segment || '',
-            created: item.created || '',
-            status: item.status || '',
+          (item: any): PendingLead => ({
+            id: item?.id || 'unknown',
+            name: item?.name || 'Sem Nome',
+            email: item?.email || 'N/A',
+            cnpj_id: item?.cnpj_id || '',
+            segment: item?.segment || '',
+            created: item?.created || new Date().toISOString(),
+            status: item?.status || 'Pendente',
           }),
         )
         setLeads(mapped)
