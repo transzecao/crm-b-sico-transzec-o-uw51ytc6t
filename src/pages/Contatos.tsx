@@ -15,7 +15,7 @@ export default function Contatos() {
     'Supervisor Comercial',
     'Funcionário Comercial',
     'Funcionário Coleta',
-  ].includes(state.role)
+  ].includes(state.user.role)
 
   return (
     <div className="space-y-6">
@@ -34,8 +34,8 @@ export default function Contatos() {
       </div>
 
       <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-        {state.contacts.map((contact) => {
-          const company = state.companies.find((c) => c.id === contact.companyId)
+        {state.data.contacts.map((contact) => {
+          const company = state.data.companies.find((c) => c.id === contact.companyId)
           const principal = contact.methods.find((m) => m.isPrincipal) || contact.methods[0]
 
           return (

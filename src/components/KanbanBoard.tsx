@@ -66,7 +66,7 @@ export function KanbanBoard({
 
               {stageLeads.map((lead) => {
                 const company = companies?.find((c) => c.id === lead.companyId)
-                const prob = calculateAIProbability(lead, state.interactions)
+                const prob = calculateAIProbability(lead, state.data.interactions)
 
                 return (
                   <Card

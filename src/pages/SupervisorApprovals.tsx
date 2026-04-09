@@ -28,6 +28,16 @@ interface PendingLead {
   status: string
 }
 
+interface PendingLeadResponse {
+  id?: string
+  name?: string
+  cnpj_id?: string
+  segment?: string
+  created?: string
+  status?: string
+  [key: string]: any
+}
+
 export default function SupervisorApprovals() {
   const { state } = useCrmStore()
   const [leads, setLeads] = useState<PendingLead[]>([])
@@ -35,12 +45,26 @@ export default function SupervisorApprovals() {
   const [processingId, setProcessingId] = useState<string | null>(null)
   const { toast } = useToast()
 
-  const isAuthorized = ['Acesso Master', 'Supervisor Comercial'].includes(state.role)
+  const isAuthorized = ['Acesso Master', 'Supervisor Comercial'].includes(state.user.role)
 
   const fetchLeads = async () => {
     try {
       const data = await getPendingApprovals()
-      setLeads(data as unknown as PendingLead[])
+      if (Array.isArray(data)) {
+        const mapped = data.map(
+          (item: PendingLeadResponse): PendingLead => ({
+            id: item.id || '',
+            name: item.name || '',
+            cnpj_id: item.cnpj_id || '',
+            segment: item.segment || '',
+            created: item.created || '',
+            status: item.status || '',
+          }),
+        )
+        setLeads(mapped)
+      } else {
+        setLeads([])
+      }
     } catch (error) {
       console.error('Failed to fetch pending leads:', error)
     } finally {
@@ -70,7 +94,6 @@ export default function SupervisorApprovals() {
             : 'O lead foi rejeitado e o cadastro foi bloqueado.',
         variant: action === 'approved' ? 'default' : 'destructive',
       })
-      // Local optimistic update to feel faster before realtime kicks in
       setLeads((prev) => prev.filter((lead) => lead.id !== id))
     } catch (error) {
       toast({

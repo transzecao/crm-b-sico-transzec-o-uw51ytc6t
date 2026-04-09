@@ -33,8 +33,8 @@ export default function Pipeline1() {
   const [pendingMove, setPendingMove] = useState<{ id: string; stage: string } | null>(null)
 
   const prospectionLeads = useMemo(
-    () => state.leads.filter((l) => l.pipeline === 'Prospection'),
-    [state.leads],
+    () => state.data.leads.filter((l) => l.pipeline === 'Prospection'),
+    [state.data.leads],
   )
 
   const canMove = [
@@ -42,11 +42,11 @@ export default function Pipeline1() {
     'Supervisor Comercial',
     'Funcionário Comercial',
     'Funcionário Prospecção',
-  ].includes(state.role)
+  ].includes(state.user.role)
 
   useEffect(() => {
     if (location.pathname.includes('/pipeline/1')) {
-      if (state.leads.length === 0 && !hasAlerted.current) {
+      if (state.data.leads.length === 0 && !hasAlerted.current) {
         hasAlerted.current = true
         toast({
           title: 'Funil Vazio',
@@ -54,7 +54,7 @@ export default function Pipeline1() {
         })
       }
     }
-  }, [location.pathname, state.leads.length, toast])
+  }, [location.pathname, state.data.leads.length, toast])
 
   const handleMove = (id: string, stage: string) => {
     if (!canMove) {
@@ -66,7 +66,7 @@ export default function Pipeline1() {
       return
     }
 
-    const previousState = [...state.leads]
+    const previousState = [...state.data.leads]
     try {
       if (!VALID_STAGES.includes(stage)) {
         throw new Error(`Etapa inválida: ${stage}`)
@@ -78,16 +78,19 @@ export default function Pipeline1() {
         return
       }
 
-      const lead = state.leads.find((l) => l.id === id)
+      const lead = state.data.leads.find((l) => l.id === id)
       if (lead && lead.stage !== stage) {
         logAction('Mudança de Etapa', lead.title, lead.stage, stage)
       }
 
       if (stage === 'Ganho') {
-        const company = state.companies.find((c) => c.id === lead?.companyId)
+        const company = state.data.companies.find((c) => c.id === lead?.companyId)
 
         updateState({
-          leads: state.leads.map((l) => (l.id === id ? { ...l, stage, score: 'Hot' } : l)),
+          data: {
+            ...state.data,
+            leads: state.data.leads.map((l) => (l.id === id ? { ...l, stage, score: 'Hot' } : l)),
+          },
         })
         logAccess(`Ganhou negócio: Lead ID ${id}`)
         toast({
@@ -95,7 +98,6 @@ export default function Pipeline1() {
           description: 'Acionando webhook de integração para ERP/Marketing...',
         })
 
-        // Webhook Simulation Call
         fetch('https://hook.us1.make.com/mock-webhook-transzecao', {
           method: 'POST',
           mode: 'no-cors',
@@ -128,15 +130,18 @@ export default function Pipeline1() {
       }
 
       updateState({
-        leads: state.leads.map((l) =>
-          l.id === id
-            ? { ...l, stage, pipeline: 'Prospection', isStalled: false, stalledDays: 0 }
-            : l,
-        ),
+        data: {
+          ...state.data,
+          leads: state.data.leads.map((l) =>
+            l.id === id
+              ? { ...l, stage, pipeline: 'Prospection', isStalled: false, stalledDays: 0 }
+              : l,
+          ),
+        },
       })
       logAccess(`Moveu Lead ID ${id} para ${stage} na Prospecção`)
     } catch (error) {
-      updateState({ leads: previousState })
+      updateState({ data: { ...state.data, leads: previousState } })
       toast({ variant: 'destructive', title: 'Erro', description: 'Revertido.' })
     }
   }
@@ -146,14 +151,17 @@ export default function Pipeline1() {
       toast({ title: 'Acesso Negado', variant: 'destructive' })
       return
     }
-    const lead = state.leads.find((l) => l.id === id)
+    const lead = state.data.leads.find((l) => l.id === id)
     if (lead) {
       logAction('Transferência de Funil', lead.title, 'Prospecção', 'Nutrição')
     }
     updateState({
-      leads: state.leads.map((l) =>
-        l.id === id ? { ...l, pipeline: 'Nutrition', stage: 'Nutrição – Aquecimento' } : l,
-      ),
+      data: {
+        ...state.data,
+        leads: state.data.leads.map((l) =>
+          l.id === id ? { ...l, pipeline: 'Nutrition', stage: 'Nutrição – Aquecimento' } : l,
+        ),
+      },
     })
     logAccess(`Enviou Lead ID ${id} para Marketing (Pipeline 2)`)
     toast({
@@ -164,14 +172,17 @@ export default function Pipeline1() {
 
   const confirmLoss = (reason: string, details?: string) => {
     if (!pendingMove) return
-    const lead = state.leads.find((l) => l.id === pendingMove.id)
+    const lead = state.data.leads.find((l) => l.id === pendingMove.id)
     if (lead) {
       logAction('Perda de Lead', lead.title, lead.stage, `Perda (${reason})`)
     }
     updateState({
-      leads: state.leads.map((l) =>
-        l.id === pendingMove.id ? { ...l, stage: 'Perda', score: 'Cold' } : l,
-      ),
+      data: {
+        ...state.data,
+        leads: state.data.leads.map((l) =>
+          l.id === pendingMove.id ? { ...l, stage: 'Perda', score: 'Cold' } : l,
+        ),
+      },
     })
     logAccess(`Registrou Perda: Lead ID ${pendingMove.id} - ${reason}`)
     toast({ title: 'Perda registrada', description: `Motivo: ${reason}`, variant: 'destructive' })
@@ -184,14 +195,14 @@ export default function Pipeline1() {
       toast({ title: 'Acesso Negado', variant: 'destructive' })
       return
     }
-    const updatedLeads = state.leads.map((lead) => {
+    const updatedLeads = state.data.leads.map((lead) => {
       if (lead.pipeline === 'Prospection' && lead.stage !== 'Ganho' && lead.stage !== 'Perda') {
         logAction('Automação Inatividade', lead.title, lead.stage, 'Nutrição')
         return { ...lead, pipeline: 'Nutrition' as const, stage: 'Nutrição – Aquecimento' }
       }
       return lead
     })
-    updateState({ leads: updatedLeads })
+    updateState({ data: { ...state.data, leads: updatedLeads } })
     logAccess('Rodou Automação de Inatividade (Prospecção)')
     toast({
       title: 'Automação de Inatividade',
@@ -224,7 +235,7 @@ export default function Pipeline1() {
         <KanbanBoard
           columns={COLUMNS}
           leads={prospectionLeads}
-          companies={state.companies}
+          companies={state.data.companies}
           onMove={handleMove}
           onSendToMarketing={handleSendToMarketing}
           onQuickAdd={(stage) => {
@@ -249,21 +260,24 @@ export default function Pipeline1() {
         onConfirm={(t, v) => {
           logAction('Criação Rápida de Lead', t, '-', stage)
           updateState({
-            leads: [
-              ...state.leads,
-              {
-                id: Math.random().toString(),
-                companyId: '1',
-                title: t,
-                value: v,
-                pipeline: 'Prospection',
-                stage: quickAddStage,
-                owner: state.currentUser.name,
-                updatedAt: new Date().toLocaleString(),
-                createdAt: new Date().toLocaleDateString(),
-                updatedBy: state.currentUser.name,
-              },
-            ],
+            data: {
+              ...state.data,
+              leads: [
+                ...state.data.leads,
+                {
+                  id: Math.random().toString(),
+                  companyId: '1',
+                  title: t,
+                  value: v,
+                  pipeline: 'Prospection',
+                  stage: quickAddStage,
+                  owner: state.user.currentUser.name,
+                  updatedAt: new Date().toLocaleString(),
+                  createdAt: new Date().toLocaleDateString(),
+                  updatedBy: state.user.currentUser.name,
+                },
+              ],
+            },
           })
           logAccess(`Criou Negócio Rápido: ${t}`)
           setQuickAddOpen(false)

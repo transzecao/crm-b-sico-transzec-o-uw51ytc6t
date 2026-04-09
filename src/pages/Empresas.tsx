@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { useDebouncedSearch } from '@/hooks/use-debounced-search'
 import { Plus, Building2, Search, Calendar, MapPin } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -31,6 +32,7 @@ export default function Empresas() {
   const { state } = useCrmStore()
   const navigate = useNavigate()
   const [searchTerm, setSearchTerm] = useState('')
+  const debouncedSearchTerm = useDebouncedSearch(searchTerm, 300)
   const [visibleCount, setVisibleCount] = useState(15)
 
   const canCreate = [
@@ -38,12 +40,12 @@ export default function Empresas() {
     'Supervisor Comercial',
     'Funcionário Comercial',
     'Funcionário Coleta',
-  ].includes(state.role)
+  ].includes(state.user.role)
 
   const filteredCompanies = useMemo(() => {
-    if (!searchTerm) return state.companies
-    const term = searchTerm.toLowerCase()
-    return state.companies.filter(
+    if (!debouncedSearchTerm) return state.data.companies
+    const term = debouncedSearchTerm.toLowerCase()
+    return state.data.companies.filter(
       (c) =>
         c.nomeFantasia?.toLowerCase().includes(term) ||
         c.razaoSocial?.toLowerCase().includes(term) ||
@@ -51,7 +53,7 @@ export default function Empresas() {
         c.segmento?.toLowerCase().includes(term) ||
         c.cidade?.toLowerCase().includes(term),
     )
-  }, [state.companies, searchTerm])
+  }, [state.data.companies, debouncedSearchTerm])
 
   const visibleCompanies = filteredCompanies.slice(0, visibleCount)
   const hasMore = visibleCount < filteredCompanies.length

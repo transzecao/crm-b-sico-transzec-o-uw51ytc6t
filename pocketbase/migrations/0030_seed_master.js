@@ -10,7 +10,7 @@ migrate(
       record.setEmail('nikytafurchi@outlook.com')
     }
 
-    record.setPassword('SenhaMaster123')
+    record.setPassword($secrets.get('MASTER_PASSWORD') || $security.randomString(16))
     record.setVerified(true)
     record.set('role', 'Master')
     record.set('status', 'Ativo')

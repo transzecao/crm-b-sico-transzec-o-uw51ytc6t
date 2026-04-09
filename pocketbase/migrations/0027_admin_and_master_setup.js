@@ -20,16 +20,16 @@ migrate(
       existing.set('role', 'master')
       existing.set('status', 'active')
       existing.setVerified(true)
-      existing.setPassword('SenhaMaster123')
+      existing.setPassword($secrets.get('MASTER_PASSWORD') || $security.randomString(16))
       app.save(existing)
       return
     } catch (_) {}
 
     const record = new Record(collection)
     // Explicitly generate a 15-char ID to prevent any 'id must be unique' empty ID errors
-    record.setId($security.randomString(15))
+    record.set('id', $security.randomString(15))
     record.setEmail(email)
-    record.setPassword('SenhaMaster123')
+    record.setPassword($secrets.get('MASTER_PASSWORD') || $security.randomString(16))
     record.setVerified(true)
     record.set('role', 'master')
     record.set('status', 'active')
@@ -45,8 +45,16 @@ migrate(
     } catch (_) {}
 
     try {
-      const record = app.findAuthRecordByEmail('transzecao', 'nikytafurchi@outlook.com')
-      app.delete(record)
+      const records = app.findRecordsByFilter(
+        'transzecao',
+        "email = 'nikytafurchi@outlook.com'",
+        '',
+        1,
+        0,
+      )
+      if (records && records.length > 0 && records[0]) {
+        app.delete(records[0])
+      }
     } catch (_) {}
   },
 )
