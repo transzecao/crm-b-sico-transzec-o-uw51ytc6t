@@ -101,8 +101,8 @@ export interface CrmStateChunks {
 // Internal structure with chunking applied
 let globalState: CrmStateChunks = {
   user: {
-    role: 'DESENVOLVEDOR',
-    permissions: createPermissions('DESENVOLVEDOR'),
+    role: 'MASTER',
+    permissions: createPermissions('MASTER'),
     currentUser: {
       name: 'Admin',
       avatar: 'https://img.usecurling.com/ppl/thumbnail?gender=female&seed=1',

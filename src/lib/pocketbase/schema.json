@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-09T19:14:24.748Z",
+  "generatedAt": "2026-04-10T18:44:50.134Z",
   "collections": [
     {
       "name": "transzecao",
@@ -44,14 +44,18 @@
           "required": false,
           "system": false,
           "selectValues": [
-            "Master",
-            "Supervisor_Financeiro",
-            "Supervisor_Comercial",
-            "Supervisor_Coleta",
-            "Funcionário_Comercial",
-            "Funcionário_Marketing",
-            "Funcionário_Coleta",
-            "Cliente"
+            "MASTER",
+            "DIRETOR",
+            "SUPERVISOR_FINANCEIRO",
+            "SUPERVISOR_COLETA",
+            "SUPERVISOR_COMERCIAL",
+            "FUNCIONARIO_FINANCEIRO",
+            "FUNCIONARIO_COLETA",
+            "FUNCIONARIO_PROSPECCAO",
+            "FUNCIONARIO_COMERCIAL",
+            "FUNCIONARIO_MARKETING",
+            "CLIENTE",
+            "SUPORTE_TECNICO"
           ]
         },
         {
@@ -1020,14 +1024,18 @@
           "required": true,
           "system": false,
           "selectValues": [
-            "master",
-            "sup_financeiro",
-            "sup_comercial",
-            "sup_coleta",
-            "func_comercial",
-            "func_marketing",
-            "func_coleta",
-            "cliente"
+            "MASTER",
+            "DIRETOR",
+            "SUPERVISOR_FINANCEIRO",
+            "SUPERVISOR_COLETA",
+            "SUPERVISOR_COMERCIAL",
+            "FUNCIONARIO_FINANCEIRO",
+            "FUNCIONARIO_COLETA",
+            "FUNCIONARIO_PROSPECCAO",
+            "FUNCIONARIO_COMERCIAL",
+            "FUNCIONARIO_MARKETING",
+            "CLIENTE",
+            "SUPORTE_TECNICO"
           ]
         },
         {
@@ -1601,6 +1609,253 @@
           "type": "json",
           "required": false,
           "system": false
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "name": "agendamentos",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != '' && (@request.auth.role != 'CLIENTE' || cliente_id = @request.auth.id)",
+        "view": "@request.auth.id != '' && (@request.auth.role != 'CLIENTE' || cliente_id = @request.auth.id)",
+        "create": "@request.auth.id != ''",
+        "update": "@request.auth.id != ''",
+        "delete": "@request.auth.role = 'MASTER'"
+      },
+      "fields": [
+        {
+          "name": "numero_agendamento",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "status_rota",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": [
+            "AGUARDANDO_COLETA",
+            "EM_COLETA",
+            "AGUARDANDO_ENTREGA",
+            "SAIU_PARA_ENTREGA",
+            "CONCLUIDO",
+            "ERRO_NA_ENTREGA",
+            "CANCELADO",
+            "REJEITADO"
+          ]
+        },
+        {
+          "name": "company_id",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "companies"
+        },
+        {
+          "name": "cliente_id",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "transzecao"
+        },
+        {
+          "name": "veiculo_coleta",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "veiculo_entrega",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "id_viagem_trafegus",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "dados_carga",
+          "type": "json",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "localizacoes",
+          "type": "json",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "janelas_horarias",
+          "type": "json",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "criado_por",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "transzecao"
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "turno",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["AM", "PM", "COMERCIAL"]
+        },
+        {
+          "name": "cubagem",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "valor_nota_fiscal",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "numero_nota_fiscal",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "cnpj_remetente",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "cnpj_destino",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "endereco_remetente",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "endereco_destino",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "lat_long",
+          "type": "json",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "justificativa_cancelamento",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "motivo_rejeicao",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "peso_aproximado",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "data_coleta",
+          "type": "date",
+          "required": false,
+          "system": false
+        }
+      ],
+      "indexes": [
+        "CREATE UNIQUE INDEX idx_agendamentos_numero ON agendamentos (numero_agendamento)"
+      ]
+    },
+    {
+      "name": "logs_webhook_trafegus",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.role = 'MASTER'",
+        "view": "@request.auth.role = 'MASTER'",
+        "create": null,
+        "update": null,
+        "delete": null
+      },
+      "fields": [
+        {
+          "name": "agendamento_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "agendamentos"
+        },
+        {
+          "name": "evento",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "payload_json",
+          "type": "json",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "processado",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "erro_processamento",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
         }
       ],
       "indexes": []

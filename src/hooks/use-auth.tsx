@@ -21,7 +21,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     id: 'public000000000',
     name: 'Usuário Público',
     email: 'public@transzecao.com',
-    role: 'master',
+    role: 'MASTER',
   }
 
   const signUp = async () => ({ error: null })

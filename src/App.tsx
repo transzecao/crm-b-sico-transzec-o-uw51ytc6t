@@ -26,7 +26,6 @@ import Profile from './pages/Profile'
 import MarketingConteudo from './pages/MarketingConteudo'
 import FinanceiroNovaCotacao from './pages/FinanceiroNovaCotacao'
 import FinanceiroCotacoes from './pages/FinanceiroCotacoes'
-import PortalHomeInt from './pages/PortalHomeInt'
 import PortalCotacaoInt from './pages/PortalCotacaoInt'
 import PortalConteudoInt from './pages/PortalConteudoInt'
 import PortalDocumentosInt from './pages/PortalDocumentosInt'
@@ -67,7 +66,6 @@ const App = () => (
 
                 <Route path="/marketing/conteudo" element={<MarketingConteudo />} />
 
-                <Route path="/portal/home" element={<PortalHomeInt />} />
                 <Route path="/portal/cotacao" element={<PortalCotacaoInt />} />
                 <Route path="/portal/cotacao-dinamica" element={<CotacaoDinamica />} />
                 <Route path="/portal/conteudo" element={<PortalConteudoInt />} />

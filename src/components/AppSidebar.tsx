@@ -40,8 +40,7 @@ export function AppSidebar() {
 
   const getMenuItems = () => {
     switch (state.role) {
-      case 'Supervisor Financeiro':
-      case 'Supervisor_Financeiro':
+      case 'SUPERVISOR_FINANCEIRO':
         return [
           { title: 'Dashboard Financeiro', url: '/app/dashboard', icon: LayoutDashboard },
           { title: 'Cotações Pendentes', url: '/financeiro/cotacoes', icon: FileText },
@@ -49,31 +48,26 @@ export function AppSidebar() {
           { title: 'Gerenciamento de Fretes', url: '/financeiro', icon: Calculator },
           { title: 'Controle da Frota e Gastos', url: '/financeiro/controle-gastos', icon: Wallet },
         ]
-      case 'Funcionário Financeiro':
-      case 'Funcionario_Financeiro':
+      case 'FUNCIONARIO_FINANCEIRO':
         return [
           { title: 'Dashboard', url: '/app/dashboard', icon: LayoutDashboard },
           { title: 'COTAÇÃO', url: '/cotacao-dinamica', icon: Calculator },
           { title: 'Solicitações de Documentação', url: '/portal/documentos', icon: FolderOpen },
           { title: 'Histórico de Cotações', url: '/financeiro/cotacoes', icon: FileText },
         ]
-      case 'Supervisor Coleta':
-      case 'Supervisor_Coleta':
+      case 'SUPERVISOR_COLETA':
         return [
           { title: 'Dashboard', url: '/app/dashboard', icon: LayoutDashboard },
           { title: 'Cadastro de Cliente', url: '/empresa/nova', icon: Building2 },
           { title: 'COTAÇÃO', url: '/cotacao-dinamica', icon: Calculator },
         ]
-      case 'Funcionário Coleta':
-      case 'Funcionário_Coleta':
-      case 'Funcionario_Coleta':
+      case 'FUNCIONARIO_COLETA':
         return [
           { title: 'Dashboard', url: '/app/dashboard', icon: LayoutDashboard },
           { title: 'Cadastrar Cliente', url: '/empresa/nova', icon: Building2 },
           { title: 'COTAÇÃO', url: '/cotacao-dinamica', icon: Calculator },
         ]
-      case 'Supervisor Comercial':
-      case 'Supervisor_Comercial':
+      case 'SUPERVISOR_COMERCIAL':
         return [
           { title: 'Dashboard', url: '/app/dashboard', icon: LayoutDashboard },
           { title: 'Aprovações Pendentes', url: '/supervisor/approvals', icon: CheckSquare },
@@ -81,9 +75,8 @@ export function AppSidebar() {
           { title: 'COTAÇÃO', url: '/cotacao-dinamica', icon: Calculator },
           { title: 'Histórico de Propostas', url: '/financeiro/cotacoes', icon: FileText },
         ]
-      case 'Funcionário Prospecção':
-      case 'Funcionário_Comercial':
-      case 'Funcionario_Comercial':
+      case 'FUNCIONARIO_PROSPECCAO':
+      case 'FUNCIONARIO_COMERCIAL':
         return [
           { title: 'Dashboard', url: '/app/dashboard', icon: LayoutDashboard },
           { title: 'Tarefas', url: '/tarefas', icon: CalendarClock },
@@ -93,22 +86,22 @@ export function AppSidebar() {
           { title: 'Cadastros de Terceiros', url: '/empresas/terceiros', icon: Users },
           { title: 'COTAÇÃO', url: '/cotacao-dinamica', icon: Calculator },
         ]
-      case 'Funcionário Marketing':
-      case 'Funcionário_Marketing':
-      case 'Funcionario_Marketing':
+      case 'FUNCIONARIO_MARKETING':
         return [
           { title: 'Dashboard', url: '/app/dashboard', icon: LayoutDashboard },
           { title: 'Cadastro de Lead Novo', url: '/empresa/nova', icon: Inbox },
           { title: 'Pipeline Nutrição', url: '/pipeline/2', icon: Sprout },
         ]
-      case 'Cliente':
+      case 'CLIENTE':
         return [
           { title: 'Meu Dashboard', url: '/portal/home', icon: LayoutDashboard },
           { title: 'COTAÇÃO', url: '/portal/cotacao-dinamica', icon: Calculator },
           { title: 'VER CONTEÚDO', url: '/portal/conteudo', icon: Rss },
           { title: 'Meus Documentos', url: '/portal/documentos', icon: FolderOpen },
         ]
-      default: // Acesso Master
+      case 'MASTER':
+      case 'DIRETOR':
+      default:
         return [
           { title: 'Dashboard', url: '/app/dashboard', icon: LayoutDashboard },
           { title: 'Lead Novo', url: '/empresa/nova', icon: Inbox },

@@ -1,5 +1,5 @@
 export type UserRole =
-  | 'DESENVOLVEDOR'
+  | 'MASTER'
   | 'DIRETOR'
   | 'SUPERVISOR_FINANCEIRO'
   | 'SUPERVISOR_COLETA'
@@ -7,13 +7,13 @@ export type UserRole =
   | 'FUNCIONARIO_FINANCEIRO'
   | 'FUNCIONARIO_COLETA'
   | 'FUNCIONARIO_PROSPECCAO'
+  | 'FUNCIONARIO_COMERCIAL'
   | 'FUNCIONARIO_MARKETING'
-  | 'Cliente'
-  | 'Cliente'
+  | 'CLIENTE'
   | 'SUPORTE_TECNICO'
 
 export const ROLE_HIERARCHY: Record<UserRole, UserRole[]> = {
-  DESENVOLVEDOR: [
+  MASTER: [
     'DIRETOR',
     'SUPERVISOR_FINANCEIRO',
     'SUPERVISOR_COLETA',
@@ -21,9 +21,9 @@ export const ROLE_HIERARCHY: Record<UserRole, UserRole[]> = {
     'FUNCIONARIO_FINANCEIRO',
     'FUNCIONARIO_COLETA',
     'FUNCIONARIO_PROSPECCAO',
+    'FUNCIONARIO_COMERCIAL',
     'FUNCIONARIO_MARKETING',
-    'Cliente',
-    'Cliente',
+    'CLIENTE',
     'SUPORTE_TECNICO',
   ],
   DIRETOR: [
@@ -33,20 +33,24 @@ export const ROLE_HIERARCHY: Record<UserRole, UserRole[]> = {
     'FUNCIONARIO_FINANCEIRO',
     'FUNCIONARIO_COLETA',
     'FUNCIONARIO_PROSPECCAO',
+    'FUNCIONARIO_COMERCIAL',
     'FUNCIONARIO_MARKETING',
-    'Cliente',
-    'Cliente',
+    'CLIENTE',
     'SUPORTE_TECNICO',
   ],
   SUPERVISOR_FINANCEIRO: ['FUNCIONARIO_FINANCEIRO'],
   SUPERVISOR_COLETA: ['FUNCIONARIO_COLETA'],
-  SUPERVISOR_COMERCIAL: ['FUNCIONARIO_PROSPECCAO', 'FUNCIONARIO_MARKETING'],
+  SUPERVISOR_COMERCIAL: [
+    'FUNCIONARIO_PROSPECCAO',
+    'FUNCIONARIO_COMERCIAL',
+    'FUNCIONARIO_MARKETING',
+  ],
   FUNCIONARIO_FINANCEIRO: [],
   FUNCIONARIO_COLETA: [],
   FUNCIONARIO_PROSPECCAO: [],
+  FUNCIONARIO_COMERCIAL: [],
   FUNCIONARIO_MARKETING: [],
-  Cliente: [],
-
+  CLIENTE: [],
   SUPORTE_TECNICO: [],
 }
 
@@ -71,7 +75,7 @@ export function createPermissions(
   const userRoles = [role, ...(ROLE_HIERARCHY[role] || [])]
 
   const canAccessTool = (toolId: string) => {
-    if (role === 'DESENVOLVEDOR' || role === 'DIRETOR') return true
+    if (role === 'MASTER' || role === 'DIRETOR') return true
 
     if (dbPermissions[toolId]) {
       return dbPermissions[toolId].can_access === true
@@ -82,7 +86,7 @@ export function createPermissions(
   }
 
   const isDeveloperOf = (toolId: string) => {
-    if (role === 'DESENVOLVEDOR' || role === 'DIRETOR') return true
+    if (role === 'MASTER' || role === 'DIRETOR') return true
 
     if (dbPermissions[toolId]) {
       return dbPermissions[toolId].is_developer === true
